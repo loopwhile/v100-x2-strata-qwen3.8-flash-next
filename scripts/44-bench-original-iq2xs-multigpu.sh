@@ -73,7 +73,7 @@ python3 -c '
 import json, sys
 m=json.load(sys.stdin)
 e=m.get("engine",{})
-r=(m.get("requests") or [{}])[-1]
+r=(m.get("requests") or [{}])[0]
 h=m.get("hardware",{})
 print("engine.version      =", e.get("version"))
 print("engine.context      =", e.get("context"))
