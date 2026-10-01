@@ -57,6 +57,9 @@ out="$RESULTS_DIR/preflight-$ts.txt"
   echo "=== compilers ==="
   gcc --version | head -n1 || true
   g++ --version | head -n1 || true
+  for c in gcc-14 g++-14 gcc-13 g++-13 gcc-12 g++-12; do
+    command -v "$c" >/dev/null 2>&1 && "$c" --version | head -n1
+  done
   cmake --version | head -n1 || true
   ninja --version || true
   python3 --version
@@ -91,4 +94,17 @@ if nvcc12="$(find_cuda12_nvcc 2>/dev/null)"; then
   echo "CUDA 12.x nvcc: $nvcc12"
 else
   echo "WARNING: no CUDA 12.x nvcc found. Do not build Strata for V100 with CUDA 13." >&2
+fi
+
+gcc_major="$(g++ -dumpfullversion -dumpversion 2>/dev/null | cut -d. -f1 || true)"
+if [ -n "$gcc_major" ] && [ "$gcc_major" -gt 14 ]; then
+  if ! command -v g++-14 >/dev/null 2>&1 && ! command -v g++-13 >/dev/null 2>&1 && ! command -v g++-12 >/dev/null 2>&1; then
+    echo "WARNING: default G++ is $gcc_major; CUDA 12.9 supports GCC through 14.x and no compatible g++ 12-14 was found." >&2
+  fi
+fi
+
+memlock="$(ulimit -l)"
+if [ "$memlock" != "unlimited" ]; then
+  echo "WARNING: memlock is $memlock KB, not unlimited. Strata's Linux expert arena/KV streaming uses large pinned/locked host memory." >&2
+  echo "         Run scripts/00-install-host-prereqs.sh, reconnect SSH, and verify 'ulimit -l' => unlimited." >&2
 fi
