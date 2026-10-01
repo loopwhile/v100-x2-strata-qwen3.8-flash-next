@@ -23,7 +23,7 @@ done
 
 start_agent() {
   local name="$1" host_gpu="$2" host_port="$3" cpuset="$4"
-  docker run -d     --name "$name"     --gpus "device=$host_gpu"     --cpuset-cpus "$cpuset"     --ulimit memlock=-1:-1     -p "127.0.0.1:${host_port}:8080"     -v "$DATA_DIR:/data:ro"     --entrypoint /opt/strata/.venv/bin/python     "$IMAGE"     /opt/strata/serve/server.py       --engine strata       --config "$CFG"       --host 0.0.0.0       --port 8080       --gpu 0 >/dev/null
+  docker run -d     --name "$name"     --gpus "device=$host_gpu"     --cpuset-cpus "$cpuset"     --ulimit memlock=-1:-1     -p "127.0.0.1:${host_port}:8080"     -v "$DATA_DIR:/data:ro"     -e STRATA_PROMPT_ATTN_OLD=1     --entrypoint /opt/strata/.venv/bin/python     "$IMAGE"     /opt/strata/serve/server.py       --engine strata       --config "$CFG"       --host 0.0.0.0       --port 8080       --gpu 0 >/dev/null
 }
 
 echo "Starting Agent A: host GPU0 -> :8080, CPUs $CPUSET_A"
