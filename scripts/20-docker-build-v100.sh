@@ -24,8 +24,15 @@ docker run --rm --entrypoint /bin/bash "$IMAGE" -lc '
   gcc --version | head -n1
   echo "--- Strata commit ---"
   git rev-parse HEAD
+  echo "--- engine artifacts ---"
+  ls -lah /opt/strata/engine
   echo "--- BUILD.json ---"
-  cat engine/BUILD.json
+  if [ ! -f /opt/strata/engine/BUILD.json ]; then
+    echo "ERROR: /opt/strata/engine/BUILD.json is missing" >&2
+    find /opt/strata -maxdepth 3 -type f \( -name BUILD.json -o -name strata \) -print >&2 || true
+    exit 1
+  fi
+  cat /opt/strata/engine/BUILD.json
 '
 
 echo
