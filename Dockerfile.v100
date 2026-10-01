@@ -35,15 +35,15 @@ RUN python3 -m venv .venv \
 
 # Keep the build logic in a normal file rather than a Dockerfile heredoc.
 # This also makes the build step's cache key include the helper's contents.
-COPY docker/build_v100_engine.py /tmp/build_v100_engine.py
+COPY docker/build_v100_engine.py /opt/strata/build_v100_engine.py
 
-RUN .venv/bin/python /tmp/build_v100_engine.py
+RUN .venv/bin/python /opt/strata/build_v100_engine.py
 
 RUN set -eux; \
     test -x /opt/strata/engine/strata; \
     test -f /opt/strata/engine/BUILD.json; \
     ls -lah /opt/strata/engine; \
-    rm -rf /opt/strata/build /tmp/build_v100_engine.py
+    rm -rf /opt/strata/build /opt/strata/build_v100_engine.py
 
 VOLUME ["/data"]
 EXPOSE 8080
