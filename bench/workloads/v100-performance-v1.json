@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+  "mode": "performance",
+  "context_tokens": 131072,
+  "output_tokens": 4096,
+  "min_context_utilization": 0.99,
+  "independent_projects_required": true,
+  "source": "deterministic C2 performance workload; repeated seed identifiers are diversified per section to avoid trivial ngram reuse",
+  "sampling": {
+    "temperature": 0,
+    "top_p": 1,
+    "seed": 520
+  },
+  "requests": [
+    {
+      "id": "project-a",
+      "project_id": "A",
+      "title": "Project A - storage engine refactor",
+      "final_instruction": "Review Project A only. Produce a detailed code review of at least 1024 tokens so sustained concurrent decode throughput can be measured.",
+      "seed_blocks": [
+        "# Project A / storage/index.py\nclass PageIndex:\n    def __init__(self):\n        self.pages = {}\n        self.version = 0\n    def put(self, key, page_id):\n        self.pages[key] = page_id\n        self.version += 1\n    def get(self, key):\n        return self.pages.get(key)\n",
+        "# Project A / storage/transaction.py\nclass Transaction:\n    def __init__(self, index):\n        self.index = index\n        self.pending = []\n    def stage(self, key, page_id):\n        self.pending.append((key, page_id))\n    def commit(self):\n        for key, page_id in self.pending:\n            self.index.put(key, page_id)\n        self.pending.clear()\n",
+        "# Project A / tests/test_recovery.py\ndef test_replay_order(log, index):\n    for key, page_id in log:\n        index.put(key, page_id)\n    assert index.version == len(log)\n"
+      ]
+    },
+    {
+      "id": "project-b",
+      "project_id": "B",
+      "title": "Project B - async job scheduler",
+      "final_instruction": "Review Project B only. Produce a detailed concurrency review of at least 1024 tokens so sustained concurrent decode throughput can be measured.",
+      "seed_blocks": [
+        "# Project B / scheduler/queue.py\nimport heapq\n\nclass JobQueue:\n    def __init__(self):\n        self._heap = []\n        self._sequence = 0\n    def push(self, priority, job):\n        self._sequence += 1\n        heapq.heappush(self._heap, (priority, self._sequence, job))\n    def pop(self):\n        return heapq.heappop(self._heap)[2]\n",
+        "# Project B / scheduler/worker.py\nimport asyncio\n\nclass Worker:\n    def __init__(self, queue):\n        self.queue = queue\n        self.running = True\n    async def run_once(self):\n        if not self.queue._heap:\n            await asyncio.sleep(0)\n            return None\n        job = self.queue.pop()\n        return await job()\n",
+        "# Project B / tests/test_scheduler.py\nasync def test_priority_order(queue, make_job):\n    queue.push(20, make_job(\"slow\"))\n    queue.push(5, make_job(\"urgent\"))\n    assert queue.pop().name == \"urgent\"\n"
+      ]
+    }
+  ],
+  "min_output_tokens": 1024,
+  "diversify_identifiers": true
+}
