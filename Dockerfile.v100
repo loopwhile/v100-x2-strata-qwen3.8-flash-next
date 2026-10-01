@@ -24,81 +24,26 @@ RUN git init . \
 
 # 0.1.31 contains the experimental Pascal/Volta CMake/runtime path, but setup.py
 # still filters GPUs below sm_75 before setup can use it. Admit Volta only.
-RUN python3 - <<'PY'
-from pathlib import Path
-p = Path("setup.py")
-s = p.read_text()
-old = '    if int(g["arch"]) < 75:\n'
-new = '    if int(g["arch"]) < 70:\n'
-if old not in s:
-    raise SystemExit("expected setup.py GPU floor not found")
-p.write_text(s.replace(old, new, 1))
-PY
+# Avoid Dockerfile RUN heredocs here: the host is using Docker's legacy builder.
+RUN sed -i 's/if int(g\["arch"\]) < 75:/if int(g["arch"]) < 70:/' setup.py \
+    && grep -F 'if int(g["arch"]) < 70:' setup.py
 
 RUN python3 -m venv .venv \
     && .venv/bin/pip install --no-cache-dir --upgrade pip \
     && .venv/bin/pip install --no-cache-dir -r requirements.txt \
     && chmod +x setup.sh docker-entrypoint.sh
 
-# Build only the text engine for V100. Vision is intentionally omitted so its
-# VRAM reserve can be used by the model/expert cache. Build and packaging are
-# separate layers so a missing artifact cannot be hidden by cleanup.
-RUN .venv/bin/python - <<'PY'
-import setup
+# Keep the build logic in a normal file rather than a Dockerfile heredoc.
+# This also makes the build step's cache key include the helper's contents.
+COPY docker/build_v100_engine.py /tmp/build_v100_engine.py
 
-llama = setup.get_llama_cpp()
-nvcc, version = setup.find_nvcc()
-if not nvcc or not version or version[0] != 12:
-    raise SystemExit(f"V100 image requires CUDA 12.x nvcc, found {nvcc} {version}")
-
-setup.cmake_build(
-    setup.ROOT,
-    setup.ROOT / "build",
-    "strata",
-    [
-        "-DSTRATA_ENABLE_CUDA=ON",
-        "-DSTRATA_EXPERIMENTAL_SM60=ON",
-        "-DSTRATA_BUILD_TESTS=OFF",
-        "-DCMAKE_CUDA_ARCHITECTURES=70",
-        f"-DCMAKE_CUDA_COMPILER={nvcc}",
-        f"-DSTRATA_GGML_DIR={llama}",
-    ],
-    None,
-    "build-strata-v100.bat",
-)
-PY
-
-RUN set -eux; \
-    test -x /opt/strata/build/strata; \
-    mkdir -p /opt/strata/engine; \
-    cp -f /opt/strata/build/strata /opt/strata/engine/strata; \
-    chmod +x /opt/strata/engine/strata; \
-    /opt/strata/.venv/bin/python - <<'PY'
-import json
-import pathlib
-import setup
-
-nvcc, version = setup.find_nvcc()
-bindir = pathlib.Path(nvcc).parent
-meta = {
-    "source": "local",
-    "version": setup.source_version(),
-    "archs": [70],
-    "vision": "none",
-    "cuda_dirs": [str(d) for d in (bindir, bindir / "x64", bindir.parent / "lib64") if d.is_dir()],
-    "src": setup.source_hash(setup.ENGINE_SOURCES),
-    "vision_src": None,
-}
-path = setup.ROOT / "engine" / "BUILD.json"
-path.write_text(json.dumps(meta, indent=1))
-print(path.read_text())
-PY
+RUN .venv/bin/python /tmp/build_v100_engine.py
 
 RUN set -eux; \
     test -x /opt/strata/engine/strata; \
     test -f /opt/strata/engine/BUILD.json; \
     ls -lah /opt/strata/engine; \
-    rm -rf /opt/strata/build
+    rm -rf /opt/strata/build /tmp/build_v100_engine.py
 
 VOLUME ["/data"]
 EXPOSE 8080
