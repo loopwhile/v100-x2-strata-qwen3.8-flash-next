@@ -41,11 +41,9 @@ RUN python3 -m venv .venv \
     && chmod +x setup.sh docker-entrypoint.sh
 
 # Build only the text engine for V100. Vision is intentionally omitted so its
-# VRAM reserve can be used by the model/expert cache.
+# VRAM reserve can be used by the model/expert cache. Build and packaging are
+# separate layers so a missing artifact cannot be hidden by cleanup.
 RUN .venv/bin/python - <<'PY'
-import json
-import pathlib
-import shutil
 import setup
 
 llama = setup.get_llama_cpp()
@@ -68,11 +66,19 @@ setup.cmake_build(
     None,
     "build-strata-v100.bat",
 )
+PY
 
-eng = setup.ROOT / "engine"
-eng.mkdir(exist_ok=True)
-shutil.copy2(setup.ROOT / "build" / setup.EXE, eng / setup.EXE)
+RUN set -eux; \
+    test -x /opt/strata/build/strata; \
+    mkdir -p /opt/strata/engine; \
+    cp -f /opt/strata/build/strata /opt/strata/engine/strata; \
+    chmod +x /opt/strata/engine/strata; \
+    /opt/strata/.venv/bin/python - <<'PY'
+import json
+import pathlib
+import setup
 
+nvcc, version = setup.find_nvcc()
 bindir = pathlib.Path(nvcc).parent
 meta = {
     "source": "local",
@@ -83,12 +89,16 @@ meta = {
     "src": setup.source_hash(setup.ENGINE_SOURCES),
     "vision_src": None,
 }
-(eng / "BUILD.json").write_text(json.dumps(meta, indent=1))
+path = setup.ROOT / "engine" / "BUILD.json"
+path.write_text(json.dumps(meta, indent=1))
+print(path.read_text())
 PY
 
-RUN rm -rf build \
-    && test -x /opt/strata/engine/strata \
-    && test -f /opt/strata/engine/BUILD.json
+RUN set -eux; \
+    test -x /opt/strata/engine/strata; \
+    test -f /opt/strata/engine/BUILD.json; \
+    ls -lah /opt/strata/engine; \
+    rm -rf /opt/strata/build
 
 VOLUME ["/data"]
 EXPOSE 8080
