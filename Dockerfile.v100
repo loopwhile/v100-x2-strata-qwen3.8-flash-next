@@ -86,7 +86,9 @@ meta = {
 (eng / "BUILD.json").write_text(json.dumps(meta, indent=1))
 PY
 
-RUN rm -rf build
+RUN rm -rf build \
+    && test -x /opt/strata/engine/strata \
+    && test -f /opt/strata/engine/BUILD.json
 
 VOLUME ["/data"]
 EXPOSE 8080
