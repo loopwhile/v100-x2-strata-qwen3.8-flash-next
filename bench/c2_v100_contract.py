@@ -18,11 +18,16 @@ import sys
 import threading
 import time
 import urllib.request
+import urllib.error
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 STRATA = Path("/opt/strata")
 EXPECTED_MANIFEST_SHA256 = "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca"
+# Strata 0.1.31 reserves 8 internal context cells (serve/server.py CTX_SLACK).
+# This is runtime overhead, not a workload change: prompt + requested output still
+# fills >99% of the declared 131072-token budget, as required by performance/v1.
+STRATA_CTX_SLACK = 8
 IDENTIFIER = re.compile(r"\b[A-Za-z_][A-Za-z0-9_]*\b")
 KEEP_IDENTIFIERS = set(keyword.kwlist) | {"True", "False", "None", "self", "cls"}
 
@@ -114,7 +119,7 @@ def post_template_count(req: dict, tok, template, openai_to_messages) -> int:
 def materialize_one(manifest: dict, spec: dict, tok, template, openai_to_messages):
     context = int(manifest["context_tokens"])
     reserve = int(manifest["output_tokens"])
-    target = context - reserve
+    target = context - reserve - STRATA_CTX_SLACK
     minimum_total = int(context * float(manifest.get("min_context_utilization", 0.99)))
     diversify = bool(manifest.get("diversify_identifiers", False))
 
@@ -159,8 +164,11 @@ def materialize_one(manifest: dict, spec: dict, tok, template, openai_to_message
     req = request_body(content, manifest)
     prompt_tokens = post_template_count(req, tok, template, openai_to_messages)
     total = prompt_tokens + reserve
-    if total > context or total < minimum_total:
-        raise RuntimeError(f"bad calibrated budget: prompt={prompt_tokens} total={total}")
+    if total + STRATA_CTX_SLACK > context or total < minimum_total:
+        raise RuntimeError(
+            f"bad calibrated budget: prompt={prompt_tokens} total={total} "
+            f"strata_slack={STRATA_CTX_SLACK} context={context}"
+        )
 
     raw_hash = sha256_bytes(
         json.dumps(req["messages"], ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -173,6 +181,8 @@ def materialize_one(manifest: dict, spec: dict, tok, template, openai_to_message
         "reserved_output_tokens": reserve,
         "minimum_output_tokens": int(manifest.get("min_output_tokens", 1)),
         "total_budget_used": total,
+        "runtime_context_used": total + STRATA_CTX_SLACK,
+        "runtime_context_slack": STRATA_CTX_SLACK,
         "utilization": total / context,
         "raw_prompt_sha256": raw_hash,
         "section_units": best_units,
@@ -196,7 +206,12 @@ def stream_complete(base: str, payload: dict, barrier: threading.Barrier, origin
     usage = None
     timings = None
     text_parts = []
-    with urllib.request.urlopen(req, timeout=7200) as response:
+    try:
+        response_ctx = urllib.request.urlopen(req, timeout=7200)
+    except urllib.error.HTTPError as exc:
+        body = exc.read(8192).decode("utf-8", "replace")
+        raise RuntimeError(f"HTTP {exc.code} from {base}: {body}") from exc
+    with response_ctx as response:
         for raw in response:
             line = raw.decode("utf-8", "replace").strip()
             if not line.startswith("data:"):
@@ -425,7 +440,8 @@ def main() -> int:
     for x in materialized:
         print(
             f"{x['project_id']}: prompt={x['prompt_tokens']} reserve={x['reserved_output_tokens']} "
-            f"total={x['total_budget_used']} util={x['utilization']:.5f} "
+            f"total={x['total_budget_used']} + strata_slack={x['runtime_context_slack']} "
+            f"runtime_total={x['runtime_context_used']} util={x['utilization']:.5f} "
             f"sha={x['raw_prompt_sha256']}"
         )
     print()
