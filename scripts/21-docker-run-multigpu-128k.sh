@@ -32,4 +32,4 @@ echo "  docker logs -f $NAME"
 echo
 echo "When it prints ready, run:"
 echo "  bash scripts/04-smoke-api.sh http://127.0.0.1:$HOST_PORT"
-echo "  python3 bench/api_bench.py --url http://127.0.0.1:$HOST_PORT --targets 32000 64000 125000"
+echo "  bash scripts/23-docker-bench-multigpu.sh"
