@@ -51,7 +51,16 @@ bash scripts/00-preflight.sh
 bash scripts/01-prepare-strata.sh
 ```
 
-The preflight is non-destructive. Stop if it does not see two V100 16 GB cards, if no CUDA 12.x toolkit is installed, or if no CUDA-12-compatible host compiler is available.
+The preflight is non-destructive. Stop if it does not see two V100 16 GB cards, if no CUDA 12.x toolkit is installed, if no CUDA-12-compatible host compiler is available, or if the SSH login memlock limit is not unlimited. On the P520 host, install/fix these prerequisites with:
+
+```bash
+bash scripts/00-install-host-prereqs.sh
+# then fully log out of SSH and reconnect
+ulimit -l   # must print: unlimited
+bash scripts/00-preflight.sh
+```
+
+The prerequisite installer installs GCC/G++ 14, CUDA Toolkit 12.9.1 **without changing the NVIDIA driver**, and writes the per-user memlock limit.
 
 ### Baseline A: Coder IQ1_M
 
