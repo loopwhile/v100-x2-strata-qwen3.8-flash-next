@@ -175,11 +175,15 @@ def main() -> int:
 
         print(f"Round wall: {round_wall:.1f}s")
         for r in results:
-            usage = (r.get("response") or {}).get("usage") or {}
+            response = r.get("response") or {}
+            usage = response.get("usage") or {}
+            timings = response.get("timings") or {}
             print(
                 f"  {r['base_url']}: wall={r['wall_s']}s "
                 f"prompt={usage.get('prompt_tokens')} completion={usage.get('completion_tokens')} "
-                f"error={r['error']} body={r.get('response') if r['error'] else ''}"
+                f"prefill={timings.get('prompt_per_second')} tok/s "
+                f"decode={timings.get('predicted_per_second')} tok/s "
+                f"error={r['error']} body={response if r['error'] else ''}"
             )
             st = r.get("status") or {}
             if isinstance(st, dict):
