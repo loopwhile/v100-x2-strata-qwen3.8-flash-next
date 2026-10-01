@@ -1,0 +1,5 @@
+.work/
+results/
+configs/*.json
+__pycache__/
+*.pyc
