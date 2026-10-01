@@ -28,6 +28,13 @@ RUN git init . \
 RUN sed -i 's/if int(g\["arch"\]) < 75:/if int(g["arch"]) < 70:/' setup.py \
     && grep -F 'if int(g["arch"]) < 70:' setup.py
 
+# 0.1.31 prompt attention checks only the major CC, so sm_70 is misclassified
+# as Turing and enters an mma.sync path that traps below sm_75. Patch the
+# runtime dispatch to use major*10+minor and fall back to the old kernel on V100.
+COPY docker/patch_volta_prompt_attn.py /opt/strata/patch_volta_prompt_attn.py
+RUN python3 /opt/strata/patch_volta_prompt_attn.py \
+    && rm -f /opt/strata/patch_volta_prompt_attn.py
+
 RUN python3 -m venv .venv \
     && .venv/bin/pip install --no-cache-dir --upgrade pip \
     && .venv/bin/pip install --no-cache-dir -r requirements.txt \
