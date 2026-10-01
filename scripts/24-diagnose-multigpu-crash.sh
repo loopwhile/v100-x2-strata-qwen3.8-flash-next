@@ -35,6 +35,10 @@ OUT="$(cd "$(dirname "$0")/.." && pwd)/results/diagnose-$(date +%Y%m%d-%H%M%S).t
   done
   echo
 
+  echo "=== in-container engine log ==="
+  docker exec "$NAME" sh -lc 'tail -n 300 /opt/strata/strata-coder-iq1_m.log' 2>&1 || true
+  echo
+
   echo "=== possible engine logs ==="
   find "$DATA_DIR" -maxdepth 4 -type f \( -name '*.log' -o -name '*engine*' \) -print 2>/dev/null || true
   while IFS= read -r f; do
