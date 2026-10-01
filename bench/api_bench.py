@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+import urllib.error
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -89,6 +90,13 @@ def request_one(base: str, prompt: str, max_tokens: int):
         with urllib.request.urlopen(req, timeout=7200) as r:
             body = json.loads(r.read().decode("utf-8"))
         error = None
+    except urllib.error.HTTPError as e:
+        raw = e.read().decode("utf-8", "replace")
+        try:
+            body = json.loads(raw)
+        except Exception:
+            body = {"raw_error_body": raw}
+        error = f"HTTP {e.code}: {e.reason}"
     except Exception as e:
         body = None
         error = repr(e)
@@ -171,7 +179,7 @@ def main() -> int:
             print(
                 f"  {r['base_url']}: wall={r['wall_s']}s "
                 f"prompt={usage.get('prompt_tokens')} completion={usage.get('completion_tokens')} "
-                f"error={r['error']}"
+                f"error={r['error']} body={r.get('response') if r['error'] else ''}"
             )
             st = r.get("status") or {}
             if isinstance(st, dict):
