@@ -19,11 +19,12 @@ echo "  Model:      Coder IQ1_M"
 echo "  Context:    131072"
 echo "  KV:         INT8"
 echo "  Low RAM:    off"
+echo "  Volta PF:   STRATA_PROMPT_ATTN_OLD=1 (force pre-sm75 fallback)"
 echo "  Data:       $DATA_DIR"
 echo "  API:        http://127.0.0.1:$HOST_PORT/v1"
 echo
 
-docker run -d   --name "$NAME"   --gpus all   --ulimit memlock=-1:-1   -p "127.0.0.1:${HOST_PORT}:8080"   -v "$DATA_DIR:/data"   -e FAMILY=coder   -e MODEL=IQ1_M   -e CONTEXT=131072   -e KV=int8   -e VISION=no   -e GPUS=0,1   -e LAYER_SPLIT=auto   -e LOW_RAM=off   -e HOST=0.0.0.0   -e PORT=8080   "$IMAGE" >/dev/null
+docker run -d   --name "$NAME"   --gpus all   --ulimit memlock=-1:-1   -p "127.0.0.1:${HOST_PORT}:8080"   -v "$DATA_DIR:/data"   -e FAMILY=coder   -e MODEL=IQ1_M   -e CONTEXT=131072   -e KV=int8   -e VISION=no   -e GPUS=0,1   -e LAYER_SPLIT=auto   -e LOW_RAM=off   -e HOST=0.0.0.0   -e PORT=8080   -e STRATA_PROMPT_ATTN_OLD=1   "$IMAGE" >/dev/null
 
 echo "Container started. First run downloads/prepares the model and can take a while."
 echo
