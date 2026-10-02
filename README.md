@@ -177,6 +177,7 @@ scripts/49-run-original-iq2xs-dual-mmap.sh
 scripts/50-smoke-original-iq2xs-dual-mmap.sh
 scripts/51-bench-original-iq2xs-dual-mmap.sh
 scripts/52-bench-v100-contract-c2-performance.sh
+scripts/53-bench-q4-v100-contract-c2-performance.sh
 ```
 
 `scripts/49-run-original-iq2xs-dual-mmap.sh` is an initial container-creation script. It intentionally refuses to replace existing agent containers. For routine boots, use `docker start` as shown above.
@@ -331,6 +332,128 @@ Therefore:
 - a full concurrent 127K-prefix + 1K-plus-output C2 run is demonstrated;
 - the earlier reset was not reproduced by the successful rerun;
 - universal stability under every sustained 128K x2 workload is not claimed.
+
+## Experimental UD-Q4_K_XL result
+
+Strata 0.1.31 was also tested with Unsloth's
+`Qwen3.8-Flash-Next-UD-Q4_K_XL` on the same V100 x2 host.
+
+The downloaded model consisted of four GGUF shards, approximately 104 GB total.
+A native Strata pack of approximately 1.4 GB was generated with
+`tools/iq_pack.py --compat-bf16`.
+
+No `experts.bin` was created. Routed experts were mmap-read directly from the
+original GGUF shards.
+
+The validated experimental topology was:
+
+- Agent A: Tesla V100 16 GB GPU0, CPUs `0-2,6-8`
+- Agent B: Tesla V100 16 GB GPU1, CPUs `3-5,9-11`
+- 131072-token context per agent
+- INT8 KV
+- `kv_resident=32768`
+- `--mmap-experts`
+- `--resident-budget-gib 16` per agent
+- 2692 GPU expert-cache slots per agent
+- approximately 7.85 GiB of expert-cache VRAM per agent
+- shared existing MTP data
+
+Both independent 128K agents loaded successfully and completed concurrent
+inference.
+
+### Q4 formal C2 128K result
+
+The same frozen `V100-PERFORMANCE-C2-128K-v1` workload used for the IQ2_XS
+measurement was run once against the Q4 dual-agent topology.
+
+Contract:
+
+- manifest SHA256: `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`
+- context: 131072 per request
+- output reserve: 4096
+- minimum output: 1024
+- independent Project A + Project B prompts
+- no full-size warmup
+- exactly one measured batch
+- fresh Strata processes before measurement
+
+Successful run on 2026-10-02:
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,924 | 1,341 |
+| TTFT | 850.706 s | 851.149 s |
+| Prefill | **149.4 tok/s** | **149.4 tok/s** |
+| Decode | **3.1 tok/s** | **3.3 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 58.9% | 65.2% |
+| RAM-tier blobs | 204,108 | 157,410 |
+| File-tier blobs | 213,743 | 115,566 |
+| File-tier reads | 615,572.4 MB | 294,972.1 MB |
+| Request wall time | 1471.416 s | 1257.075 s |
+
+Batch-level result:
+
+~~~text
+submission_skew_s = 0.003769
+batch_wall_s      = 1471.425
+decode_overlap_s  = 405.926
+both_busy_samples = 1974
+both_answering    = 1974
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+The Q4 run therefore demonstrated that `UD-Q4_K_XL` can technically run as two
+independent 128K Strata agents on two Tesla V100 16 GB GPUs.
+
+Performance, however, was substantially below the validated IQ2_XS topology.
+
+For the same formal C2 workload:
+
+| Model | Prefill A/B | Decode A/B | Batch wall |
+|---|---:|---:|---:|
+| IQ2_XS | 700.5 / 714.0 tok/s | 21.2 / 22.5 tok/s | 247.933 s |
+| UD-Q4_K_XL | 149.4 / 149.4 tok/s | 3.1 / 3.3 tok/s | 1471.425 s |
+
+Relative to IQ2_XS, the Q4 experiment was approximately:
+
+- 4.7x slower in long-context prefill
+- 6.4-6.8x slower in decode
+- 5.9x longer in total batch wall time
+- approximately 14.2 minutes TTFT per request
+
+The Q4 topology also placed substantial pressure on the 64 GB host memory.
+With two 16 GiB resident expert tiers, the 4 GiB swap file approached
+saturation during the 128K concurrent workload, while large amounts of expert
+data continued to be served from the GGUF file tier.
+
+The result is therefore recorded as a successful compatibility and feasibility
+test, but `UD-Q4_K_XL` is not considered practical for the intended dual-agent
+128K workload on this P520.
+
+IQ2_XS remains the preferred deployment for this machine.
+
+Local result directory:
+
+~~~text
+results/c2-q4-v100-contract-20261002-164957
+~~~
+
+The result directory is excluded by the repository's `results/` gitignore rule.
+The measured `summary.json` SHA256 is:
+
+~~~text
+f5f6427eb063af3ff61f7e2090219ca36f32c0d4f0bd758b3afdd7bb4f74d6dc
+~~~
+
+The Q4 GGUF files and generated pack were removed after testing, recovering
+approximately 105 GB of model-NVMe capacity. The Q4 benchmark harness and
+launcher are retained for reproducibility.
 
 ## Build image
 
