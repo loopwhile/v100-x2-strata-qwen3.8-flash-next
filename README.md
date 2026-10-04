@@ -1,6 +1,6 @@
 # V100 x2 + Strata + Qwen3.8-Flash-Next
 
-Experimental Docker-first deployment and benchmark harness for running the original Qwen3.8-Flash-Next IQ2_XS model on a Lenovo ThinkStation P520 with two Tesla V100 16 GB GPUs.
+Experimental Docker-first deployment and benchmark harness for running and comparing the original Qwen3.8-Flash-Next quantizations on a Lenovo ThinkStation P520 with two Tesla V100 16 GB GPUs. IQ2_XS remains the preferred deployment; IQ3_XXS and IQ3_S are also measured below.
 
 ## Current validated state
 
@@ -30,7 +30,7 @@ The current preferred topology is **two independent 128K mmap agents**, one per 
 
 ## Model
 
-Current model:
+Preferred deployment:
 
 - **Original Qwen3.8-Flash-Next IQ2_XS**
 - source: `ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF`
@@ -311,6 +311,151 @@ This does **not** mean the system is cache-free overall:
 - prompt working buffers can borrow expert-cache VRAM.
 
 These cache layers must not be conflated.
+
+## IQ3_XXS and IQ3_S formal C2 128K comparison
+
+On 2026-10-04, the same frozen `V100-PERFORMANCE-C2-128K-v1` workload was
+run against original Qwen3.8-Flash-Next IQ3_XXS and IQ3_S native packs.
+
+The comparison kept the following controls aligned with the IQ2_XS C2 run:
+
+- Strata 0.1.31, commit `9259cad4cfa3543cd3b8decab5962672b968c649`
+- two independent one-V100 agents
+- Agent A on GPU0 / CPUs `0-2,6-8`; Agent B on GPU1 / CPUs `3-5,9-11`
+- 131072-token context per request
+- INT8 KV with `kv_resident=32768`
+- GGUF-in-place `--mmap-experts`, with no `experts.bin`
+- `--prefill auto`
+- `--spec 4 --spec-min-p 0.5`
+- shared existing MTP data
+- `STRATA_PROMPT_ATTN_OLD=1`
+- fresh Strata processes, no full-size warmup
+- prefix `cache_n=0` and `cached_tokens=0`
+- the same frozen manifest SHA256:
+  `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`
+
+The C2 harness now accepts `--expected-model-a` and `--expected-model-b` so
+the same workload runner can validate non-IQ2_XS model names without changing
+the frozen workload or its materialization.
+
+### IQ3_XXS result
+
+Successful run on 2026-10-04:
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,627 | 2,506 |
+| TTFT | 206.324 s | 202.460 s |
+| Prefill | **617.1 tok/s** | **629.0 tok/s** |
+| Decode | **10.9 tok/s** | **12.0 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 74.8% | 77.5% |
+| File-tier reads reported by Strata | 352,725.5 MB | 481,364.7 MB |
+| Request wall time | 355.536 s | 411.259 s |
+
+Batch-level result:
+
+~~~text
+submission_skew_s = 0.003845
+batch_wall_s      = 411.269
+decode_overlap_s  = 149.212
+both_busy_samples = 734
+both_answering    = 734
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+Local result directory:
+
+~~~text
+results/c2-iq3xxs-v100-contract-20261004-151015
+~~~
+
+### IQ3_S result
+
+Successful run on 2026-10-04:
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,872 | 1,515 |
+| TTFT | 213.225 s | 209.501 s |
+| Prefill | **597.0 tok/s** | **607.8 tok/s** |
+| Decode | **10.1 tok/s** | **11.4 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 74.0% | 78.2% |
+| File-tier reads reported by Strata | 483,553.9 MB | 331,848.4 MB |
+| Request wall time | 398.902 s | 342.008 s |
+
+Batch-level result:
+
+~~~text
+submission_skew_s = 0.003909
+batch_wall_s      = 398.911
+decode_overlap_s  = 128.779
+both_busy_samples = 633
+both_answering    = 633
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+Local result directory:
+
+~~~text
+results/c2-iq3s-v100-contract-20261004-145554
+~~~
+
+### Quantization comparison
+
+Averaging the two agents' engine-reported rates gives:
+
+| Model | Avg prefill | Avg decode | Avg expert hit |
+|---|---:|---:|---:|
+| IQ2_XS | **707.3 tok/s** | **21.85 tok/s** | **88.95%** |
+| IQ3_XXS | **623.1 tok/s** | **11.45 tok/s** | **76.15%** |
+| IQ3_S | **602.4 tok/s** | **10.75 tok/s** | **76.10%** |
+
+Relative to IQ2_XS under this C2 topology:
+
+- IQ3_XXS prefill was about 11.9% lower and decode about 47.6% lower.
+- IQ3_S prefill was about 14.8% lower and decode about 50.8% lower.
+- Both IQ3 variants averaged about 76.1% expert-cache hit rate, roughly 12.8
+  percentage points below IQ2_XS.
+- IQ3_XXS was only about 3.4% faster in average prefill and 6.5% faster in
+  average decode than IQ3_S in these single measured batches.
+
+The similar IQ3_XXS and IQ3_S expert-hit rates, together with their much lower
+decode throughput than IQ2_XS, are consistent with an expert-residency /
+miss-path bottleneck once the working set grows beyond the IQ2_XS case. This
+benchmark does not isolate that mechanism as the sole cause.
+
+Host-memory exhaustion was not observed in either IQ3 run. The IQ3_S run ended
+with about 49 GiB available RAM and 4.8 MiB of swap in use; the IQ3_XXS run
+ended with about 49 GiB available and 29.6 MiB of swap in use. End-of-run GPU
+temperatures were 53/46 C for IQ3_S and 51/48 C for IQ3_XXS, so these completed
+runs do not show evidence of thermal throttling as the dominant limitation.
+
+The reported `file_mb` counters can greatly exceed the physical GGUF size and
+should be treated as Strata's cumulative file-tier traffic metric, not as the
+size of the model or a direct measurement of physical NVMe bytes read.
+
+Storage is one remaining uncontrolled variable in the cross-quant comparison:
+IQ3_XXS was stored under `/srv/models/strata-iq3xxs` on the dedicated model
+NVMe, while IQ3_S was stored under `/models/strata-iq3s` on the root NVMe.
+Therefore the table is a controlled workload/runtime comparison, but not a
+strict quant-only storage A/B.
+
+Under the current Strata 0.1.31 dual-agent topology, IQ2_XS remains the
+preferred performance configuration. No direct model-quality benchmark has
+been run, so these measurements make no quality claim for IQ2_XS, IQ3_XXS, or
+IQ3_S.
 
 ## Stability note
 
