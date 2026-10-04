@@ -261,6 +261,8 @@ def main() -> int:
     ap.add_argument("--config", type=Path, default=Path("/iq2/config/strata-iq2xs-agent-a.json"))
     ap.add_argument("--manifest", type=Path, default=ROOT / "bench/workloads/v100-performance-v1.json")
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--expected-model-a", default="qwen3.8-flash-next-iq2_xs-mmap-a")
+    ap.add_argument("--expected-model-b", default="qwen3.8-flash-next-iq2_xs-mmap-b")
     args = ap.parse_args()
 
     args.out.mkdir(parents=True, exist_ok=False)
@@ -278,8 +280,8 @@ def main() -> int:
         raise SystemExit("workload output contract changed")
 
     for base, expected in (
-        (args.url_a, "qwen3.8-flash-next-iq2_xs-mmap-a"),
-        (args.url_b, "qwen3.8-flash-next-iq2_xs-mmap-b"),
+        (args.url_a, args.expected_model_a),
+        (args.url_b, args.expected_model_b),
     ):
         h = get_json(base + "/health")
         if h.get("status") != "ok" or not h.get("loaded") or h.get("model") != expected:
