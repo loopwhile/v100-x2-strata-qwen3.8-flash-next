@@ -26,7 +26,7 @@ Runtime:
 - `STRATA_PROMPT_ATTN_OLD=1` retained for the conservative Volta prompt-attention path
 - the W-2135 does not satisfy Strata's AVX-512 IQ fast-path requirements, so IQ expert CPU work uses AVX2
 
-Stage 3-A also validated a separate V100-optimized comparison image without replacing the stable deployment:
+Stage 3-A and Stage 3-B also validated a separate V100-optimized comparison image without replacing the preserved stable deployment:
 
 - image: `strata-v100-jmnargi:9d77749`
 - source fork: `jmnargi/Strata-V100`
@@ -34,9 +34,11 @@ Stage 3-A also validated a separate V100-optimized comparison image without repl
 - Strata engine: `0.1.36`
 - CUDA Toolkit 12.9.1, `sm_70`, text-only
 - uses the fork's native Volta paths; `STRATA_PROMPT_ATTN_OLD=1` is **not** set
-- reuses the same physical GGUF files, native packs, MTP data, frozen C2 workload and runtime arguments used by the 0.1.31 comparison
+- reuses the same physical GGUF files, native packs, MTP data and frozen C2 workload used by the 0.1.31 comparison
+- Stage 3-A uses CLI `--spec 4 --spec-min-p 0.5`, which the fork reports as effective `spec=6 / mtp_max=4 / lookup=3`
+- Stage 3-B tests CLI `--spec 8 --spec-min-p 0.7` plus `STRATA_EXPERT_PAIR=1`, reported as effective `spec=8 / mtp_max=8 / lookup=3`
 
-The current preferred production topology remains **two independent 128K mmap agents**, one per V100, on the stable `strata-v100:0.1.31` image.
+The preserved day-to-day deployment remains **two independent 128K mmap agents**, one per V100, on `strata-v100:0.1.31`. For performance work, however, the validated 0.1.36 V100 fork is the preferred engine candidate because it materially improves long-context prefill and TTFT across all three measured quantizations. Stage 3-A settings remain the conservative common tuning recommendation; Stage 3-B did not materially improve IQ3 decode.
 
 ## Model
 
@@ -500,8 +502,8 @@ B: prompt=126968 sha=5a19042f67dd7702e843595467e1d6c2b96414f565b0fbfa8036590709d
 
 The engine reports `spec=6`, `mtp_max=4`, `lookup=3`,
 `spec_min_p=0.50` under these arguments, as it did in the earlier baseline
-runs. Stage 3-B tuning such as `spec 8 / spec-min-p 0.70` has **not** yet been
-applied.
+runs. Stage 3-B, documented below, separately evaluates the higher speculative
+window and paired-expert kernel without changing the Stage 3-A measurements.
 
 ### Stage 3-A IQ2_XS
 
@@ -675,6 +677,229 @@ is stronger because each pair reused the same physical model files.
 No direct model-quality benchmark has been run. The performance ordering under
 this dual independent 128K Stage 3-A topology is currently IQ2_XS first,
 IQ3_XXS second and IQ3_S third.
+
+## Stage 3-B: speculative-window and paired-expert tuning
+
+Stage 3-B kept the pinned 0.1.36 V100 engine, hardware, model files, native
+packs, MTP data, CPU affinity, 131072 context, INT8 KV,
+`kv_resident=32768`, mmap experts, `--prefill auto`, frozen C2 workload,
+fresh-process policy and no-warmup policy unchanged from Stage 3-A.
+
+Only the following tuning bundle changed:
+
+~~~text
+Stage 3-A CLI:
+  --spec 4
+  --spec-min-p 0.5
+  STRATA_EXPERT_PAIR unset
+
+Stage 3-B CLI / environment:
+  --spec 8
+  --spec-min-p 0.7
+  STRATA_EXPERT_PAIR=1
+~~~
+
+Because suffix lookup remains enabled by default in the pinned fork, the Stage
+3-B engine reports:
+
+~~~text
+spec=8
+mtp_max=8
+lookup=3
+spec_min_p=0.70
+~~~
+
+The formal C2 prompts remained identical to the earlier stages:
+
+~~~text
+A: prompt=126967 sha=882a3617750ab8dbcb61d3e8e1d42641555a6b1450d060d7bb22a4f1161670b6
+B: prompt=126968 sha=5a19042f67dd7702e843595467e1d6c2b96414f565b0fbfa8036590709dba557
+~~~
+
+All three Stage 3-B batches passed the mechanical contract, active-overlap
+check and post-run health check with `cache_n=0` and `cached_tokens=0`.
+
+### Stage 3-B IQ2_XS
+
+Result directory:
+
+~~~text
+results/c2-jmn3b-iq2xs-v100-contract-20261004-172412
+~~~
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,716 | 1,402 |
+| TTFT | 138.823 s | 136.631 s |
+| Prefill | **918.0 tok/s** | **932.9 tok/s** |
+| Decode | **20.9 tok/s** | **26.9 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 87.0% | 91.8% |
+| Strata `file_mb` | 143,435.4 MB | 71,357.0 MB |
+| Drafts offered | 1,407 | 1,038 |
+| Drafts accepted | 1,018 | 743 |
+| Draft acceptance | 72.35% | 71.58% |
+| Request wall time | 220.663 s | 188.662 s |
+
+Batch result:
+
+~~~text
+submission_skew_s = 0.004341
+batch_wall_s      = 220.672
+decode_overlap_s  = 49.835
+both_busy_samples = 245
+both_answering    = 245
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+The Stage 3-B IQ2_XS average decode rate was 23.90 tok/s versus 22.20 tok/s in
+Stage 3-A, an apparent +7.7% gain. This result had a wide A/B spread
+(20.9 vs 26.9 tok/s), so it is treated as a promising single-batch result
+rather than a precise isolated gain attributable to one Stage 3-B option.
+
+### Stage 3-B IQ3_XXS
+
+Result directory:
+
+~~~text
+results/c2-jmn3b-iq3xxs-v100-contract-20261004-173816
+~~~
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,555 | 2,499 |
+| TTFT | 157.413 s | 155.286 s |
+| Prefill | **809.4 tok/s** | **820.7 tok/s** |
+| Decode | **13.1 tok/s** | **12.4 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 78.3% | 76.8% |
+| Strata `file_mb` | 265,592.9 MB | 470,762.8 MB |
+| Drafts offered | 1,348 | 2,194 |
+| Drafts accepted | 934 | 1,545 |
+| Draft acceptance | 69.29% | 70.42% |
+| Request wall time | 276.226 s | 356.903 s |
+
+Batch result:
+
+~~~text
+submission_skew_s = 0.003900
+batch_wall_s      = 356.913
+decode_overlap_s  = 118.813
+both_busy_samples = 585
+both_answering    = 585
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+Average decode was 12.75 tok/s versus 12.70 tok/s in Stage 3-A, effectively
+unchanged in this single-batch comparison. The longer Stage 3-B batch wall is
+not a like-for-like decode-speed regression because Agent B generated 2,499
+output tokens in Stage 3-B versus 2,036 in Stage 3-A.
+
+### Stage 3-B IQ3_S
+
+Result directory:
+
+~~~text
+results/c2-jmn3b-iq3s-v100-contract-20261004-175414
+~~~
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 2,224 | 1,920 |
+| TTFT | 173.697 s | 174.803 s |
+| Prefill | **733.5 tok/s** | **728.8 tok/s** |
+| Decode | **9.9 tok/s** | **11.5 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 70.3% | 76.7% |
+| Strata `file_mb` | 616,080.3 MB | 424,628.4 MB |
+| Drafts offered | 1,900 | 1,592 |
+| Drafts accepted | 1,446 | 1,057 |
+| Draft acceptance | 76.11% | 66.39% |
+| Request wall time | 397.917 s | 342.194 s |
+
+Batch result:
+
+~~~text
+submission_skew_s = 0.003878
+batch_wall_s      = 397.931
+decode_overlap_s  = 167.391
+both_busy_samples = 823
+both_answering    = 823
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+The run finished healthy. Swap usage rose from about 68 MiB before the run to
+about 403 MiB after it, while about 49 GiB of RAM remained available; this was
+not a host-memory-exhaustion event.
+
+### Stage 2 vs Stage 3-A vs Stage 3-B
+
+Averaging the two agents' engine-reported rates:
+
+| Quant | Stage | Avg prefill | Avg decode | Avg TTFT | Avg expert hit |
+|---|---|---:|---:|---:|---:|
+| IQ2_XS | Stage 2 / 0.1.31 | 707.25 tok/s | 21.85 tok/s | 180.05 s | 88.95% |
+| IQ2_XS | Stage 3-A / 0.1.36 | 909.90 tok/s | 22.20 tok/s | 140.09 s | 88.75% |
+| IQ2_XS | **Stage 3-B / 0.1.36 tuned** | **925.45 tok/s** | **23.90 tok/s** | **137.73 s** | **89.40%** |
+| IQ3_XXS | Stage 2 / 0.1.31 | 623.05 tok/s | 11.45 tok/s | 204.39 s | 76.15% |
+| IQ3_XXS | Stage 3-A / 0.1.36 | 790.95 tok/s | 12.70 tok/s | 161.08 s | **79.35%** |
+| IQ3_XXS | **Stage 3-B / 0.1.36 tuned** | **815.05 tok/s** | **12.75 tok/s** | **156.35 s** | 77.55% |
+| IQ3_S | Stage 2 / 0.1.31 | 602.40 tok/s | **10.75 tok/s** | 211.36 s | **76.10%** |
+| IQ3_S | Stage 3-A / 0.1.36 | 721.30 tok/s | 10.65 tok/s | 176.62 s | 75.45% |
+| IQ3_S | **Stage 3-B / 0.1.36 tuned** | **731.15 tok/s** | 10.70 tok/s | **174.25 s** | 73.50% |
+
+Stage 3-B relative to Stage 3-A:
+
+| Quant | Prefill change | Decode change | TTFT change | Expert-hit change |
+|---|---:|---:|---:|---:|
+| IQ2_XS | +1.7% | **+7.7%** | -1.7% | +0.65 pp |
+| IQ3_XXS | +3.0% | **+0.4%** | -2.9% | -1.80 pp |
+| IQ3_S | +1.4% | **+0.5%** | -1.3% | -1.95 pp |
+
+Stage 3-B therefore does **not** resolve the IQ3 decode slowdown. IQ3_XXS and
+IQ3_S decode changed by only about +0.4% and +0.5%, respectively, while their
+expert-cache hit rates declined. Draft acceptance remained roughly around
+70% across the three quantizations, so the IQ3 decode gap is not explained
+simply by a failure to accept speculative drafts.
+
+The remaining evidence is more consistent with the IQ3 formats paying higher
+expert execution and/or miss-path costs under this host/GPU topology. The
+benchmark does not isolate expert format cost, cache residency, CPU-to-GPU
+transfer, filesystem traffic or another mechanism as the sole cause.
+
+### Current recommendation after Stage 3-B
+
+- **Engine:** use the pinned 0.1.36 V100 fork as the preferred performance
+  candidate. Its long-context prefill and TTFT gains over the 0.1.31 baseline
+  are large and repeat across all three quantizations.
+- **Common tuning:** retain Stage 3-A `--spec 4 --spec-min-p 0.5` with
+  `STRATA_EXPERT_PAIR` unset as the conservative common recommendation.
+  Stage 3-B adds little or no decode benefit to IQ3 and reduces IQ3 expert-hit
+  rate.
+- **IQ2_XS:** Stage 3-B is worth preserving as an optional high-performance
+  candidate because its single measured batch averaged 23.90 tok/s decode,
+  but the wide A/B spread means the +7.7% average gain should not be treated as
+  a precise isolated effect.
+- **IQ3:** IQ3_XXS remains the faster IQ3 choice. IQ3_S would need a separately
+  measured quality advantage to justify its lower throughput.
+- **Overall performance:** IQ2_XS remains the clear throughput winner on this
+  P520. No direct model-quality benchmark has been run, so this conclusion is
+  performance-only.
 
 ## Stability note
 
