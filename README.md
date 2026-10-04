@@ -26,7 +26,17 @@ Runtime:
 - `STRATA_PROMPT_ATTN_OLD=1` retained for the conservative Volta prompt-attention path
 - the W-2135 does not satisfy Strata's AVX-512 IQ fast-path requirements, so IQ expert CPU work uses AVX2
 
-The current preferred topology is **two independent 128K mmap agents**, one per V100.
+Stage 3-A also validated a separate V100-optimized comparison image without replacing the stable deployment:
+
+- image: `strata-v100-jmnargi:9d77749`
+- source fork: `jmnargi/Strata-V100`
+- pinned commit: `9d7774919e26d235359bc2c3001f61f607eb288d`
+- Strata engine: `0.1.36`
+- CUDA Toolkit 12.9.1, `sm_70`, text-only
+- uses the fork's native Volta paths; `STRATA_PROMPT_ATTN_OLD=1` is **not** set
+- reuses the same physical GGUF files, native packs, MTP data, frozen C2 workload and runtime arguments used by the 0.1.31 comparison
+
+The current preferred production topology remains **two independent 128K mmap agents**, one per V100, on the stable `strata-v100:0.1.31` image.
 
 ## Model
 
@@ -178,6 +188,7 @@ scripts/50-smoke-original-iq2xs-dual-mmap.sh
 scripts/51-bench-original-iq2xs-dual-mmap.sh
 scripts/52-bench-v100-contract-c2-performance.sh
 scripts/53-bench-q4-v100-contract-c2-performance.sh
+scripts/54-docker-build-jmnargi-v100.sh
 ```
 
 `scripts/49-run-original-iq2xs-dual-mmap.sh` is an initial container-creation script. It intentionally refuses to replace existing agent containers. For routine boots, use `docker start` as shown above.
@@ -457,6 +468,214 @@ preferred performance configuration. No direct model-quality benchmark has
 been run, so these measurements make no quality claim for IQ2_XS, IQ3_XXS, or
 IQ3_S.
 
+## Stage 3-A: Strata-V100 0.1.36 engine comparison
+
+Stage 3-A repeated the same three-quant C2 comparison with the V100-focused
+`jmnargi/Strata-V100` fork while preserving the validated 0.1.31 image and
+model data.
+
+Candidate engine:
+
+- fork: `jmnargi/Strata-V100`
+- pinned commit: `9d7774919e26d235359bc2c3001f61f607eb288d`
+- engine version: `0.1.36`
+- image: `strata-v100-jmnargi:9d77749`
+- CUDA Toolkit 12.9.1
+- `CMAKE_CUDA_ARCHITECTURES=70`
+- text-only / vision disabled
+- no old 0.1.31 Volta compatibility patches
+- no `STRATA_PROMPT_ATTN_OLD=1`; the fork's native Volta prompt path is used
+
+The host, two-agent topology, CPU pinning, 131072 context, INT8 KV,
+`kv_resident=32768`, GGUF-in-place `--mmap-experts`, native packs, shared
+MTP data, `--prefill auto`, `--spec 4 --spec-min-p 0.5`, frozen workload,
+fresh-process policy and no-warmup policy were kept aligned with Stage 2.
+The prompt materialization was also verified byte-for-byte against the Stage 2
+contract:
+
+~~~text
+A: prompt=126967 sha=882a3617750ab8dbcb61d3e8e1d42641555a6b1450d060d7bb22a4f1161670b6
+B: prompt=126968 sha=5a19042f67dd7702e843595467e1d6c2b96414f565b0fbfa8036590709dba557
+~~~
+
+The engine reports `spec=6`, `mtp_max=4`, `lookup=3`,
+`spec_min_p=0.50` under these arguments, as it did in the earlier baseline
+runs. Stage 3-B tuning such as `spec 8 / spec-min-p 0.70` has **not** yet been
+applied.
+
+### Stage 3-A IQ2_XS
+
+Result directory:
+
+~~~text
+results/c2-jmn-iq2xs-v100-contract-20261004-162142
+~~~
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,664 | 1,066 |
+| TTFT | 141.565 s | 138.605 s |
+| Prefill | **900.1 tok/s** | **919.7 tok/s** |
+| Decode | **21.7 tok/s** | **22.7 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 88.3% | 89.2% |
+| Strata `file_mb` | 129,125.9 MB | 75,486.3 MB |
+| Request wall time | 218.031 s | 185.579 s |
+
+Batch result:
+
+~~~text
+submission_skew_s = 0.003925
+batch_wall_s      = 218.039
+decode_overlap_s  = 44.011
+both_busy_samples = 216
+both_answering    = 216
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+The fork allocated 7281 expert slots, approximately 9.75 GiB of expert-cache
+VRAM, per IQ2_XS agent.
+
+### Stage 3-A IQ3_XXS
+
+Result directory:
+
+~~~text
+results/c2-jmn-iq3xxs-v100-contract-20261004-163227
+~~~
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,873 | 2,036 |
+| TTFT | 161.681 s | 160.488 s |
+| Prefill | **788.0 tok/s** | **793.9 tok/s** |
+| Decode | **12.2 tok/s** | **13.2 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 78.5% | 80.2% |
+| Strata `file_mb` | 338,595.7 MB | 340,658.8 MB |
+| Request wall time | 314.492 s | 314.591 s |
+
+Batch result:
+
+~~~text
+submission_skew_s = 0.003937
+batch_wall_s      = 314.595
+decode_overlap_s  = 152.811
+both_busy_samples = 750
+both_answering    = 750
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+The fork allocated 5690 expert slots, approximately 9.22 GiB of expert-cache
+VRAM, per IQ3_XXS agent.
+
+### Stage 3-A IQ3_S
+
+Result directory:
+
+~~~text
+results/c2-jmn-iq3s-v100-contract-20261004-164626
+~~~
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,495 | 1,529 |
+| TTFT | 177.805 s | 175.435 s |
+| Prefill | **716.4 tok/s** | **726.2 tok/s** |
+| Decode | **9.9 tok/s** | **11.4 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 72.7% | 78.2% |
+| Strata `file_mb` | 398,612.4 MB | 332,413.3 MB |
+| Request wall time | 327.930 s | 309.338 s |
+
+Batch result:
+
+~~~text
+submission_skew_s = 0.004141
+batch_wall_s      = 327.938
+decode_overlap_s  = 131.529
+both_busy_samples = 647
+both_answering    = 647
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+The IQ3_S run ended with about 48 GiB available RAM, about 69 MiB of swap in
+use, and final GPU temperatures of 50/45 C at 1200 MHz.
+
+### Stage 2 vs Stage 3-A
+
+Averaging the two agents' engine-reported rates:
+
+| Quant | 0.1.31 prefill | 0.1.36 prefill | Change | 0.1.31 decode | 0.1.36 decode | Change | 0.1.31 hit | 0.1.36 hit |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| IQ2_XS | 707.25 | **909.90** | **+28.7%** | 21.85 | **22.20** | **+1.6%** | 88.95% | 88.75% |
+| IQ3_XXS | 623.05 | **790.95** | **+26.9%** | 11.45 | **12.70** | **+10.9%** | 76.15% | **79.35%** |
+| IQ3_S | 602.40 | **721.30** | **+19.7%** | **10.75** | 10.65 | **-0.9%** | 76.10% | 75.45% |
+
+Mean TTFT also improved:
+
+| Quant | 0.1.31 mean TTFT | 0.1.36 mean TTFT | Change |
+|---|---:|---:|---:|
+| IQ2_XS | 180.05 s | **140.09 s** | **-22.2%** |
+| IQ3_XXS | 204.39 s | **161.08 s** | **-21.2%** |
+| IQ3_S | 211.36 s | **176.62 s** | **-16.4%** |
+
+The strongest repeatable Stage 3-A improvement is long-context prefill:
+all three quantizations improved, with IQ2_XS and IQ3_XXS gaining about
+27-29%. This is consistent with the fork's V100-oriented prompt path being
+meaningful on this 128K workload.
+
+Decode behavior is different. IQ2_XS changed little, IQ3_XXS improved about
+10.9%, and IQ3_S was effectively unchanged in this single measured batch.
+The IQ3 decode cliff therefore remains after the engine swap:
+
+| Stage 3-A quant | Avg prefill | Avg decode | Avg expert hit |
+|---|---:|---:|---:|
+| IQ2_XS | **909.90 tok/s** | **22.20 tok/s** | **88.75%** |
+| IQ3_XXS | 790.95 tok/s | 12.70 tok/s | 79.35% |
+| IQ3_S | 721.30 tok/s | 10.65 tok/s | 75.45% |
+
+Relative to IQ2_XS on the same Stage 3-A engine, IQ3_XXS decode is about 42.8%
+lower and IQ3_S decode about 52.0% lower. IQ3_XXS is about 9.7% faster than
+IQ3_S in average prefill and about 19.2% faster in average decode in these
+single measured batches.
+
+Therefore the current evidence supports two separate conclusions:
+
+1. the older 0.1.31 engine left substantial V100 long-context prefill
+   performance on the table;
+2. the IQ3 decode slowdown is not explained solely by that older engine,
+   because a large decode gap remains on the V100-optimized fork.
+
+The IQ3_S A/B spread was wider than the IQ3_XXS spread, especially in expert
+hit rate (72.7% vs 78.2%). One measured batch is not enough to attribute that
+spread to a single mechanism.
+
+As in Stage 2, `file_mb` is treated only as Strata's cumulative/logical
+file-tier traffic counter, not physical NVMe bytes read. Cross-quant storage
+also remains uncontrolled: IQ3_XXS is under `/srv/models` while IQ3_S is
+under `/models`. The old-vs-new engine comparison for each individual quant
+is stronger because each pair reused the same physical model files.
+
+No direct model-quality benchmark has been run. The performance ordering under
+this dual independent 128K Stage 3-A topology is currently IQ2_XS first,
+IQ3_XXS second and IQ3_S third.
+
 ## Stability note
 
 During an earlier attempt at the same cold-prefix dual long-context workload, the host abruptly reset while both agents were still in prefill above 100K prompt tokens.
@@ -602,14 +821,35 @@ launcher are retained for reproducibility.
 
 ## Build image
 
-Rebuild only when intentionally changing the Strata/CUDA image:
+Rebuild the validated 0.1.31 image only when intentionally changing the stable
+Strata/CUDA image:
 
 ```bash
 git pull --ff-only
 bash scripts/20-docker-build-v100.sh
 ```
 
-The image build is Docker-contained. Do not install a host CUDA toolkit for this deployment.
+Build the separate Stage 3-A V100-fork image with:
+
+```bash
+bash scripts/54-docker-build-jmnargi-v100.sh
+```
+
+That produces:
+
+~~~text
+strata-v100-jmnargi:9d77749
+~~~
+
+The Stage 3-A Dockerfile deliberately uses CUDA 12.9.1 instead of the fork's
+default CUDA 13 image so that `sm_70` can be compiled. It does **not** apply
+the old 0.1.31 `setup.py` admission patch, `patch_volta_prompt_attn.py`, or
+`STRATA_EXPERIMENTAL_SM60=ON`: the pinned fork already has native V100 support.
+The helper also avoids Dockerfile Python heredocs because this P520 uses the
+legacy Docker builder.
+
+Both image builds are Docker-contained. Do not install a host CUDA toolkit for
+this deployment.
 
 ## Safety / preservation policy
 
@@ -629,6 +869,7 @@ The formal C2 script intentionally restarts the two existing agents to clear pro
 ## References
 
 - Strata: https://github.com/Niko1221/Strata
+- Strata-V100 fork used for Stage 3-A: https://github.com/jmnargi/Strata-V100
 - Volta issue: https://github.com/Niko1221/Strata/issues/236
 - V100 experimental PR: https://github.com/Niko1221/Strata/pull/130
 - V100 multi-GPU measurements: https://github.com/Niko1221/Strata/pull/139
