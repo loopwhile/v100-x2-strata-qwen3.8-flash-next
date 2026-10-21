@@ -11,7 +11,9 @@ Stage 4 benchmarking has been executed and verified in isolated environments wit
 - [Repository agent guardrails](AGENTS.md)
 - [Stage 4-0 inventory receipt](artifacts/stage4-results-20261021/stage4-0-inventory-receipt.md)
 - [Stage 4-A build receipt (0.1.44.1)](artifacts/stage4-results-20261021/stage4-a-build-receipt.md) & [C2 benchmark summary](artifacts/stage4-results-20261021/stage4-a-c2-benchmark-summary.md)
-- [Stage 4-B build receipt (0.1.47)](artifacts/stage4-results-20261021/stage4-b-build-receipt.md) & [C2 benchmark summary](artifacts/stage4-results-20261021/stage4-b-c2-benchmark-summary.md)
+- [Stage 4-B build receipt (0.1.47)](artifacts/stage4-results-20261021/stage4-b-build-receipt.md) & [IQ2_XS C2 summary](artifacts/stage4-results-20261021/stage4-b-c2-benchmark-summary.md)
+- [Stage 4-B IQ3_XXS C2 summary](artifacts/stage4-results-20261021/stage4-b-iq3xxs-c2-benchmark-summary.md)
+- [Stage 4-B IQ3_S C2 summary](artifacts/stage4-results-20261021/stage4-b-iq3s-c2-benchmark-summary.md)
 - [Stage 4-C IQ2_XS C2 summary](artifacts/stage4-results-20261021/stage4-c-c2-benchmark-summary.md)
 - [Stage 4-C IQ3_XXS C2 summary](artifacts/stage4-results-20261021/stage4-c-iq3xxs-c2-benchmark-summary.md)
 - [Stage 4-C IQ3_S C2 summary](artifacts/stage4-results-20261021/stage4-c-iq3s-c2-benchmark-summary.md)
@@ -26,14 +28,22 @@ Stage 4 benchmarking has been executed and verified in isolated environments wit
 | **Stage 4-B** (Upstream Strata v0.1.47 / v0.2.2) | 981.55 | 129.60 | 38.50 | 93.55% | **+73.42%** |
 | **Stage 4-C** (0.1.47 + `STRATA_SM70_TABLE=1`) | **995.70** | **127.77** | **39.60** | **93.10%** | **+78.38% 🚀🚀** |
 
-#### 2. Cross-Quant Comparison under Stage 4-C (Upstream 0.1.47 + `STRATA_SM70_TABLE=1`)
-| Quantization | Prefill (tok/s) | TTFT (s) | Decode (tok/s) | Expert Hit | vs Stage 3-A Decode |
-|---|---|---|---|---|---|
-| **IQ2_XS** | **995.70** | **127.77** | **39.60** | **93.10%** | **+78.38%** (22.20 -> 39.60 tok/s) |
-| **IQ3_XXS** | 630.70 | 201.60 | **26.05** | 86.90% | **+105.12% 🚀** (12.70 -> 26.05 tok/s) |
-| **IQ3_S** | 468.05 | 271.60 | **20.55** | 81.50% | **+92.96% 🚀** (10.65 -> 20.55 tok/s) |
+#### 2. Cross-Quant Comparison: Stage 4-B (Vanilla 0.1.47) vs Stage 4-C (0.1.47 + SM70_TABLE)
+| Quantization | Stage | Prefill (tok/s) | TTFT (s) | Decode (tok/s) | Expert Hit | vs Stage 3-A Decode |
+|---|---|---|---|---|---|---|
+| **IQ2_XS** | **Stage 4-B (vanilla)** | 981.55 | 129.60 | 38.50 | 93.55% | +73.42% |
+| **IQ2_XS** | **Stage 4-C (SM70_TABLE)** | **995.70** | **127.77** | **39.60** | **93.10%** | **+78.38% 🚀** |
+| **IQ3_XXS** | **Stage 4-B (vanilla)** | **725.50** | **175.27** | **26.15** | 86.30% | **+105.91% 🚀🚀** |
+| **IQ3_XXS** | **Stage 4-C (SM70_TABLE)** | 630.70 | 201.60 | 26.05 | 86.90% | +105.12% 🚀🚀 |
+| **IQ3_S** | **Stage 4-B (vanilla)** | **535.00** | **237.60** | **21.35** | 81.50% | **+100.47% 🚀🚀** |
+| **IQ3_S** | **Stage 4-C (SM70_TABLE)** | 468.05 | 271.60 | 20.55 | 81.50% | +92.96% 🚀 |
 
-> **Key Finding & Recommendation**: Upstream Strata v0.1.47 with `STRATA_SM70_TABLE=1` (Stage 4-C) completely resolves the historical "IQ3 decode cliff" on Tesla V100. IQ3_XXS and IQ3_S decode speeds both doubled (+105% and +93% respectively) compared to Stage 3-A. For production serving, **IQ2_XS remains the top recommendation** due to its near 1,000 tok/s prefill and ~40 tok/s decode performance. All Stage 3-A, 4-A, 4-B, and 4-C containers remain preserved and stopped for instant reuse.
+> **Key Findings & Engineering Insights**:
+> 1. **IQ3 디코드 절벽 해결의 원인**: IQ3_XXS 및 IQ3_S의 디코드 속도 2배 향상(+100~106%)은 `STRATA_SM70_TABLE=1` 튜닝이 아니라 **Upstream Strata v0.1.47 코어 엔진 자체의 개선** 덕분임이 완전히 입증되었습니다.
+> 2. **양자화별 최적 설정 차이**:
+>    - **IQ2_XS**: `STRATA_SM70_TABLE=1`이 디코드(+1.1 tok/s)와 프리필(+14.1 tok/s) 모두에서 긍정적 효과를 보여 **Stage 4-C가 최적**.
+>    - **IQ3_XXS / IQ3_S**: `STRATA_SM70_TABLE=1`은 디코드 개선 없이 프리필 속도를 13~15% 저하시키고 TTFT를 26~34초 증가시킵니다. 따라서 IQ3 서빙 시에는 **순정 Stage 4-B가 최적**.
+> 3. **최종 프로덕션 권고**: 전체 서빙 처리량, 레이턴시, GPU VRAM 균형 측면에서 **IQ2_XS + Stage 4-C** 조합이 초당 약 1,000 토큰 프리필과 ~40 토큰 디코드를 달성하여 압도적인 최적 솔루션입니다.
 
 ## Current validated state
 
