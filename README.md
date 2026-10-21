@@ -2,6 +2,16 @@
 
 Experimental Docker-first deployment and benchmark harness for running and comparing the original Qwen3.8-Flash-Next quantizations on a Lenovo ThinkStation P520 with two Tesla V100 16 GB GPUs. IQ2_XS remains the preferred deployment; IQ3_XXS and IQ3_S are also measured below.
 
+## Stage 4 planning (2026-10-21; not yet executed)
+
+**Active user-facing setup:** independent Stage 3-A IQ2_XS agents `strata-jmn-iq2xs-agent-a` and `strata-jmn-iq2xs-agent-b` (Strata 0.1.36), reached from ThinkPad at `127.0.0.1:18080/v1` and `127.0.0.1:18081/v1`. The older 0.1.31 containers/images documented below remain preserved baselines. **Stage 4 has not been built, tested, or promoted.**
+
+- [Stage 4 plan: pinned upstream 0.1.44.1, isolated V100 build, symmetric IQ2_XS 128K C2 comparison, optional 0.1.47](docs/STAGE4_PLAN.md)
+- [Antigravity CLI handoff for ThinkPad E14 → `ssh p520`](docs/STAGE4_ANTIGRAVITY_HANDOFF.md)
+- [Repository agent guardrails](AGENTS.md)
+
+**Power limits and GPU clocks are intentionally unchanged.** Do not change host power settings in Stage 4. Preserve current containers, images, model data, and the ThinkPad tunnel; require an approved window before any test interrupts the existing agents.
+
 ## Current validated state
 
 Host:
@@ -38,7 +48,7 @@ Stage 3-A and Stage 3-B also validated a separate V100-optimized comparison imag
 - Stage 3-A uses CLI `--spec 4 --spec-min-p 0.5`, which the fork reports as effective `spec=6 / mtp_max=4 / lookup=3`
 - Stage 3-B tests CLI `--spec 8 --spec-min-p 0.7` plus `STRATA_EXPERT_PAIR=1`, reported as effective `spec=8 / mtp_max=8 / lookup=3`
 
-The preserved day-to-day deployment remains **two independent 128K mmap agents**, one per V100, on `strata-v100:0.1.31`. For performance work, however, the validated 0.1.36 V100 fork is the preferred engine candidate because it materially improves long-context prefill and TTFT across all three measured quantizations. Stage 3-A settings remain the conservative common tuning recommendation; Stage 3-B did not materially improve IQ3 decode.
+The **preserved 0.1.31 baseline** remains two independent 128K mmap agents, one per V100, on `strata-v100:0.1.31`. The **current user-facing agents**, however, use the validated 0.1.36 V100 fork (see Stage 4 planning above); that engine materially improves long-context prefill and TTFT across all three measured quantizations. Stage 3-A settings remain the conservative common tuning recommendation; Stage 3-B did not materially improve IQ3 decode.
 
 ## Model
 
