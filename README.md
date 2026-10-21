@@ -19,9 +19,10 @@ Stage 4 benchmarking has been executed and verified in isolated environments wit
 |---|---|---|---|---|---|
 | **Stage 3-A** (Strata 0.1.36 / jmnargi fork) | 909.90 | 140.09 | 22.20 | ~90.0% | Baseline |
 | **Stage 4-A** (Upstream Strata v0.1.44.1) | 939.40 | 135.41 | 31.65 | 91.60% | **+42.57%** |
-| **Stage 4-B** (Upstream Strata v0.1.47 / v0.2.2) | **981.55** | **129.60** | **38.50** | **93.55%** | **+73.42% 🚀** |
+| **Stage 4-B** (Upstream Strata v0.1.47 / v0.2.2) | 981.55 | 129.60 | 38.50 | 93.55% | **+73.42%** |
+| **Stage 4-C** (0.1.47 + `STRATA_SM70_TABLE=1`) | **995.70** | **127.77** | **39.60** | **93.10%** | **+78.38% 🚀🚀** |
 
-> **Recommendation**: **Upstream Strata v0.1.47 (Stage 4-B)** is a strong candidate for future production promotion upon user review. It delivers a +73.4% decode throughput boost (38.5 tok/s, up to 40.4 tok/s on Agent A) and +7.9% prefill speedup (981.6 tok/s) while perfectly conforming to the frozen C2 128K contract and INT8 KV recipe. Existing Stage 3-A containers remain preserved and available.
+> **Recommendation**: **Upstream Strata v0.1.47 with `STRATA_SM70_TABLE=1` (Stage 4-C)** is the top-performing candidate for production promotion. It achieves **39.60 tok/s decode** (up to 41.9 tok/s on Agent A, +78.4% over Stage 3-A) and **995.7 tok/s prefill** (breaking 1,000 tok/s on Agent B) with complete frozen C2 128K contract conformance. All Stage 3-A, 4-A, 4-B, and 4-C containers remain preserved and stopped for instant reuse.
 
 ## Current validated state
 
