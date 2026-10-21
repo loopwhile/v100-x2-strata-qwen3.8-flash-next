@@ -125,6 +125,8 @@ docker run --rm \
   /work/bench/c2_v100_contract.py \
     --url-a "$A_URL" \
     --url-b "$B_URL" \
+    --expected-model-a "$A_MODEL" \
+    --expected-model-b "$B_MODEL" \
     --config /iq2/config/strata-jmn-iq2xs-agent-a.json \
     --manifest /work/bench/workloads/v100-performance-v1.json \
     --out "$OUT_CONT"
