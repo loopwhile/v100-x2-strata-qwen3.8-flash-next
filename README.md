@@ -12,9 +12,13 @@ Stage 4 benchmarking has been executed and verified in isolated environments wit
 - [Stage 4-0 inventory receipt](artifacts/stage4-results-20261021/stage4-0-inventory-receipt.md)
 - [Stage 4-A build receipt (0.1.44.1)](artifacts/stage4-results-20261021/stage4-a-build-receipt.md) & [C2 benchmark summary](artifacts/stage4-results-20261021/stage4-a-c2-benchmark-summary.md)
 - [Stage 4-B build receipt (0.1.47)](artifacts/stage4-results-20261021/stage4-b-build-receipt.md) & [C2 benchmark summary](artifacts/stage4-results-20261021/stage4-b-c2-benchmark-summary.md)
+- [Stage 4-C IQ2_XS C2 summary](artifacts/stage4-results-20261021/stage4-c-c2-benchmark-summary.md)
+- [Stage 4-C IQ3_XXS C2 summary](artifacts/stage4-results-20261021/stage4-c-iq3xxs-c2-benchmark-summary.md)
+- [Stage 4-C IQ3_S C2 summary](artifacts/stage4-results-20261021/stage4-c-iq3s-c2-benchmark-summary.md)
 
 ### Stage 4 C2 128K Performance Comparison Summary
 
+#### 1. Engine Evolution (IQ2_XS Primary Arm)
 | Engine / Release | Prefill (tok/s) | TTFT (s) | Decode (tok/s) | Expert Hit | vs Stage 3-A Decode |
 |---|---|---|---|---|---|
 | **Stage 3-A** (Strata 0.1.36 / jmnargi fork) | 909.90 | 140.09 | 22.20 | ~90.0% | Baseline |
@@ -22,7 +26,14 @@ Stage 4 benchmarking has been executed and verified in isolated environments wit
 | **Stage 4-B** (Upstream Strata v0.1.47 / v0.2.2) | 981.55 | 129.60 | 38.50 | 93.55% | **+73.42%** |
 | **Stage 4-C** (0.1.47 + `STRATA_SM70_TABLE=1`) | **995.70** | **127.77** | **39.60** | **93.10%** | **+78.38% 🚀🚀** |
 
-> **Recommendation**: **Upstream Strata v0.1.47 with `STRATA_SM70_TABLE=1` (Stage 4-C)** is the top-performing candidate for production promotion. It achieves **39.60 tok/s decode** (up to 41.9 tok/s on Agent A, +78.4% over Stage 3-A) and **995.7 tok/s prefill** (breaking 1,000 tok/s on Agent B) with complete frozen C2 128K contract conformance. All Stage 3-A, 4-A, 4-B, and 4-C containers remain preserved and stopped for instant reuse.
+#### 2. Cross-Quant Comparison under Stage 4-C (Upstream 0.1.47 + `STRATA_SM70_TABLE=1`)
+| Quantization | Prefill (tok/s) | TTFT (s) | Decode (tok/s) | Expert Hit | vs Stage 3-A Decode |
+|---|---|---|---|---|---|
+| **IQ2_XS** | **995.70** | **127.77** | **39.60** | **93.10%** | **+78.38%** (22.20 -> 39.60 tok/s) |
+| **IQ3_XXS** | 630.70 | 201.60 | **26.05** | 86.90% | **+105.12% 🚀** (12.70 -> 26.05 tok/s) |
+| **IQ3_S** | 468.05 | 271.60 | **20.55** | 81.50% | **+92.96% 🚀** (10.65 -> 20.55 tok/s) |
+
+> **Key Finding & Recommendation**: Upstream Strata v0.1.47 with `STRATA_SM70_TABLE=1` (Stage 4-C) completely resolves the historical "IQ3 decode cliff" on Tesla V100. IQ3_XXS and IQ3_S decode speeds both doubled (+105% and +93% respectively) compared to Stage 3-A. For production serving, **IQ2_XS remains the top recommendation** due to its near 1,000 tok/s prefill and ~40 tok/s decode performance. All Stage 3-A, 4-A, 4-B, and 4-C containers remain preserved and stopped for instant reuse.
 
 ## Current validated state
 
