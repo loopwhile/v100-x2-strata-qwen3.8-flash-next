@@ -2,15 +2,26 @@
 
 Experimental Docker-first deployment and benchmark harness for running and comparing the original Qwen3.8-Flash-Next quantizations on a Lenovo ThinkStation P520 with two Tesla V100 16 GB GPUs. IQ2_XS remains the preferred deployment; IQ3_XXS and IQ3_S are also measured below.
 
-## Stage 4 planning (2026-10-21; not yet executed)
+## Stage 4 execution and results (2026-10-21)
 
-**Active user-facing setup:** independent Stage 3-A IQ2_XS agents `strata-jmn-iq2xs-agent-a` and `strata-jmn-iq2xs-agent-b` (Strata 0.1.36), reached from ThinkPad at `127.0.0.1:18080/v1` and `127.0.0.1:18081/v1`. The older 0.1.31 containers/images documented below remain preserved baselines. **Stage 4 has not been built, tested, or promoted.**
+Stage 4 benchmarking has been executed and verified in isolated environments without modifying live infrastructure or host power settings.
 
-- [Stage 4 plan: pinned upstream 0.1.44.1, isolated V100 build, symmetric IQ2_XS 128K C2 comparison, optional 0.1.47](docs/STAGE4_PLAN.md)
-- [Antigravity CLI handoff for ThinkPad E14 → `ssh p520`](docs/STAGE4_ANTIGRAVITY_HANDOFF.md)
+- [Stage 4 plan](docs/STAGE4_PLAN.md)
+- [Antigravity CLI handoff](docs/STAGE4_ANTIGRAVITY_HANDOFF.md)
 - [Repository agent guardrails](AGENTS.md)
+- [Stage 4-0 inventory receipt](artifacts/stage4-results-20261021/stage4-0-inventory-receipt.md)
+- [Stage 4-A build receipt (0.1.44.1)](artifacts/stage4-results-20261021/stage4-a-build-receipt.md) & [C2 benchmark summary](artifacts/stage4-results-20261021/stage4-a-c2-benchmark-summary.md)
+- [Stage 4-B build receipt (0.1.47)](artifacts/stage4-results-20261021/stage4-b-build-receipt.md) & [C2 benchmark summary](artifacts/stage4-results-20261021/stage4-b-c2-benchmark-summary.md)
 
-**Power limits and GPU clocks are intentionally unchanged.** Do not change host power settings in Stage 4. Preserve current containers, images, model data, and the ThinkPad tunnel; require an approved window before any test interrupts the existing agents.
+### Stage 4 C2 128K Performance Comparison Summary
+
+| Engine / Release | Prefill (tok/s) | TTFT (s) | Decode (tok/s) | Expert Hit | vs Stage 3-A Decode |
+|---|---|---|---|---|---|
+| **Stage 3-A** (Strata 0.1.36 / jmnargi fork) | 909.90 | 140.09 | 22.20 | ~90.0% | Baseline |
+| **Stage 4-A** (Upstream Strata v0.1.44.1) | 939.40 | 135.41 | 31.65 | 91.60% | **+42.57%** |
+| **Stage 4-B** (Upstream Strata v0.1.47 / v0.2.2) | **981.55** | **129.60** | **38.50** | **93.55%** | **+73.42% 🚀** |
+
+> **Recommendation**: **Upstream Strata v0.1.47 (Stage 4-B)** is a strong candidate for future production promotion upon user review. It delivers a +73.4% decode throughput boost (38.5 tok/s, up to 40.4 tok/s on Agent A) and +7.9% prefill speedup (981.6 tok/s) while perfectly conforming to the frozen C2 128K contract and INT8 KV recipe. Existing Stage 3-A containers remain preserved and available.
 
 ## Current validated state
 
