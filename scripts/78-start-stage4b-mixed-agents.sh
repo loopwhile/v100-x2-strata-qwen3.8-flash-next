@@ -7,23 +7,6 @@ IMAGE="strata-v100-upstream:0.1.47"
 A_NAME="strata-s4b-mixed-iq3xxs-agent-a"
 B_NAME="strata-s4b-mixed-iq2xs-agent-b"
 
-# Safety checks: ensure live production agents are not overwritten
-for old in "strata-jmn-iq2xs-agent-a" "strata-jmn-iq2xs-agent-b"; do
-  if docker ps --format '{{.Names}}' | grep -qw "$old"; then
-    echo "ERROR: Preserved serving agent $old is currently RUNNING." >&2
-    echo "       Stopping production agents requires explicit user approval." >&2
-    exit 1
-  fi
-done
-
-# Ensure ports 8080 and 8081 are free
-for p in 8080 8081; do
-  if ss -tlnp 2>/dev/null | grep -q ":$p "; then
-    echo "ERROR: Port $p is already in use on host." >&2
-    exit 1
-  fi
-done
-
 # Reject unrelated image revisions even if the Docker tag was reused.
 EXPECTED_ID="sha256:19c3b72a1097486eeae3fd9b964179a36a1c137615e5c93f6d6e70eacdab8e9d"
 # Check required existing models/packs (never download or repack).
@@ -45,7 +28,33 @@ docker image inspect "$IMAGE" >/dev/null 2>&1 || {
   exit 1
 }
 
-# Never remove prior containers: allow explicit reuse with docker start after inspection.
+# Exact pinned image provenance before any container actions.
+ACTUAL_ID="$(docker image inspect --format '{{.Id}}' "$IMAGE")"
+[ "$ACTUAL_ID" = "$EXPECTED_ID" ] || { echo "ERROR: unexpected image ID: $ACTUAL_ID" >&2; exit 1; }
+if [ "${1:-}" = "--preflight" ]; then
+  echo "[ok] Mixed A/B model assets, config files and pinned Stage 4-B image verified."
+  echo "[ok] Read-only preflight completed; running services and host power untouched."
+  exit 0
+fi
+
+# Creation requires free ports and no existing mixed names. Do NOT delete anything.
+# Safety checks: ensure live production agents are not overwritten
+for old in "strata-jmn-iq2xs-agent-a" "strata-jmn-iq2xs-agent-b"; do
+  if docker ps --format '{{.Names}}' | grep -qw "$old"; then
+    echo "ERROR: Preserved serving agent $old is currently RUNNING." >&2
+    echo "       Stopping production agents requires explicit user approval." >&2
+    exit 1
+  fi
+done
+
+# Ensure ports 8080 and 8081 are free
+for p in 8080 8081; do
+  if ss -tlnp 2>/dev/null | grep -q ":$p "; then
+    echo "ERROR: Port $p is already in use on host." >&2
+    exit 1
+  fi
+done
+
 for c in "$A_NAME" "$B_NAME"; do
   if docker container inspect "$c" >/dev/null 2>&1; then
     echo "ERROR: $c already exists; will NOT replace it. Inspect, or docker start the stopped container." >&2
@@ -54,13 +63,6 @@ for c in "$A_NAME" "$B_NAME"; do
 done
 
 mkdir -p "$ROOT/results/stage4b-mixed/logs"
-ACTUAL_ID="$(docker image inspect --format '{{.Id}}' "$IMAGE")"
-[ "$ACTUAL_ID" = "$EXPECTED_ID" ] || { echo "ERROR: unexpected image ID: $ACTUAL_ID" >&2; exit 1; }
-if [ "${1:-}" = "--preflight" ]; then
-  echo "[ok] Mixed A/B model assets, config files and pinned Stage 4-B image verified."
-  echo "No running containers, power settings or SSH tunnel were changed."
-  exit 0
-fi
 echo "Starting Stage 4-B MIXED IQ3_XXS Agent A on Host GPU 0 (cpus: 0-2,6-8, port: 8080) ..."
 docker run -d \
   --name "$A_NAME" \
@@ -100,7 +102,7 @@ docker run -d \
     --port 8080
 
 echo
-echo "Stage 4-B containers launched. Waiting for health checks ..."
+echo "Stage 4-B MIXED containers launched. Waiting for health checks ..."
 for pair in "A http://127.0.0.1:8080 qwen3.8-flash-next-iq3_xxs-s4b-mixed-a" "B http://127.0.0.1:8081 qwen3.8-flash-next-iq2_xs-s4b-mixed-b"; do
   set -- $pair
   label="$1"
@@ -108,7 +110,7 @@ for pair in "A http://127.0.0.1:8080 qwen3.8-flash-next-iq3_xxs-s4b-mixed-a" "B 
   want="$3"
   echo "Waiting for Agent $label ($url) loaded as $want ..."
   ready=0
-  for _ in $(seq 1 120); do
+  for _ in $(seq 1 600); do
     if curl -fsS "$url/health" 2>/dev/null | python3 -c '
 import json, sys
 want = sys.argv[1]
