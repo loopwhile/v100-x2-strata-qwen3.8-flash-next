@@ -1,101 +1,28 @@
 # V100 x2 + Strata + Qwen3.8-Flash-Next
 
-Experimental Docker-first deployment and benchmark harness for running and comparing Qwen3.8-Flash-Next quantizations on a Lenovo ThinkStation P520 with two Tesla V100 16 GB GPUs.
+Experimental Docker-first deployment and benchmark harness for running and comparing the original Qwen3.8-Flash-Next quantizations on a Lenovo ThinkStation P520 with two Tesla V100 16 GB GPUs. IQ2_XS remains the preferred deployment; IQ3_XXS and IQ3_S are also measured below.
 
----
+## Stage 4 execution and results (2026-10-21)
 
-## 1. Executive Summary & Recommended Deployment
+Stage 4 benchmarking has been executed and verified in isolated environments without modifying live infrastructure or host power settings.
 
-### Production Serving Recommendation
-- **Primary Recommendation**: **IQ2_XS + Stage 4-C (Upstream Strata 0.1.47 + `STRATA_SM70_TABLE=1`)**
-  - **Prefill Speed**: **995.70 tok/s** (near 1,000 tok/s)
-  - **Decode Speed**: **39.60 tok/s** (**+78.38% 🚀** vs Stage 3-A baseline)
-  - **TTFT (Latency to First Token)**: **127.77 s**
-  - **Expert Cache Hit Rate**: **93.10%**
-- **Preserved Serving Baseline**: Stage 3-A (`strata-v100-jmnargi:9d77749`, Strata 0.1.36 fork) on `strata-jmn-iq2xs-agent-a/b` remains preserved and validated as the historical baseline.
+- [Stage 4 plan](docs/STAGE4_PLAN.md)
+- [Antigravity CLI handoff](docs/STAGE4_ANTIGRAVITY_HANDOFF.md)
+- [Repository agent guardrails](AGENTS.md)
+- [Stage 4-0 inventory receipt](artifacts/stage4-results-20261021/stage4-0-inventory-receipt.md)
+- [Stage 4-A build receipt (0.1.44.1)](artifacts/stage4-results-20261021/stage4-a-build-receipt.md) & [C2 benchmark summary](artifacts/stage4-results-20261021/stage4-a-c2-benchmark-summary.md)
+- [Stage 4-B build receipt (0.1.47)](artifacts/stage4-results-20261021/stage4-b-build-receipt.md) & [IQ2_XS C2 summary](artifacts/stage4-results-20261021/stage4-b-c2-benchmark-summary.md)
+- [Stage 4-B IQ3_XXS C2 summary](artifacts/stage4-results-20261021/stage4-b-iq3xxs-c2-benchmark-summary.md)
+- [Stage 4-B IQ3_S C2 summary](artifacts/stage4-results-20261021/stage4-b-iq3s-c2-benchmark-summary.md)
+- [Stage 4-B MIXED C2 summary & root cause analysis](artifacts/stage4-results-20261021/stage4-b-mixed-c2-benchmark-summary.md)
+- [Stage 4-B Mixed AGY handoff](docs/STAGE4B_MIXED_AGY_HANDOFF.md)
+- [Stage 4-C IQ2_XS C2 summary](artifacts/stage4-results-20261021/stage4-c-c2-benchmark-summary.md)
+- [Stage 4-C IQ3_XXS C2 summary](artifacts/stage4-results-20261021/stage4-c-iq3xxs-c2-benchmark-summary.md)
+- [Stage 4-C IQ3_S C2 summary](artifacts/stage4-results-20261021/stage4-c-iq3s-c2-benchmark-summary.md)
 
-### Key Engineering Discoveries
-1. **Upstream Strata 0.1.47 Engine Breakthrough**:
-   Upstream v0.1.47 (Release v0.2.2) delivers massive performance leaps across all models (+73% decode on IQ2_XS, +106% on IQ3_XXS, +100% on IQ3_S).
-2. **IQ3 Decode Cliff Resolution**:
-   The historical "IQ3 decode cliff" on Tesla V100 (where IQ3 decode stalled at 10~12 tok/s) is **completely resolved by Upstream Strata 0.1.47 core engine improvements**, doubling IQ3 decode speeds natively to ~26 tok/s (IQ3_XXS) and ~21 tok/s (IQ3_S).
-3. **Quantization-Specific Tuning Rules**:
-   - **IQ2_XS**: `STRATA_SM70_TABLE=1` provides positive speedups for both prefill (+14 tok/s) and decode (+1.1 tok/s) -> **Stage 4-C is optimal**.
-   - **IQ3_XXS / IQ3_S**: `STRATA_SM70_TABLE=1` yields no decode benefit but degrades prefill by 13~15% and adds 26~34s to TTFT -> **Vanilla Stage 4-B is optimal**.
-4. **Architectural Limit: Heterogeneous Mixed Quantization is Prohibited**:
-   Co-locating different quantizations (e.g., Host GPU0 = IQ3_XXS, Host GPU1 = IQ2_XS) on a single 61 GB host breaks Linux OS Page Cache sharing across mmapped models (47 GB + 39 GB = **86 GB working set > 61 GB RAM**). This induces severe memory thrashing (1.6 GiB swap spillage, 18,690 major page faults, 606 GB NVMe read), causing TTFT to explode by 5.2x (914.9s) and collapsing active decode concurrency to 0.000s. **Co-located independent agents must remain homogeneous**.
+### Stage 4 C2 128K Performance Comparison Summary
 
----
-
-## 2. Day-to-Day Operations & Serving Guide
-
-### Dual-Agent Independent Topology
-The primary serving topology runs two independent symmetric 1-GPU agents, sharing physical model shards read-only via `--mmap-experts`:
-
-```text
-Agent A (Port 8080)                  Agent B (Port 8081)
-Host GPU 0 (Tesla V100 16GB)          Host GPU 1 (Tesla V100 16GB)
-CPUs 0-2, 6-8                        CPUs 3-5, 9-11
-128K context, INT8 KV                128K context, INT8 KV
-mmap experts (NVMe)                  mmap experts (NVMe)
-        \                                   /
-         \--- Shared IQ2_XS + MTP (NVMe) ---/
-```
-
-### Server Management Commands (P520)
-
-#### Starting Preserved Serving Agents
-To start the validated Stage 3-A production agents after a reboot:
-```bash
-cd ~/v100-x2-strata-qwen3.8-flash-next
-docker start strata-jmn-iq2xs-agent-a strata-jmn-iq2xs-agent-b
-```
-*(Or to run the Stage 4-C high-performance candidate agents: `docker start strata-s4c-iq2xs-agent-a strata-s4c-iq2xs-agent-b`)*
-
-#### Checking Status & Health
-```bash
-# Check Docker container status
-docker ps --filter name=strata-   --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-
-# Health endpoints
-curl -fsS http://127.0.0.1:8080/health && echo
-curl -fsS http://127.0.0.1:8081/health && echo
-
-# OpenAI-compatible model endpoints
-curl -fsS http://127.0.0.1:8080/v1/models && echo
-curl -fsS http://127.0.0.1:8081/v1/models && echo
-```
-
-#### Monitoring Logs
-```bash
-# Agent A (GPU 0)
-docker logs -f --tail 50 strata-jmn-iq2xs-agent-a
-
-# Agent B (GPU 1)
-docker logs -f --tail 50 strata-jmn-iq2xs-agent-b
-```
-
-#### Stopping Serving Agents
-```bash
-docker stop strata-jmn-iq2xs-agent-a strata-jmn-iq2xs-agent-b
-```
-> [!IMPORTANT]
-> Always use `docker stop` and `docker start`. Never run destructive Docker cleanups (`docker system prune` or `docker rm -f`) on validated containers.
-
-### ThinkPad SSH Tunnel Integration
-The ThinkPad E14 runs `strata-tunnel.service` to forward P520 agent endpoints locally:
-- **ThinkPad `127.0.0.1:18080/v1`** -> P520 Agent A `127.0.0.1:8080/v1`
-- **ThinkPad `127.0.0.1:18081/v1`** -> P520 Agent B `127.0.0.1:8081/v1`
-
----
-
-## 3. Stage 4 Comprehensive Benchmarks (2026-10-21 ~ 2026-10-22)
-
-Stage 4 evaluated the latest upstream Strata releases (v0.1.44.1 and v0.1.47), kernel optimizations (`STRATA_SM70_TABLE=1`), cross-quantization behavior, and isolated mixed-quantization serving under the frozen `V100-PERFORMANCE-C2-128K-v1` workload (SHA-256: `e413acced27c...`).
-
-### 3.1 Engine Evolution (IQ2_XS Primary Arm)
-All runs: Dual independent V100s, 131,072 context, INT8 KV (`--kv-resident 32768`), cold process, 128K concurrent C2 contract:
-
+#### 1. Engine Evolution (IQ2_XS Primary Arm)
 | Engine / Release | Prefill (tok/s) | TTFT (s) | Decode (tok/s) | Expert Hit | vs Stage 3-A Decode |
 |---|---|---|---|---|---|
 | **Stage 3-A** (Strata 0.1.36 / jmnargi fork) | 909.90 | 140.09 | 22.20 | ~90.0% | Baseline |
@@ -103,32 +30,32 @@ All runs: Dual independent V100s, 131,072 context, INT8 KV (`--kv-resident 32768
 | **Stage 4-B** (Upstream Strata v0.1.47 / v0.2.2) | 981.55 | 129.60 | 38.50 | 93.55% | **+73.42%** |
 | **Stage 4-C** (0.1.47 + `STRATA_SM70_TABLE=1`) | **995.70** | **127.77** | **39.60** | **93.10%** | **+78.38% 🚀🚀** |
 
----
+#### 2. Cross-Quant Comparison: Stage 4-B (Vanilla 0.1.47) vs Stage 4-C (0.1.47 + SM70_TABLE)
+| Quantization | Stage | Prefill (tok/s) | TTFT (s) | Decode (tok/s) | Expert Hit | vs Stage 3-A Decode |
+|---|---|---|---|---|---|---|
+| **IQ2_XS** | **Stage 4-B (vanilla)** | 981.55 | 129.60 | 38.50 | 93.55% | +73.42% |
+| **IQ2_XS** | **Stage 4-C (SM70_TABLE)** | **995.70** | **127.77** | **39.60** | **93.10%** | **+78.38% 🚀** |
+| **IQ3_XXS** | **Stage 4-B (vanilla)** | **725.50** | **175.27** | **26.15** | 86.30% | **+105.91% 🚀🚀** |
+| **IQ3_XXS** | **Stage 4-C (SM70_TABLE)** | 630.70 | 201.60 | 26.05 | 86.90% | +105.12% 🚀🚀 |
+| **IQ3_S** | **Stage 4-B (vanilla)** | **535.00** | **237.60** | **21.35** | 81.50% | **+100.47% 🚀🚀** |
+| **IQ3_S** | **Stage 4-C (SM70_TABLE)** | 468.05 | 271.60 | 20.55 | 81.50% | +92.96% 🚀 |
 
-### 3.2 Cross-Quantization Matrix: Stage 4-B (Vanilla) vs Stage 4-C (SM70_TABLE)
+> **Key Findings & Engineering Insights**:
+> 1. **IQ3 디코드 절벽 해결의 원인**: IQ3_XXS 및 IQ3_S의 디코드 속도 2배 향상(+100~106%)은 `STRATA_SM70_TABLE=1` 튜닝이 아니라 **Upstream Strata v0.1.47 코어 엔진 자체의 개선** 덕분임이 완전히 입증되었습니다.
+> 2. **양자화별 최적 설정 차이**:
+>    - **IQ2_XS**: `STRATA_SM70_TABLE=1`이 디코드(+1.1 tok/s)와 프리필(+14.1 tok/s) 모두에서 긍정적 효과를 보여 **Stage 4-C가 최적**.
+>    - **IQ3_XXS / IQ3_S**: `STRATA_SM70_TABLE=1`은 디코드 개선 없이 프리필 속도를 13~15% 저하시키고 TTFT를 26~34초 증가시킵니다. 따라서 IQ3 서빙 시에는 **순정 Stage 4-B가 최적**.
+> 3. **최종 프로덕션 권고**: 전체 서빙 처리량, 레이턴시, GPU VRAM 균형 측면에서 **IQ2_XS + Stage 4-C** 조합이 초당 약 1,000 토큰 프리필과 ~40 토큰 디코드를 달성하여 압도적인 최적 솔루션입니다.
 
-| Quantization | Configuration | Prefill (tok/s) | TTFT (s) | Decode (tok/s) | Expert Hit | vs Stage 3-A Decode | Optimal Profile |
-|---|---|---|---|---|---|---|---|
-| **IQ2_XS** | **Stage 4-B (vanilla 0.1.47)** | 981.55 | 129.60 | 38.50 | 93.55% | +73.42% | |
-| **IQ2_XS** | **Stage 4-C (+ SM70_TABLE)** | **995.70** | **127.77** | **39.60** | **93.10%** | **+78.38% 🚀** | **Stage 4-C (Optimal)** |
-| **IQ3_XXS** | **Stage 4-B (vanilla 0.1.47)** | **725.50** | **175.27** | **26.15** | 86.30% | **+105.91% 🚀🚀** | **Stage 4-B (Optimal)** |
-| **IQ3_XXS** | **Stage 4-C (+ SM70_TABLE)** | 630.70 | 201.60 | 26.05 | 86.90% | +105.12% 🚀🚀 | |
-| **IQ3_S** | **Stage 4-B (vanilla 0.1.47)** | **535.00** | **237.60** | **21.35** | 81.50% | **+100.47% 🚀🚀** | **Stage 4-B (Optimal)** |
-| **IQ3_S** | **Stage 4-C (+ SM70_TABLE)** | 468.05 | 271.60 | 20.55 | 81.50% | +92.96% 🚀 | |
+#### 3. Isolated Stage 4-B MIXED Quantization Trial (IQ3_XXS + IQ2_XS)
+An isolated trial was conducted on vanilla Strata 0.1.47 with **Agent A (Host GPU0) = IQ3_XXS** and **Agent B (Host GPU1) = IQ2_XS**, both with independent 128K contexts, INT8 KV, and `--mmap-experts`. See [detailed summary & root cause analysis](artifacts/stage4-results-20261021/stage4-b-mixed-c2-benchmark-summary.md).
 
----
-
-### 3.3 Stage 4-B MIXED Quantization Trial (Agent A: IQ3_XXS + Agent B: IQ2_XS)
-
-A dedicated trial was conducted to evaluate mixed-quantization co-residency on vanilla Strata 0.1.47: Host GPU0 = IQ3_XXS, Host GPU1 = IQ2_XS.
-
-#### Measured Results (Single Cold Run #1)
 | Metric | Agent A (Host GPU0 - IQ3_XXS) | Agent B (Host GPU1 - IQ2_XS) | Stage 4-B Homogeneous A (IQ3_XXS) | Stage 4-B Homogeneous B (IQ2_XS) |
 |---|---|---|---|---|
 | **Prompt Tokens** | 126,967 | 126,968 | 126,967 | 126,968 |
 | **Output Tokens** | 1,289 (PASS) | 2,036 (PASS) | 1,396 | 1,717 |
 | **Wall Time** | **1,077.62 s (~18.0 min)** | **303.87 s (~5.1 min)** | 228.02 s | 175.54 s |
-| **TTFT** | **914.90 s (5.2x slower ⚠️)** | **214.04 s (+66% slower)** | 176.50 s | 128.69 s |
+| **TTFT (Latency to First Token)** | **914.90 s (5.2x latency surge ⚠️)** | **214.04 s (+66% slower)** | 176.50 s | 128.69 s |
 | **Prefill Speed** | **138.8 tok/s (-80.7% ⚠️)** | **593.9 tok/s (-39.9%)** | 720.4 tok/s | 988.5 tok/s |
 | **Decode Speed** | **7.9 tok/s (-70.8% ⚠️)** | **22.6 tok/s (-38.3%)** | 27.1 tok/s | 36.6 tok/s |
 | **Major Page Faults** | **18,690 faults** | 274 faults | 0 | 0 |
@@ -136,132 +63,1105 @@ A dedicated trial was conducted to evaluate mixed-quantization co-residency on v
 | **Host Swap Spilled** | **1.6 GiB** | **1.6 GiB** | 0 B | 0 B |
 | **Decode Overlap** | **0.000 s (FAIL ❌)** | **0.000 s (FAIL ❌)** | 51.52 s (PASS) | 36.81 s (PASS) |
 
-#### Root Cause Analysis
-1. **OS Page Cache Sharing Breakdown**: When running homogeneous agents (IQ2_XS + IQ2_XS), both containers mmap the *identical* GGUF file. Linux kernel shares the exact same page-cache pages across processes, requiring only **~39 GiB RAM** (fitting completely in 61 GiB RAM). In the mixed setup, two distinct GGUF models required **47 GiB + 39 GiB = 86 GiB**, overflowing host RAM by 25 GiB.
-2. **Catastrophic Memory Thrashing & Swap Spillage**: The host exhausted available RAM, spilling **1.6 GiB into swap** and generating **18,690 major page faults** on Agent A. Physical NVMe reads hit 606 GB for a single request, stalling Agent A's prefill for 15 minutes.
-3. **Loss of Concurrency**: Agent B finished in 304s, while Agent A did not start decoding until 915s. Decode overlap was 0.000s (`active_overlap = False`), failing the C2 concurrency contract.
+> **Key Architectural Takeaway: Heterogeneous Mixed Quantization is Prohibited on 61GB RAM**:
+> 1. **OS Page Cache Sharing Breakdown**: Homogeneous agents share identical underlying physical GGUF pages via mmap, requiring only ~39 GiB RAM for both agents. Mixed agents require 47 GB + 39 GB = **86 GB working set**, overflowing the 61 GiB host RAM by 25 GiB.
+> 2. **Severe Memory Thrashing**: The page cache starved, spilling **1.6 GiB into swap** and triggering **18,690 major page faults** on Agent A. Physical NVMe reads hit 606 GB for a single request.
+> 3. **Concurrency Collapse**: Agent B completed at 304s while Agent A took 915s just to complete prefill. Overlap was 0.000s (`active_overlap = False`), failing the C2 concurrency contract. Co-located independent agents must remain homogeneous.
 
----
+## Current validated state
 
-### 3.4 Stage 4 Artifact Receipts & Verification Links
-All Stage 4 experimental receipts, raw summaries, and runner scripts are versioned and verified:
-- [Stage 4 Plan](docs/STAGE4_PLAN.md)
-- [Stage 4 Antigravity CLI Handoff](docs/STAGE4_ANTIGRAVITY_HANDOFF.md)
-- [Stage 4-B Mixed AGY Handoff](docs/STAGE4B_MIXED_AGY_HANDOFF.md)
-- [Stage 4-0 Inventory Receipt](artifacts/stage4-results-20261021/stage4-0-inventory-receipt.md)
-- [Stage 4-A Build Receipt](artifacts/stage4-results-20261021/stage4-a-build-receipt.md) & [Stage 4-A C2 Benchmark Summary](artifacts/stage4-results-20261021/stage4-a-c2-benchmark-summary.md)
-- [Stage 4-B Build Receipt](artifacts/stage4-results-20261021/stage4-b-build-receipt.md) & [Stage 4-B IQ2_XS C2 Summary](artifacts/stage4-results-20261021/stage4-b-c2-benchmark-summary.md)
-- [Stage 4-B IQ3_XXS C2 Summary](artifacts/stage4-results-20261021/stage4-b-iq3xxs-c2-benchmark-summary.md)
-- [Stage 4-B IQ3_S C2 Summary](artifacts/stage4-results-20261021/stage4-b-iq3s-c2-benchmark-summary.md)
-- [Stage 4-B MIXED C2 Summary & Deep Root Cause Analysis](artifacts/stage4-results-20261021/stage4-b-mixed-c2-benchmark-summary.md)
-- [Stage 4-C IQ2_XS C2 Summary](artifacts/stage4-results-20261021/stage4-c-c2-benchmark-summary.md)
-- [Stage 4-C IQ3_XXS C2 Summary](artifacts/stage4-results-20261021/stage4-c-iq3xxs-c2-benchmark-summary.md)
-- [Stage 4-C IQ3_S C2 Summary](artifacts/stage4-results-20261021/stage4-c-iq3s-c2-benchmark-summary.md)
-- [Stage 4-A Preserved Containers](artifacts/stage4-results-20261021/stage4-a-preserved-containers.md)
-- [Stage 4-B Preserved Containers](artifacts/stage4-results-20261021/stage4-b-preserved-containers.md)
-- [Stage 4-C Preserved Containers](artifacts/stage4-results-20261021/stage4-c-preserved-containers.md)
+Host:
 
----
+- Lenovo ThinkStation P520
+- Xeon W-2135, 6C/12T
+- 64 GB DDR4-2400 ECC
+- Tesla V100-SXM2 16 GB x2 (sm_70)
+- Ubuntu Server 26.04.1
+- Docker 29.1.3
+- NVIDIA Container Toolkit 1.20.0
+- NVIDIA driver 580.178.04
+- no host CUDA toolkit required
 
-## 4. Historical Benchmark Progression (Stage 2 ~ Stage 3-B)
+Runtime:
 
-### 4.1 Stage 3-B: Speculative Window & Paired-Expert Tuning (2026-10-04)
-Stage 3-B evaluated higher speculative windows (`--spec 8 --spec-min-p 0.7`) and paired-expert kernels (`STRATA_EXPERT_PAIR=1`) on the Strata 0.1.36 fork:
+- image: `strata-v100:0.1.31`
+- Strata 0.1.31 pinned to commit `9259cad4cfa3543cd3b8decab5962672b968c649`
+- CUDA Toolkit 12.9.1 inside the image
+- `CMAKE_CUDA_ARCHITECTURES=70`
+- text-only / vision disabled
+- `STRATA_PROMPT_ATTN_OLD=1` retained for the conservative Volta prompt-attention path
+- the W-2135 does not satisfy Strata's AVX-512 IQ fast-path requirements, so IQ expert CPU work uses AVX2
 
-| Quantization | Stage 3-A Decode | Stage 3-B Decode | Delta (%) | Stage 3-A Prefill | Stage 3-B Prefill |
-|---|---|---|---|---|---|
-| **IQ2_XS** | 22.20 tok/s | **23.90 tok/s** | **+7.66%** | 909.90 tok/s | 913.40 tok/s |
-| **IQ3_XXS** | 12.70 tok/s | 12.75 tok/s | +0.39% | 790.95 tok/s | 815.05 tok/s |
-| **IQ3_S** | 10.65 tok/s | 10.70 tok/s | +0.47% | 721.30 tok/s | 731.15 tok/s |
+Stage 3-A and Stage 3-B also validated a separate V100-optimized comparison image without replacing the preserved stable deployment:
 
-> **Conclusion**: Stage 3-B tuning offered slight decode gains for IQ2_XS (+1.7 tok/s) but yielded negligible improvements for IQ3 while reducing expert cache hit rates.
+- image: `strata-v100-jmnargi:9d77749`
+- source fork: `jmnargi/Strata-V100`
+- pinned commit: `9d7774919e26d235359bc2c3001f61f607eb288d`
+- Strata engine: `0.1.36`
+- CUDA Toolkit 12.9.1, `sm_70`, text-only
+- uses the fork's native Volta paths; `STRATA_PROMPT_ATTN_OLD=1` is **not** set
+- reuses the same physical GGUF files, native packs, MTP data and frozen C2 workload used by the 0.1.31 comparison
+- Stage 3-A uses CLI `--spec 4 --spec-min-p 0.5`, which the fork reports as effective `spec=6 / mtp_max=4 / lookup=3`
+- Stage 3-B tests CLI `--spec 8 --spec-min-p 0.7` plus `STRATA_EXPERT_PAIR=1`, reported as effective `spec=8 / mtp_max=8 / lookup=3`
 
----
+The **preserved 0.1.31 baseline** remains two independent 128K mmap agents, one per V100, on `strata-v100:0.1.31`. The **current user-facing agents**, however, use the validated 0.1.36 V100 fork (see Stage 4 planning above); that engine materially improves long-context prefill and TTFT across all three measured quantizations. Stage 3-A settings remain the conservative common tuning recommendation; Stage 3-B did not materially improve IQ3 decode.
 
-### 4.2 Stage 3-A: Strata-V100 0.1.36 Fork Introduction (2026-10-04)
-Stage 3-A evaluated the V100-optimized `jmnargi/Strata-V100:9d77749` fork (`strata-v100-jmnargi:9d77749`), enabling native Volta prompt-attention paths without `STRATA_PROMPT_ATTN_OLD=1`:
+## Model
 
-| Quantization | 0.1.31 Baseline Prefill | 0.1.36 Fork Prefill | Prefill Gain | 0.1.31 Decode | 0.1.36 Decode | Decode Gain |
-|---|---|---|---|---|---|---|
-| **IQ2_XS** | 707.25 tok/s | **909.90 tok/s** | **+28.65%** | 21.85 tok/s | **22.20 tok/s** | +1.60% |
-| **IQ3_XXS** | 623.05 tok/s | **790.95 tok/s** | **+26.95%** | 11.45 tok/s | **12.70 tok/s** | +10.92% |
-| **IQ3_S** | 602.40 tok/s | **721.30 tok/s** | **+19.74%** | 10.75 tok/s | 10.65 tok/s | -0.93% |
+Preferred deployment:
 
-> **Conclusion**: The fork dramatically improved 128K long-context prefill across all models (+20~29%), slashing TTFT by 16~22%, but left the IQ3 decode cliff largely unaddressed.
+- **Original Qwen3.8-Flash-Next IQ2_XS**
+- source: `ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF`
+- pinned revision: `ed59f92082b1e93c0e96d60a8b11aab089b52f09`
+- two GGUF shards, approximately 64 GB total
+- native Strata pack approximately 1.5 GB
+- no `experts.bin` in the native pack
+- expert slices are mmap-read directly from the GGUF shards
+- shared MTP data is reused read-only from `/srv/models/strata-data/mtp`
 
----
+IQ2_XS is a higher-precision quantization than the earlier Coder IQ1_M baseline. A direct model-quality benchmark has **not** been run, so this repository does not claim a measured quality delta.
 
-### 4.3 Stage 2: Initial Baseline & Frozen C2 Contract (2026-10-01)
-The foundational stage established the dual-agent 128K mmap architecture on upstream Strata 0.1.31 (`strata-v100:0.1.31`):
-- **IQ2_XS C2 Baseline**: Prefill 707.25 tok/s, Decode 21.85 tok/s, TTFT 180.05 s, Expert hit 88.95%.
-- **IQ3_XXS C2 Baseline**: Prefill 623.05 tok/s, Decode 11.45 tok/s, TTFT 204.39 s, Expert hit 76.15%.
-- **IQ3_S C2 Baseline**: Prefill 602.40 tok/s, Decode 10.75 tok/s, TTFT 211.36 s, Expert hit 76.10%.
-- **Prefix Cache Isolation**: Confirmed `cache_n = 0` and `cached_tokens = 0` across all runs, verifying raw model speed without prefix reuse.
+## Storage layout
 
----
+The old Coder IQ1_M model under `/srv/models/strata-data/models/coder-IQ1_M` was removed after the IQ2_XS deployment was validated.
 
-### 4.4 Experimental UD-Q4_K_XL Single-Server Test (2026-10-02)
-Unsloth's `Qwen3.8-Flash-Next-UD-Q4_K_XL` (104 GB, 4 GGUF shards) was tested on Strata 0.1.31:
-- **Measured Result**: Prefill **149.4 tok/s**, Decode **3.2 tok/s**, TTFT **850.9 s (14.2 min)**, Batch Wall **1,471 s**.
-- **Assessment**: While mechanically functional under 128K context, Q4 was 4.7x slower in prefill and 6.6x slower in decode than IQ2_XS, while saturating swap. It is not practical for 16 GB V100 dual serving.
-
----
-
-## 5. System Specifications & Storage Architecture
-
-### Host Hardware & Driver Environment
-- **Platform**: Lenovo ThinkStation P520
-- **CPU**: Intel Xeon W-2135 (6C / 12T, 3.70 GHz base / 4.50 GHz turbo, AVX2)
-- **Host RAM**: 64 GB DDR4-2400 ECC (61 GiB usable)
-- **GPUs**: 2x NVIDIA Tesla V100-SXM2-16GB (`sm_70`, Volta architecture)
-- **Power Cap**: Fixed 150W per GPU (strictly preserved)
-- **OS**: Ubuntu Server 26.04 LTS (Kernel 7.0.0-38-generic)
-- **NVIDIA Driver**: 580.178.04 (CUDA 13.0 driver level)
-- **Docker**: Docker CE 29.1.3 with NVIDIA Container Toolkit 1.20.0
-
-### Storage Layout (NVMe vs Backup HDD)
-Physical storage layout on P520:
+The IQ2_XS data now physically lives on the dedicated model NVMe:
 
 ```text
-/srv/models/ (SAMSUNG NVMe SSD - 256GB, High-Throughput Inference)
-├── strata-iq2xs/
-│   ├── model/ (2 GGUF shards, ~64 GB, mmapped read-only)
-│   └── pack/  (Native Strata pack, ~1.5 GB, tokenizer & config)
-├── strata-iq3xxs/
-│   ├── IQ3_XXS/ (2 GGUF shards, ~71 GB, mmapped read-only)
-│   └── pack/    (Native Strata pack, ~1.5 GB)
-└── strata-data/
-    └── mtp/     (Shared MTP speculative verification data)
+/srv/models/strata-iq2xs/
+├── config/
+├── logs/
+├── model/
+└── pack/
 
-/srv/backup/ (Western Digital 1TB SATA HDD - Long-Term Archive)
-└── models-archive/ (Cold archives of IQ3_XXS, IQ3_S, and environments)
+/srv/models/strata-data/mtp/
+└── ... shared MTP data ...
 ```
 
-### Preserved Docker Containers Registry
-The following containers are strictly preserved on P520 for reproducible benchmarking and rollback:
-- **Stage 4-C**: `strata-s4c-iq2xs-agent-a/b`, `strata-s4c-iq3xxs-agent-a/b`, `strata-s4c-iq3s-agent-a/b`
-- **Stage 4-B**: `strata-s4b-iq2xs-agent-a/b`, `strata-s4b-iq3xxs-agent-a/b`, `strata-s4b-iq3s-agent-a/b`, `strata-s4b-mixed-iq3xxs-agent-a`, `strata-s4b-mixed-iq2xs-agent-b`
-- **Stage 4-A**: `strata-s4a-iq2xs-agent-a/b`
-- **Stage 3-A**: `strata-jmn-iq2xs-agent-a/b` (Current serving baseline)
-- **Stage 2**: `strata-iq2xs-agent-a/b`, `strata-iq2xs-single-mmap`, `strata-iq2xs-mgpu`
+For compatibility with the already validated containers and scripts, the original path is a symlink:
 
----
+```text
+/home/loopwhile/models/strata-iq2xs -> /srv/models/strata-iq2xs
+```
 
-## 6. Safety, Power Caps & Repository Guardrails
+The copy was verified with SHA-256 across all 19 files before the old 65 GB copy under `/home` was deleted. The preserved `strata-iq2xs-single-mmap` container was then started successfully through the symlink and reported the model as loaded with `n_ctx=131072`.
 
-Before changing code or executing commands on P520, adhere to the strict guardrails in [AGENTS.md](AGENTS.md):
-1. **Host Power & Clocks**: Never modify GPU power caps (150W), GPU clocks, or host power settings.
-2. **Serving Continuity**: Never stop or overwrite active serving containers (`strata-jmn-iq2xs-agent-a/b`) without explicit user approval.
-3. **Container Immutability**: Do not update existing container images in place or execute destructive Docker cleanup. Always spawn isolated containers for benchmark arms.
-4. **SSH Tunnel Integrity**: Preserve ThinkPad `strata-tunnel.service` and forwarded ports `18080/18081`.
-5. **Worktree Hygiene**: Always verify clean worktrees before synchronization (`git pull --ff-only`).
+## Day-to-day server startup
 
----
+The validated containers already exist. **Do not recreate or remove them for normal startup.**
+
+The main serving topology is:
+
+```text
+Agent A                              Agent B
+host GPU 0                           host GPU 1
+V100 16 GB                           V100 16 GB
+128K context                         128K context
+127.0.0.1:8080                       127.0.0.1:8081
+CPUs 0-2,6-8                         CPUs 3-5,9-11
+mmap experts                         mmap experts
+        \                           /
+         \-- shared IQ2_XS + MTP --/
+```
+
+Start both validated agents after a reboot:
+
+```bash
+cd ~/v100-x2-strata-qwen3.8-flash-next
+
+docker start strata-iq2xs-agent-a strata-iq2xs-agent-b
+```
+
+Check status:
+
+```bash
+docker ps --filter name=strata-iq2xs-agent   --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+
+curl -fsS http://127.0.0.1:8080/health
+echo
+curl -fsS http://127.0.0.1:8081/health
+echo
+```
+
+Check the OpenAI-compatible model endpoints:
+
+```bash
+curl -fsS http://127.0.0.1:8080/v1/models
+echo
+curl -fsS http://127.0.0.1:8081/v1/models
+echo
+```
+
+Follow logs:
+
+```bash
+docker logs -f --tail 50 strata-iq2xs-agent-a
+```
+
+and, in another terminal:
+
+```bash
+docker logs -f --tail 50 strata-iq2xs-agent-b
+```
+
+Stop both without deleting them:
+
+```bash
+docker stop strata-iq2xs-agent-a strata-iq2xs-agent-b
+```
+
+### Preserved alternate containers
+
+These validated containers are also intentionally preserved:
+
+```text
+strata-iq2xs-single-mmap
+strata-iq2xs-mgpu
+```
+
+Do not run these at the same time as the dual-agent topology because they compete for the same GPUs and/or port 8080.
+
+Single-V100 mmap:
+
+```bash
+docker start strata-iq2xs-single-mmap
+docker logs -f --tail 50 strata-iq2xs-single-mmap
+docker stop strata-iq2xs-single-mmap
+```
+
+Two-GPU single-server baseline:
+
+```bash
+docker start strata-iq2xs-mgpu
+docker logs -f --tail 50 strata-iq2xs-mgpu
+docker stop strata-iq2xs-mgpu
+```
+
+## Provisioning scripts
+
+The current IQ2_XS workflow was built with:
+
+```text
+scripts/40-download-original-iq2xs.sh
+scripts/41-docker-pack-original-iq2xs-native.sh
+scripts/42-prepare-original-iq2xs-multigpu-128k.sh
+scripts/43-run-original-iq2xs-multigpu-128k.sh
+scripts/44-bench-original-iq2xs-multigpu.sh
+scripts/45-prepare-original-iq2xs-single-mmap.sh
+scripts/46-run-original-iq2xs-single-mmap.sh
+scripts/47-bench-original-iq2xs-single-mmap.sh
+scripts/48-prepare-original-iq2xs-dual-mmap.sh
+scripts/49-run-original-iq2xs-dual-mmap.sh
+scripts/50-smoke-original-iq2xs-dual-mmap.sh
+scripts/51-bench-original-iq2xs-dual-mmap.sh
+scripts/52-bench-v100-contract-c2-performance.sh
+scripts/53-bench-q4-v100-contract-c2-performance.sh
+scripts/54-docker-build-jmnargi-v100.sh
+```
+
+`scripts/49-run-original-iq2xs-dual-mmap.sh` is an initial container-creation script. It intentionally refuses to replace existing agent containers. For routine boots, use `docker start` as shown above.
+
+The earlier Coder IQ1_M scripts and results remain useful as historical references, but IQ1_M is no longer the active model deployment.
+
+## Validated performance
+
+### Two-GPU single Strata server
+
+The preserved `strata-iq2xs-mgpu` configuration uses both V100s for one server.
+
+Observed results:
+
+| Prompt | Prefill | Decode |
+|---|---:|---:|
+| ~32K | 1329.6 tok/s | 44.9 tok/s |
+| ~64K | 1398.9 tok/s | 43.9 tok/s |
+| ~125K | 1331.3 tok/s | 48.1 tok/s |
+
+This topology used a full expert arena in host RAM and is retained as the single-server performance baseline.
+
+### One-V100 mmap server
+
+The preserved `strata-iq2xs-single-mmap` configuration uses one V100, mmap experts, and no host expert arena.
+
+A 32K run measured approximately:
+
+- prefill: 723.8 tok/s
+- decode: 17.6 tok/s
+- expert-cache hit rate: 82.2%
+
+### Dual independent 128K mmap agents
+
+The current serving topology is:
+
+- Agent A: host GPU0, port 8080, CPUs `0-2,6-8`
+- Agent B: host GPU1, port 8081, CPUs `3-5,9-11`
+- both configured for `131072` context
+- KV cache INT8
+- `kv_resident=32768`
+- mmap experts
+- 7283 expert-cache slots per agent, approximately 9.75 GiB VRAM
+- no `experts.bin`
+
+Earlier diagnostic runs established concurrent 32K, 64K and ~125K operation. The clean 32K concurrent diagnostic had zero prefix reuse and measured approximately 746.8 / 762.6 prefill tok/s for A/B.
+
+## Formal C2 128K result
+
+The repository includes an adapted direct-Strata implementation of the frozen `v100-llm-test` performance C2 contract:
+
+```bash
+bash scripts/52-bench-v100-contract-c2-performance.sh
+```
+
+Contract:
+
+- workload: `V100-PERFORMANCE-C2-128K-v1`
+- manifest SHA256: `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`
+- context: 131072 per request
+- output reserve: 4096
+- minimum output: 1024
+- independent Project A + Project B prompts
+- no full-size warmup
+- exactly one measured batch
+- fresh Strata processes before measurement
+- 8 internal Strata context cells reserved by the adapted harness
+
+Successful run on 2026-10-01:
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,402 | 1,446 |
+| TTFT | 181.762 s | 178.345 s |
+| Prefill | **700.5 tok/s** | **714.0 tok/s** |
+| Decode | **21.2 tok/s** | **22.5 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 88.6% | 89.3% |
+| Request wall time | 247.918 s | 242.537 s |
+
+Batch-level result:
+
+```text
+submission_skew_s = 0.003766
+batch_wall_s      = 247.933
+decode_overlap_s  = 60.771
+both_busy_samples = 299
+both_answering    = 299
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+```
+
+Local result directory from that run:
+
+```text
+results/c2-v100-contract-20261001-194809
+```
+
+The evidence was also copied into the separate `v100-llm-test` result archive as:
+
+```text
+EXP-V100-Q38-STRATA-IQ2XS-2GPU2-C2-PERF-20261001-001
+```
+
+with the copied `summary.json` SHA256:
+
+```text
+793ed441f305541934ee252829ef7eebe7e127443e24386df7e6e440d1698cbc
+```
+
+### Cache interpretation
+
+The successful C2 result is specifically **prefix-cache-free**:
+
+```text
+A: cache_n=0, cached_tokens=0
+B: cache_n=0, cached_tokens=0
+```
+
+Therefore the 700.5 / 714.0 tok/s prefill measurements are not explained by reused conversation/KV prefixes.
+
+This does **not** mean the system is cache-free overall:
+
+- Strata's reported `expert_hit_rate` is the decode expert-cache hit rate, not prefix-cache reuse.
+- Each agent pre-fills its GPU expert cache from the routing profile.
+- mmap expert reads can benefit from the Linux filesystem page cache.
+- prompt working buffers can borrow expert-cache VRAM.
+
+These cache layers must not be conflated.
+
+## IQ3_XXS and IQ3_S formal C2 128K comparison
+
+On 2026-10-04, the same frozen `V100-PERFORMANCE-C2-128K-v1` workload was
+run against original Qwen3.8-Flash-Next IQ3_XXS and IQ3_S native packs.
+
+The comparison kept the following controls aligned with the IQ2_XS C2 run:
+
+- Strata 0.1.31, commit `9259cad4cfa3543cd3b8decab5962672b968c649`
+- two independent one-V100 agents
+- Agent A on GPU0 / CPUs `0-2,6-8`; Agent B on GPU1 / CPUs `3-5,9-11`
+- 131072-token context per request
+- INT8 KV with `kv_resident=32768`
+- GGUF-in-place `--mmap-experts`, with no `experts.bin`
+- `--prefill auto`
+- `--spec 4 --spec-min-p 0.5`
+- shared existing MTP data
+- `STRATA_PROMPT_ATTN_OLD=1`
+- fresh Strata processes, no full-size warmup
+- prefix `cache_n=0` and `cached_tokens=0`
+- the same frozen manifest SHA256:
+  `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`
+
+The C2 harness now accepts `--expected-model-a` and `--expected-model-b` so
+the same workload runner can validate non-IQ2_XS model names without changing
+the frozen workload or its materialization.
+
+### IQ3_XXS result
+
+Successful run on 2026-10-04:
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,627 | 2,506 |
+| TTFT | 206.324 s | 202.460 s |
+| Prefill | **617.1 tok/s** | **629.0 tok/s** |
+| Decode | **10.9 tok/s** | **12.0 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 74.8% | 77.5% |
+| File-tier reads reported by Strata | 352,725.5 MB | 481,364.7 MB |
+| Request wall time | 355.536 s | 411.259 s |
+
+Batch-level result:
+
+~~~text
+submission_skew_s = 0.003845
+batch_wall_s      = 411.269
+decode_overlap_s  = 149.212
+both_busy_samples = 734
+both_answering    = 734
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+Local result directory:
+
+~~~text
+results/c2-iq3xxs-v100-contract-20261004-151015
+~~~
+
+### IQ3_S result
+
+Successful run on 2026-10-04:
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,872 | 1,515 |
+| TTFT | 213.225 s | 209.501 s |
+| Prefill | **597.0 tok/s** | **607.8 tok/s** |
+| Decode | **10.1 tok/s** | **11.4 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 74.0% | 78.2% |
+| File-tier reads reported by Strata | 483,553.9 MB | 331,848.4 MB |
+| Request wall time | 398.902 s | 342.008 s |
+
+Batch-level result:
+
+~~~text
+submission_skew_s = 0.003909
+batch_wall_s      = 398.911
+decode_overlap_s  = 128.779
+both_busy_samples = 633
+both_answering    = 633
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+Local result directory:
+
+~~~text
+results/c2-iq3s-v100-contract-20261004-145554
+~~~
+
+### Quantization comparison
+
+Averaging the two agents' engine-reported rates gives:
+
+| Model | Avg prefill | Avg decode | Avg expert hit |
+|---|---:|---:|---:|
+| IQ2_XS | **707.3 tok/s** | **21.85 tok/s** | **88.95%** |
+| IQ3_XXS | **623.1 tok/s** | **11.45 tok/s** | **76.15%** |
+| IQ3_S | **602.4 tok/s** | **10.75 tok/s** | **76.10%** |
+
+Relative to IQ2_XS under this C2 topology:
+
+- IQ3_XXS prefill was about 11.9% lower and decode about 47.6% lower.
+- IQ3_S prefill was about 14.8% lower and decode about 50.8% lower.
+- Both IQ3 variants averaged about 76.1% expert-cache hit rate, roughly 12.8
+  percentage points below IQ2_XS.
+- IQ3_XXS was only about 3.4% faster in average prefill and 6.5% faster in
+  average decode than IQ3_S in these single measured batches.
+
+The similar IQ3_XXS and IQ3_S expert-hit rates, together with their much lower
+decode throughput than IQ2_XS, are consistent with an expert-residency /
+miss-path bottleneck once the working set grows beyond the IQ2_XS case. This
+benchmark does not isolate that mechanism as the sole cause.
+
+Host-memory exhaustion was not observed in either IQ3 run. The IQ3_S run ended
+with about 49 GiB available RAM and 4.8 MiB of swap in use; the IQ3_XXS run
+ended with about 49 GiB available and 29.6 MiB of swap in use. End-of-run GPU
+temperatures were 53/46 C for IQ3_S and 51/48 C for IQ3_XXS, so these completed
+runs do not show evidence of thermal throttling as the dominant limitation.
+
+The reported `file_mb` counters can greatly exceed the physical GGUF size and
+should be treated as Strata's cumulative file-tier traffic metric, not as the
+size of the model or a direct measurement of physical NVMe bytes read.
+
+Storage is one remaining uncontrolled variable in the cross-quant comparison:
+IQ3_XXS was stored under `/srv/models/strata-iq3xxs` on the dedicated model
+NVMe, while IQ3_S was stored under `/models/strata-iq3s` on the root NVMe.
+Therefore the table is a controlled workload/runtime comparison, but not a
+strict quant-only storage A/B.
+
+Under the current Strata 0.1.31 dual-agent topology, IQ2_XS remains the
+preferred performance configuration. No direct model-quality benchmark has
+been run, so these measurements make no quality claim for IQ2_XS, IQ3_XXS, or
+IQ3_S.
+
+## Stage 3-A: Strata-V100 0.1.36 engine comparison
+
+Stage 3-A repeated the same three-quant C2 comparison with the V100-focused
+`jmnargi/Strata-V100` fork while preserving the validated 0.1.31 image and
+model data.
+
+Candidate engine:
+
+- fork: `jmnargi/Strata-V100`
+- pinned commit: `9d7774919e26d235359bc2c3001f61f607eb288d`
+- engine version: `0.1.36`
+- image: `strata-v100-jmnargi:9d77749`
+- CUDA Toolkit 12.9.1
+- `CMAKE_CUDA_ARCHITECTURES=70`
+- text-only / vision disabled
+- no old 0.1.31 Volta compatibility patches
+- no `STRATA_PROMPT_ATTN_OLD=1`; the fork's native Volta prompt path is used
+
+The host, two-agent topology, CPU pinning, 131072 context, INT8 KV,
+`kv_resident=32768`, GGUF-in-place `--mmap-experts`, native packs, shared
+MTP data, `--prefill auto`, `--spec 4 --spec-min-p 0.5`, frozen workload,
+fresh-process policy and no-warmup policy were kept aligned with Stage 2.
+The prompt materialization was also verified byte-for-byte against the Stage 2
+contract:
+
+~~~text
+A: prompt=126967 sha=882a3617750ab8dbcb61d3e8e1d42641555a6b1450d060d7bb22a4f1161670b6
+B: prompt=126968 sha=5a19042f67dd7702e843595467e1d6c2b96414f565b0fbfa8036590709dba557
+~~~
+
+The engine reports `spec=6`, `mtp_max=4`, `lookup=3`,
+`spec_min_p=0.50` under these arguments, as it did in the earlier baseline
+runs. Stage 3-B, documented below, separately evaluates the higher speculative
+window and paired-expert kernel without changing the Stage 3-A measurements.
+
+### Stage 3-A IQ2_XS
+
+Result directory:
+
+~~~text
+results/c2-jmn-iq2xs-v100-contract-20261004-162142
+~~~
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,664 | 1,066 |
+| TTFT | 141.565 s | 138.605 s |
+| Prefill | **900.1 tok/s** | **919.7 tok/s** |
+| Decode | **21.7 tok/s** | **22.7 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 88.3% | 89.2% |
+| Strata `file_mb` | 129,125.9 MB | 75,486.3 MB |
+| Request wall time | 218.031 s | 185.579 s |
+
+Batch result:
+
+~~~text
+submission_skew_s = 0.003925
+batch_wall_s      = 218.039
+decode_overlap_s  = 44.011
+both_busy_samples = 216
+both_answering    = 216
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+The fork allocated 7281 expert slots, approximately 9.75 GiB of expert-cache
+VRAM, per IQ2_XS agent.
+
+### Stage 3-A IQ3_XXS
+
+Result directory:
+
+~~~text
+results/c2-jmn-iq3xxs-v100-contract-20261004-163227
+~~~
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,873 | 2,036 |
+| TTFT | 161.681 s | 160.488 s |
+| Prefill | **788.0 tok/s** | **793.9 tok/s** |
+| Decode | **12.2 tok/s** | **13.2 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 78.5% | 80.2% |
+| Strata `file_mb` | 338,595.7 MB | 340,658.8 MB |
+| Request wall time | 314.492 s | 314.591 s |
+
+Batch result:
+
+~~~text
+submission_skew_s = 0.003937
+batch_wall_s      = 314.595
+decode_overlap_s  = 152.811
+both_busy_samples = 750
+both_answering    = 750
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+The fork allocated 5690 expert slots, approximately 9.22 GiB of expert-cache
+VRAM, per IQ3_XXS agent.
+
+### Stage 3-A IQ3_S
+
+Result directory:
+
+~~~text
+results/c2-jmn-iq3s-v100-contract-20261004-164626
+~~~
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,495 | 1,529 |
+| TTFT | 177.805 s | 175.435 s |
+| Prefill | **716.4 tok/s** | **726.2 tok/s** |
+| Decode | **9.9 tok/s** | **11.4 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 72.7% | 78.2% |
+| Strata `file_mb` | 398,612.4 MB | 332,413.3 MB |
+| Request wall time | 327.930 s | 309.338 s |
+
+Batch result:
+
+~~~text
+submission_skew_s = 0.004141
+batch_wall_s      = 327.938
+decode_overlap_s  = 131.529
+both_busy_samples = 647
+both_answering    = 647
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+The IQ3_S run ended with about 48 GiB available RAM, about 69 MiB of swap in
+use, and final GPU temperatures of 50/45 C at 1200 MHz.
+
+### Stage 2 vs Stage 3-A
+
+Averaging the two agents' engine-reported rates:
+
+| Quant | 0.1.31 prefill | 0.1.36 prefill | Change | 0.1.31 decode | 0.1.36 decode | Change | 0.1.31 hit | 0.1.36 hit |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| IQ2_XS | 707.25 | **909.90** | **+28.7%** | 21.85 | **22.20** | **+1.6%** | 88.95% | 88.75% |
+| IQ3_XXS | 623.05 | **790.95** | **+26.9%** | 11.45 | **12.70** | **+10.9%** | 76.15% | **79.35%** |
+| IQ3_S | 602.40 | **721.30** | **+19.7%** | **10.75** | 10.65 | **-0.9%** | 76.10% | 75.45% |
+
+Mean TTFT also improved:
+
+| Quant | 0.1.31 mean TTFT | 0.1.36 mean TTFT | Change |
+|---|---:|---:|---:|
+| IQ2_XS | 180.05 s | **140.09 s** | **-22.2%** |
+| IQ3_XXS | 204.39 s | **161.08 s** | **-21.2%** |
+| IQ3_S | 211.36 s | **176.62 s** | **-16.4%** |
+
+The strongest repeatable Stage 3-A improvement is long-context prefill:
+all three quantizations improved, with IQ2_XS and IQ3_XXS gaining about
+27-29%. This is consistent with the fork's V100-oriented prompt path being
+meaningful on this 128K workload.
+
+Decode behavior is different. IQ2_XS changed little, IQ3_XXS improved about
+10.9%, and IQ3_S was effectively unchanged in this single measured batch.
+The IQ3 decode cliff therefore remains after the engine swap:
+
+| Stage 3-A quant | Avg prefill | Avg decode | Avg expert hit |
+|---|---:|---:|---:|
+| IQ2_XS | **909.90 tok/s** | **22.20 tok/s** | **88.75%** |
+| IQ3_XXS | 790.95 tok/s | 12.70 tok/s | 79.35% |
+| IQ3_S | 721.30 tok/s | 10.65 tok/s | 75.45% |
+
+Relative to IQ2_XS on the same Stage 3-A engine, IQ3_XXS decode is about 42.8%
+lower and IQ3_S decode about 52.0% lower. IQ3_XXS is about 9.7% faster than
+IQ3_S in average prefill and about 19.2% faster in average decode in these
+single measured batches.
+
+Therefore the current evidence supports two separate conclusions:
+
+1. the older 0.1.31 engine left substantial V100 long-context prefill
+   performance on the table;
+2. the IQ3 decode slowdown is not explained solely by that older engine,
+   because a large decode gap remains on the V100-optimized fork.
+
+The IQ3_S A/B spread was wider than the IQ3_XXS spread, especially in expert
+hit rate (72.7% vs 78.2%). One measured batch is not enough to attribute that
+spread to a single mechanism.
+
+As in Stage 2, `file_mb` is treated only as Strata's cumulative/logical
+file-tier traffic counter, not physical NVMe bytes read. Cross-quant storage
+also remains uncontrolled: IQ3_XXS is under `/srv/models` while IQ3_S is
+under `/models`. The old-vs-new engine comparison for each individual quant
+is stronger because each pair reused the same physical model files.
+
+No direct model-quality benchmark has been run. The performance ordering under
+this dual independent 128K Stage 3-A topology is currently IQ2_XS first,
+IQ3_XXS second and IQ3_S third.
+
+## Stage 3-B: speculative-window and paired-expert tuning
+
+Stage 3-B kept the pinned 0.1.36 V100 engine, hardware, model files, native
+packs, MTP data, CPU affinity, 131072 context, INT8 KV,
+`kv_resident=32768`, mmap experts, `--prefill auto`, frozen C2 workload,
+fresh-process policy and no-warmup policy unchanged from Stage 3-A.
+
+Only the following tuning bundle changed:
+
+~~~text
+Stage 3-A CLI:
+  --spec 4
+  --spec-min-p 0.5
+  STRATA_EXPERT_PAIR unset
+
+Stage 3-B CLI / environment:
+  --spec 8
+  --spec-min-p 0.7
+  STRATA_EXPERT_PAIR=1
+~~~
+
+Because suffix lookup remains enabled by default in the pinned fork, the Stage
+3-B engine reports:
+
+~~~text
+spec=8
+mtp_max=8
+lookup=3
+spec_min_p=0.70
+~~~
+
+The formal C2 prompts remained identical to the earlier stages:
+
+~~~text
+A: prompt=126967 sha=882a3617750ab8dbcb61d3e8e1d42641555a6b1450d060d7bb22a4f1161670b6
+B: prompt=126968 sha=5a19042f67dd7702e843595467e1d6c2b96414f565b0fbfa8036590709dba557
+~~~
+
+All three Stage 3-B batches passed the mechanical contract, active-overlap
+check and post-run health check with `cache_n=0` and `cached_tokens=0`.
+
+### Stage 3-B IQ2_XS
+
+Result directory:
+
+~~~text
+results/c2-jmn3b-iq2xs-v100-contract-20261004-172412
+~~~
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,716 | 1,402 |
+| TTFT | 138.823 s | 136.631 s |
+| Prefill | **918.0 tok/s** | **932.9 tok/s** |
+| Decode | **20.9 tok/s** | **26.9 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 87.0% | 91.8% |
+| Strata `file_mb` | 143,435.4 MB | 71,357.0 MB |
+| Drafts offered | 1,407 | 1,038 |
+| Drafts accepted | 1,018 | 743 |
+| Draft acceptance | 72.35% | 71.58% |
+| Request wall time | 220.663 s | 188.662 s |
+
+Batch result:
+
+~~~text
+submission_skew_s = 0.004341
+batch_wall_s      = 220.672
+decode_overlap_s  = 49.835
+both_busy_samples = 245
+both_answering    = 245
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+The Stage 3-B IQ2_XS average decode rate was 23.90 tok/s versus 22.20 tok/s in
+Stage 3-A, an apparent +7.7% gain. This result had a wide A/B spread
+(20.9 vs 26.9 tok/s), so it is treated as a promising single-batch result
+rather than a precise isolated gain attributable to one Stage 3-B option.
+
+### Stage 3-B IQ3_XXS
+
+Result directory:
+
+~~~text
+results/c2-jmn3b-iq3xxs-v100-contract-20261004-173816
+~~~
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,555 | 2,499 |
+| TTFT | 157.413 s | 155.286 s |
+| Prefill | **809.4 tok/s** | **820.7 tok/s** |
+| Decode | **13.1 tok/s** | **12.4 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 78.3% | 76.8% |
+| Strata `file_mb` | 265,592.9 MB | 470,762.8 MB |
+| Drafts offered | 1,348 | 2,194 |
+| Drafts accepted | 934 | 1,545 |
+| Draft acceptance | 69.29% | 70.42% |
+| Request wall time | 276.226 s | 356.903 s |
+
+Batch result:
+
+~~~text
+submission_skew_s = 0.003900
+batch_wall_s      = 356.913
+decode_overlap_s  = 118.813
+both_busy_samples = 585
+both_answering    = 585
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+Average decode was 12.75 tok/s versus 12.70 tok/s in Stage 3-A, effectively
+unchanged in this single-batch comparison. The longer Stage 3-B batch wall is
+not a like-for-like decode-speed regression because Agent B generated 2,499
+output tokens in Stage 3-B versus 2,036 in Stage 3-A.
+
+### Stage 3-B IQ3_S
+
+Result directory:
+
+~~~text
+results/c2-jmn3b-iq3s-v100-contract-20261004-175414
+~~~
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 2,224 | 1,920 |
+| TTFT | 173.697 s | 174.803 s |
+| Prefill | **733.5 tok/s** | **728.8 tok/s** |
+| Decode | **9.9 tok/s** | **11.5 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 70.3% | 76.7% |
+| Strata `file_mb` | 616,080.3 MB | 424,628.4 MB |
+| Drafts offered | 1,900 | 1,592 |
+| Drafts accepted | 1,446 | 1,057 |
+| Draft acceptance | 76.11% | 66.39% |
+| Request wall time | 397.917 s | 342.194 s |
+
+Batch result:
+
+~~~text
+submission_skew_s = 0.003878
+batch_wall_s      = 397.931
+decode_overlap_s  = 167.391
+both_busy_samples = 823
+both_answering    = 823
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+The run finished healthy. Swap usage rose from about 68 MiB before the run to
+about 403 MiB after it, while about 49 GiB of RAM remained available; this was
+not a host-memory-exhaustion event.
+
+### Stage 2 vs Stage 3-A vs Stage 3-B
+
+Averaging the two agents' engine-reported rates:
+
+| Quant | Stage | Avg prefill | Avg decode | Avg TTFT | Avg expert hit |
+|---|---|---:|---:|---:|---:|
+| IQ2_XS | Stage 2 / 0.1.31 | 707.25 tok/s | 21.85 tok/s | 180.05 s | 88.95% |
+| IQ2_XS | Stage 3-A / 0.1.36 | 909.90 tok/s | 22.20 tok/s | 140.09 s | 88.75% |
+| IQ2_XS | **Stage 3-B / 0.1.36 tuned** | **925.45 tok/s** | **23.90 tok/s** | **137.73 s** | **89.40%** |
+| IQ3_XXS | Stage 2 / 0.1.31 | 623.05 tok/s | 11.45 tok/s | 204.39 s | 76.15% |
+| IQ3_XXS | Stage 3-A / 0.1.36 | 790.95 tok/s | 12.70 tok/s | 161.08 s | **79.35%** |
+| IQ3_XXS | **Stage 3-B / 0.1.36 tuned** | **815.05 tok/s** | **12.75 tok/s** | **156.35 s** | 77.55% |
+| IQ3_S | Stage 2 / 0.1.31 | 602.40 tok/s | **10.75 tok/s** | 211.36 s | **76.10%** |
+| IQ3_S | Stage 3-A / 0.1.36 | 721.30 tok/s | 10.65 tok/s | 176.62 s | 75.45% |
+| IQ3_S | **Stage 3-B / 0.1.36 tuned** | **731.15 tok/s** | 10.70 tok/s | **174.25 s** | 73.50% |
+
+Stage 3-B relative to Stage 3-A:
+
+| Quant | Prefill change | Decode change | TTFT change | Expert-hit change |
+|---|---:|---:|---:|---:|
+| IQ2_XS | +1.7% | **+7.7%** | -1.7% | +0.65 pp |
+| IQ3_XXS | +3.0% | **+0.4%** | -2.9% | -1.80 pp |
+| IQ3_S | +1.4% | **+0.5%** | -1.3% | -1.95 pp |
+
+Stage 3-B therefore does **not** resolve the IQ3 decode slowdown. IQ3_XXS and
+IQ3_S decode changed by only about +0.4% and +0.5%, respectively, while their
+expert-cache hit rates declined. Draft acceptance remained roughly around
+70% across the three quantizations, so the IQ3 decode gap is not explained
+simply by a failure to accept speculative drafts.
+
+The remaining evidence is more consistent with the IQ3 formats paying higher
+expert execution and/or miss-path costs under this host/GPU topology. The
+benchmark does not isolate expert format cost, cache residency, CPU-to-GPU
+transfer, filesystem traffic or another mechanism as the sole cause.
+
+### Current recommendation after Stage 3-B
+
+- **Engine:** use the pinned 0.1.36 V100 fork as the preferred performance
+  candidate. Its long-context prefill and TTFT gains over the 0.1.31 baseline
+  are large and repeat across all three quantizations.
+- **Common tuning:** retain Stage 3-A `--spec 4 --spec-min-p 0.5` with
+  `STRATA_EXPERT_PAIR` unset as the conservative common recommendation.
+  Stage 3-B adds little or no decode benefit to IQ3 and reduces IQ3 expert-hit
+  rate.
+- **IQ2_XS:** Stage 3-B is worth preserving as an optional high-performance
+  candidate because its single measured batch averaged 23.90 tok/s decode,
+  but the wide A/B spread means the +7.7% average gain should not be treated as
+  a precise isolated effect.
+- **IQ3:** IQ3_XXS remains the faster IQ3 choice. IQ3_S would need a separately
+  measured quality advantage to justify its lower throughput.
+- **Overall performance:** IQ2_XS remains the clear throughput winner on this
+  P520. No direct model-quality benchmark has been run, so this conclusion is
+  performance-only.
+
+## Stability note
+
+During an earlier attempt at the same cold-prefix dual long-context workload, the host abruptly reset while both agents were still in prefill above 100K prompt tokens.
+
+Post-reboot diagnostics did not show evidence of:
+
+- host OOM
+- a new NVIDIA Xid at the crash time
+- a logged kernel panic
+- a logged MCE
+- a logged thermal trip
+
+The later formal C2 run shown above completed successfully under the same class of dual 127K fresh-prefix load and passed post-run health checks.
+
+Therefore:
+
+- dual independent 128K IQ2_XS serving is demonstrated;
+- a full concurrent 127K-prefix + 1K-plus-output C2 run is demonstrated;
+- the earlier reset was not reproduced by the successful rerun;
+- universal stability under every sustained 128K x2 workload is not claimed.
+
+## Experimental UD-Q4_K_XL result
+
+Strata 0.1.31 was also tested with Unsloth's
+`Qwen3.8-Flash-Next-UD-Q4_K_XL` on the same V100 x2 host.
+
+The downloaded model consisted of four GGUF shards, approximately 104 GB total.
+A native Strata pack of approximately 1.4 GB was generated with
+`tools/iq_pack.py --compat-bf16`.
+
+No `experts.bin` was created. Routed experts were mmap-read directly from the
+original GGUF shards.
+
+The validated experimental topology was:
+
+- Agent A: Tesla V100 16 GB GPU0, CPUs `0-2,6-8`
+- Agent B: Tesla V100 16 GB GPU1, CPUs `3-5,9-11`
+- 131072-token context per agent
+- INT8 KV
+- `kv_resident=32768`
+- `--mmap-experts`
+- `--resident-budget-gib 16` per agent
+- 2692 GPU expert-cache slots per agent
+- approximately 7.85 GiB of expert-cache VRAM per agent
+- shared existing MTP data
+
+Both independent 128K agents loaded successfully and completed concurrent
+inference.
+
+### Q4 formal C2 128K result
+
+The same frozen `V100-PERFORMANCE-C2-128K-v1` workload used for the IQ2_XS
+measurement was run once against the Q4 dual-agent topology.
+
+Contract:
+
+- manifest SHA256: `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`
+- context: 131072 per request
+- output reserve: 4096
+- minimum output: 1024
+- independent Project A + Project B prompts
+- no full-size warmup
+- exactly one measured batch
+- fresh Strata processes before measurement
+
+Successful run on 2026-10-02:
+
+| Metric | Agent A | Agent B |
+|---|---:|---:|
+| Prompt tokens | 126,967 | 126,968 |
+| Output tokens | 1,924 | 1,341 |
+| TTFT | 850.706 s | 851.149 s |
+| Prefill | **149.4 tok/s** | **149.4 tok/s** |
+| Decode | **3.1 tok/s** | **3.3 tok/s** |
+| Prefix `cache_n` | 0 | 0 |
+| `cached_tokens` | 0 | 0 |
+| Expert-cache hit | 58.9% | 65.2% |
+| RAM-tier blobs | 204,108 | 157,410 |
+| File-tier blobs | 213,743 | 115,566 |
+| File-tier reads | 615,572.4 MB | 294,972.1 MB |
+| Request wall time | 1471.416 s | 1257.075 s |
+
+Batch-level result:
+
+~~~text
+submission_skew_s = 0.003769
+batch_wall_s      = 1471.425
+decode_overlap_s  = 405.926
+both_busy_samples = 1974
+both_answering    = 1974
+
+mechanical_pass = true
+active_overlap  = true
+post_health     = true
+~~~
+
+The Q4 run therefore demonstrated that `UD-Q4_K_XL` can technically run as two
+independent 128K Strata agents on two Tesla V100 16 GB GPUs.
+
+Performance, however, was substantially below the validated IQ2_XS topology.
+
+For the same formal C2 workload:
+
+| Model | Prefill A/B | Decode A/B | Batch wall |
+|---|---:|---:|---:|
+| IQ2_XS | 700.5 / 714.0 tok/s | 21.2 / 22.5 tok/s | 247.933 s |
+| UD-Q4_K_XL | 149.4 / 149.4 tok/s | 3.1 / 3.3 tok/s | 1471.425 s |
+
+Relative to IQ2_XS, the Q4 experiment was approximately:
+
+- 4.7x slower in long-context prefill
+- 6.4-6.8x slower in decode
+- 5.9x longer in total batch wall time
+- approximately 14.2 minutes TTFT per request
+
+The Q4 topology also placed substantial pressure on the 64 GB host memory.
+With two 16 GiB resident expert tiers, the 4 GiB swap file approached
+saturation during the 128K concurrent workload, while large amounts of expert
+data continued to be served from the GGUF file tier.
+
+The result is therefore recorded as a successful compatibility and feasibility
+test, but `UD-Q4_K_XL` is not considered practical for the intended dual-agent
+128K workload on this P520.
+
+IQ2_XS remains the preferred deployment for this machine.
+
+Local result directory:
+
+~~~text
+results/c2-q4-v100-contract-20261002-164957
+~~~
+
+The result directory is excluded by the repository's `results/` gitignore rule.
+The measured `summary.json` SHA256 is:
+
+~~~text
+f5f6427eb063af3ff61f7e2090219ca36f32c0d4f0bd758b3afdd7bb4f74d6dc
+~~~
+
+The Q4 GGUF files and generated pack were removed after testing, recovering
+approximately 105 GB of model-NVMe capacity. The Q4 benchmark harness and
+launcher are retained for reproducibility.
+
+## Build image
+
+Rebuild the validated 0.1.31 image only when intentionally changing the stable
+Strata/CUDA image:
+
+```bash
+git pull --ff-only
+bash scripts/20-docker-build-v100.sh
+```
+
+Build the separate Stage 3-A V100-fork image with:
+
+```bash
+bash scripts/54-docker-build-jmnargi-v100.sh
+```
+
+That produces:
+
+~~~text
+strata-v100-jmnargi:9d77749
+~~~
+
+The Stage 3-A Dockerfile deliberately uses CUDA 12.9.1 instead of the fork's
+default CUDA 13 image so that `sm_70` can be compiled. It does **not** apply
+the old 0.1.31 `setup.py` admission patch, `patch_volta_prompt_attn.py`, or
+`STRATA_EXPERIMENTAL_SM60=ON`: the pinned fork already has native V100 support.
+The helper also avoids Dockerfile Python heredocs because this P520 uses the
+legacy Docker builder.
+
+Both image builds are Docker-contained. Do not install a host CUDA toolkit for
+this deployment.
+
+## Safety / preservation policy
+
+The following containers are validated baselines and should not be deleted casually:
+
+```text
+strata-iq2xs-mgpu
+strata-iq2xs-single-mmap
+strata-iq2xs-agent-a
+strata-iq2xs-agent-b
+```
+
+Normal operations should use `docker start`, `docker stop`, or `docker restart`. Avoid `docker rm -f` unless deliberately replacing a baseline after its configuration and results have been preserved.
+
+The formal C2 script intentionally restarts the two existing agents to clear process-local request/prefix state before its one measured batch.
 
 ## References
 
-- **Strata Core Engine**: https://github.com/Niko1221/Strata
-- **Strata-V100 Fork (Stage 3-A)**: https://github.com/jmnargi/Strata-V100
-- **Model Card (GSQ-RCO GGUF)**: `ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF`
-- **Volta SM70 Context Issue**: https://github.com/Niko1221/Strata/issues/236
-- **Multi-GPU Strata Architecture**: https://github.com/Niko1221/Strata/blob/main/docs/MULTI_GPU.md
+- Strata: https://github.com/Niko1221/Strata
+- Strata-V100 fork used for Stage 3-A: https://github.com/jmnargi/Strata-V100
+- Volta issue: https://github.com/Niko1221/Strata/issues/236
+- V100 experimental PR: https://github.com/Niko1221/Strata/pull/130
+- V100 multi-GPU measurements: https://github.com/Niko1221/Strata/pull/139
+- Multi-GPU docs: https://github.com/Niko1221/Strata/blob/main/docs/MULTI_GPU.md
