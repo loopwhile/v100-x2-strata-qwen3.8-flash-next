@@ -2,20 +2,24 @@
 
 Experimental Docker-first deployment and benchmark harness for running and comparing the original Qwen3.8-Flash-Next quantizations on a Lenovo ThinkStation P520 with two Tesla V100 16 GB GPUs. IQ2_XS remains the preferred deployment; IQ3_XXS and IQ3_S are also measured below.
 
-## Stage 4-B MIXED experiment — prepared, not yet measured
+## Stage 4-B MIXED experiment (2026-10-22) — measured & analyzed
 
-**New isolated configuration:** V100 host GPU0 Agent A = **IQ3_XXS**,
+**Isolated configuration:** V100 host GPU0 Agent A = **IQ3_XXS**,
 host GPU1 Agent B = **IQ2_XS**, both vanilla Strata **0.1.47**, INT8 KV and
 independent 128K contexts. Existing containers, Docker image and ThinkPad
-SSH tunnel remain unchanged. No power-limit or clock adjustments.
+SSH tunnel remained unchanged. No power-limit or clock adjustments.
 
 - [Mixed AGY plan and exact ThinkPad → P520 commands](docs/STAGE4B_MIXED_AGY_HANDOFF.md)
+- [Stage 4-B Mixed C2 summary & deep root cause analysis](artifacts/stage4-results-20261021/stage4-b-mixed-c2-benchmark-summary.md)
 - [Safe mixed start/preflight](scripts/78-start-stage4b-mixed-agents.sh),
   [stop without delete](scripts/79-stop-stage4b-mixed-agents.sh),
   [frozen mixed C2](scripts/80-bench-stage4b-mixed-c2.sh).
 
-**Not measured yet.** Mixed measurements cannot be inferred by averaging
-the previous homogeneous IQ2_XS and IQ3_XXS scores.
+**Key Empirical Result: Mixed Quant Serving is Prohibited on 61GB RAM.**
+- **Agent A (IQ3_XXS)**: TTFT ballooned from 176.5s to **914.9s** (+418% latency), prefill collapsed from 720.4 to **138.8 tok/s** (-81%), decode dropped from 27.1 to **7.9 tok/s** (-71%). 18,690 major page faults, 606 GB read from disk.
+- **Agent B (IQ2_XS)**: TTFT degraded from 128.7s to **214.0s** (+66%), prefill dropped from 988.5 to **593.9 tok/s** (-40%), decode dropped from 36.6 to **22.6 tok/s** (-38%).
+- **C2 Concurrency Collapse**: `decode_overlap_s = 0.000s` (`active_overlap = False`). Agent B completed at 304s while Agent A was still in prefill until 915s.
+- **Root Cause**: Breaking Linux OS page cache sharing across heterogeneous GGUF models required 47 GB + 39 GB = **86 GB working set**, vastly exceeding host RAM (61 GiB) and triggering 1.6 GiB swap and catastrophic storage thrashing. Co-located independent agents must remain homogeneous (IQ2_XS + IQ2_XS).
 
 ## Stage 4 execution and results (2026-10-21)
 
@@ -29,6 +33,7 @@ Stage 4 benchmarking has been executed and verified in isolated environments wit
 - [Stage 4-B build receipt (0.1.47)](artifacts/stage4-results-20261021/stage4-b-build-receipt.md) & [IQ2_XS C2 summary](artifacts/stage4-results-20261021/stage4-b-c2-benchmark-summary.md)
 - [Stage 4-B IQ3_XXS C2 summary](artifacts/stage4-results-20261021/stage4-b-iq3xxs-c2-benchmark-summary.md)
 - [Stage 4-B IQ3_S C2 summary](artifacts/stage4-results-20261021/stage4-b-iq3s-c2-benchmark-summary.md)
+- [Stage 4-B MIXED C2 summary](artifacts/stage4-results-20261021/stage4-b-mixed-c2-benchmark-summary.md)
 - [Stage 4-C IQ2_XS C2 summary](artifacts/stage4-results-20261021/stage4-c-c2-benchmark-summary.md)
 - [Stage 4-C IQ3_XXS C2 summary](artifacts/stage4-results-20261021/stage4-c-iq3xxs-c2-benchmark-summary.md)
 - [Stage 4-C IQ3_S C2 summary](artifacts/stage4-results-20261021/stage4-c-iq3s-c2-benchmark-summary.md)
