@@ -2,6 +2,21 @@
 
 Experimental Docker-first deployment and benchmark harness for running and comparing the original Qwen3.8-Flash-Next quantizations on a Lenovo ThinkStation P520 with two Tesla V100 16 GB GPUs. IQ2_XS remains the preferred deployment; IQ3_XXS and IQ3_S are also measured below.
 
+## Stage 4-B MIXED experiment — prepared, not yet measured
+
+**New isolated configuration:** V100 host GPU0 Agent A = **IQ3_XXS**,
+host GPU1 Agent B = **IQ2_XS**, both vanilla Strata **0.1.47**, INT8 KV and
+independent 128K contexts. Existing containers, Docker image and ThinkPad
+SSH tunnel remain unchanged. No power-limit or clock adjustments.
+
+- [Mixed AGY plan and exact ThinkPad → P520 commands](docs/STAGE4B_MIXED_AGY_HANDOFF.md)
+- [Safe mixed start/preflight](scripts/78-start-stage4b-mixed-agents.sh),
+  [stop without delete](scripts/79-stop-stage4b-mixed-agents.sh),
+  [frozen mixed C2](scripts/80-bench-stage4b-mixed-c2.sh).
+
+**Not measured yet.** Mixed measurements cannot be inferred by averaging
+the previous homogeneous IQ2_XS and IQ3_XXS scores.
+
 ## Stage 4 execution and results (2026-10-21)
 
 Stage 4 benchmarking has been executed and verified in isolated environments without modifying live infrastructure or host power settings.

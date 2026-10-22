@@ -18,3 +18,13 @@ and [Antigravity handoff](docs/STAGE4_ANTIGRAVITY_HANDOFF.md).
 - Before stopping live serving agents to free GPUs/8080/8081 for Stage 4 tests,
   ask the user for explicit approval and document rollback.
 - Record empirical results distinctly from unverified optimization claims.
+
+## Explicit Stage 4-B mixed-quant exception
+
+The existing IQ2_XS symmetric agent recipe remains the **historical primary
+comparison** only. The user expressly requested an **isolated** mixed trial:
+host GPU0/A = IQ3_XXS, host GPU1/B = IQ2_XS, both vanilla Strata 0.1.47.
+See [mixed AGY handoff](docs/STAGE4B_MIXED_AGY_HANDOFF.md). This does not
+authorize changing power, overwriting live containers, deleting historical
+agents, enabling SM70_TABLE or modifying the ThinkPad SSH tunnel.
+The mixed test has not been measured or promoted.
