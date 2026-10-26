@@ -6,6 +6,8 @@ The project explores how far legacy Volta hardware can be pushed using [Strata](
 
 This repository documents the experimental progression from initial Volta compatibility through dual-agent deployment, quantization comparisons, upstream engine upgrades, optional V100 tuning, and mixed-quantization co-residency.
 
+> **Stage 5 (planned only):** [IQ3_S optimization test plan](docs/STAGE5_PLAN.md) defines seven software-only experiment types (one conditional), repeated 128K C2 tests, diagnostics, and preservation gates. **No Stage 5 result or production change is implied.**
+
 > **Current performance recommendation:** Two independent **IQ2_XS** agents using **upstream Strata 0.1.47**. Stage 4-C (`STRATA_SM70_TABLE=1`) produced the fastest single-run IQ2_XS results, while vanilla Stage 4-B is a simpler candidate. The preserved Stage 3-A deployment remains available for rollback. A benchmark result does not imply that its containers have been promoted to production.
 
 ---
@@ -651,6 +653,7 @@ These scripts are **not routine start commands**. They may restart selected test
 - [Stage 3 results](artifacts/stage3-results-20261004/)
 - [Stage 4 configs](artifacts/stage4-configs-20261021/)
 - [Stage 4 results and SHA-256 receipts](artifacts/stage4-results-20261021/)
+- [Stage 5 IQ3_S optimization test plan](docs/STAGE5_PLAN.md)
 - [Stage 4 plan](docs/STAGE4_PLAN.md)
 - [Stage 4 Antigravity CLI handoff](docs/STAGE4_ANTIGRAVITY_HANDOFF.md)
 - [Mixed trial handoff](docs/STAGE4B_MIXED_AGY_HANDOFF.md)
