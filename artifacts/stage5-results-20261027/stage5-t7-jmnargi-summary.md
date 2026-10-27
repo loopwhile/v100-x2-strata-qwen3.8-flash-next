@@ -1,24 +1,45 @@
-# Stage 5 — T7 Benchmark Summary (`jmnargi/Strata-V100@2c9b1dd`, PR #74 IQ3_S WMMA2 + PR #80 V100 Prefill Scheduler)
+# Stage 5 — T7 & T7-Fixed Benchmark Summary (`jmnargi/Strata-V100@2c9b1dd`, PR #74 IQ3_S WMMA2 + PR #80 V100 Prefill Scheduler)
 
 - **Date**: 2026-10-27
-- **Experiment ID**: Stage 5 — **T7** (`jmnargi/Strata-V100@2c9b1dd` + `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` + `STRATA_STAGER_SSD=0`)
+- **Experiment IDs**:
+  - **T7 (Default `STRATA_SM70_PERF=1`)**: `jmnargi/Strata-V100@2c9b1dd` + `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` + `STRATA_STAGER_SSD=0`
+  - **T7-Fixed (`STRATA_SM70_PERF=0` + `STRATA_PF_WMMA2=1`)**: `jmnargi/Strata-V100@2c9b1dd` + `STRATA_SM70_PERF=0` + `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` + `STRATA_PF_WMMA2=1` + `STRATA_STAGER_SSD=0`
 - **Engine & Image**:
   - Image: `strata-v100-jmnargi:2c9b1dd` (`sha256:5b62fa861bbd66bf11600f153e1f277145ed0c41d118a39a6d5fc8c9735147fa`)
-  - Upstream Base Image: `v0.1.47` (`sha256:47533f103d14ca24267e4cf2129d18b4739a17609e691dfda69f426f4120c27d`)
-  - Source Commit: `jmnargi/Strata-V100@2c9b1dd294a7ffbb50171d87e45d43ab8062fa0e` (`PR #80: V100 prefill scheduler`, includes `PR #74: IQ3_S WMMA2 128-token grouped tiles` and `PR #77: V100 graph dispatch`)
-  - Native Engine SHA256 (`/app/strata_inference_engine.cpython-312-x86_64-linux-gnu.so`): `f0da5abf41115c9c0707751ec940f0f1977d04c690b55713cd19b2b7ba815030` (`0.1.45.3`, CUDA `12.9.86`, `sm_70`)
+  - Source Commit: `jmnargi/Strata-V100@2c9b1dd7bda3102c4a8e65fbe56c45f5c6882926` (`PR #80: V100 prefill scheduler`, includes `PR #74: IQ3_S WMMA2 128-token grouped tiles` and `PR #77: V100 graph dispatch`)
+  - Native Engine SHA256 (`/opt/strata/engine/strata`): `f0da5abf41115c9c0707751ec940f0f1977d04c690b55713cd19b2b7ba815030` (`0.1.45.3`, CUDA `12.9.86`, `sm_70`)
 - **Model**: `Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf` (53.2 GiB across 2 shards in `/srv/models`)
 - **Topology**: 2 independent symmetric 1-GPU agents (`strata-s5-agent-a` on GPU0 / port 8080, `strata-s5-agent-b` on GPU1 / port 8081)
-- **Locked Contract**:
-  - `--ctx-size 131072 -np 1 --cache-type-k q8_0 --cache-type-v q8_0 --Reasoning off --temp 0 --seed 42 --threads 8 --gpu-layers 99 --mmap-experts --paged-kv --kv-Pool-blocks 4200`
-  - Environment flags: `STRATA_SELECT_SIMT=1`, `STRATA_PF_WMMA=1` (also activates `STRATA_PF_WMMA2=1` grouped 128-token WMMA2 tiles in `jmnargi`), `STRATA_STAGER_SSD=0`
-  - Note: `jmnargi/Strata-V100` `src/core/nv_defaults.cpp` also enables 15 `sm_70` default flags unless `STRATA_SM70_PERF=0` is set, including `STRATA_SM70_TABLE=1` and `STRATA_ADAPT_OVERLAP=1`.
-  - GPU Power Cap: 150 W locked on both V100-SXM2-16GB GPUs
 - **Workload Contract**: `V100-PERFORMANCE-C2-128K-v1` (Manifest SHA256: `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`)
 
 ---
 
-## 1. Per-Batch Results (3 Runs)
+## 1. T7-Fixed Per-Batch Results (`STRATA_SM70_PERF=0` + `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` + `STRATA_PF_WMMA2=1` + `STRATA_STAGER_SSD=0`)
+
+By setting `STRATA_SM70_PERF=0` (disabling the 15 decode/table switches in `src/core/nv_defaults.cpp` that were tuned for `--layer-split 16` rather than single-GPU 16GB `--mmap-experts`: `STRATA_SM70_TABLE=1`, `STRATA_ADAPT_OVERLAP=1`, `STRATA_EXPDEC=1`, etc.) and explicitly enabling `STRATA_SELECT_SIMT=1`, `STRATA_PF_WMMA=1`, `STRATA_PF_WMMA2=1`, and `STRATA_STAGER_SSD=0`, **T7-Fixed preserved 100% of the Stage 4-B/T1 decode speed (`21.45 tok/s` 3-run mean, up to `22.6 tok/s`) while achieving `899.23 tok/s` 3-run mean prefill (`905.40 tok/s` median, `939.0 tok/s` peak) and the shortest batch wall time of all Stage 5 experiments (`212.18 s` mean, `205.85 s` best)**.
+
+| Run | Batch ID | Agent | Prompt Tokens | Output Tokens | Prefill (tok/s) | TTFT (s) | Decode (tok/s) | Total Wall (s) | Expert Hit Rate | File Stage (MB) | Output SHA256 |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| **Run 1** | `c2-stage5-t7-fixed-iq3s-20261027-195330-run1` | **A (GPU0)** | 126,967 | 1,332 | **921.7** | 138.03 | **22.6** | **197.04** | 0.828 | 223,112.0 | `72e11c1e388b425c...` |
+| **Run 1** | `c2-stage5-t7-fixed-iq3s-20261027-195330-run1` | **B (GPU1)** | 126,968 | 1,503 | **939.0** | 135.50 | **21.4** | **205.84** | 0.831 | 270,970.4 | `869d2bdd4f456cc9...` |
+| **Run 2** | `c2-stage5-t7-fixed-iq3s-20261027-195737-run2` | **A (GPU0)** | 126,967 | 1,371 | **856.7** | 148.48 | **21.4** | 212.83 | 0.827 | 231,957.7 | `e6d8bbb4ab2ef70a...` |
+| **Run 2** | `c2-stage5-t7-fixed-iq3s-20261027-195737-run2` | **B (GPU1)** | 126,968 | 1,489 | **867.2** | 146.69 | **20.6** | 218.99 | 0.830 | 268,537.2 | `51d312dc042b9fce...` |
+| **Run 3** | `c2-stage5-t7-fixed-iq3s-20261027-200143-run3` | **A (GPU0)** | 126,967 | 1,469 | **891.4** | 142.71 | **21.3** | 211.68 | 0.828 | 257,046.8 | `82bc30ff43d4c511...` |
+| **Run 3** | `c2-stage5-t7-fixed-iq3s-20261027-200143-run3` | **B (GPU1)** | 126,968 | 1,418 | **919.4** | 138.40 | **21.4** | **204.62** | 0.832 | 250,657.1 | `0ff40635a805c379...` |
+
+### T7-Fixed Batch-Level Symmetry & Overlap Summary
+
+| Run | Symmetric Mean Prefill (tok/s) | Symmetric Mean TTFT (s) | Symmetric Mean Decode (tok/s) | Batch Wall Time (s) | Decode Overlap (s) | Dual-Decode Samples |
+|---|---:|---:|---:|---:|---:|---:|
+| **Run 1** | **930.35** | **136.77** | **22.00** | **205.85** | 59.01 | 290 |
+| **Run 2** | 861.95 | 147.59 | 21.00 | 219.00 | 64.35 | 315 |
+| **Run 3** | **905.40** | **140.55** | **21.35** | **211.70** | 61.90 | 304 |
+| **3-Run Mean** | **899.23** | **141.64** | **21.45** | **212.18** | **61.75** | **303.0** |
+| **3-Run Median** | **905.40** | **140.55** | **21.35** | **211.70** | **61.90** | **304.0** |
+
+---
+
+## 2. T7 Unfixed Per-Batch Results (Default `STRATA_SM70_PERF=1` Stack Active)
 
 | Run | Batch ID | Page Cache Start | Agent | Prompt Tokens | Output Tokens | Prefill (tok/s) | TTFT (s) | Decode (tok/s) | Total Wall (s) | Expert Hit Rate | File Stage (MB) | Output SHA256 |
 |---|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
@@ -29,50 +50,27 @@
 | **Run 3** | `c2-stage5-t7-iq3s-20261027-191616-run3` | 48.8G / 51.1G (95.5%) | **A (GPU0)** | 126,955 | 1,980 | **932.1** | 136.50 | 18.1 | 245.82 | 0.795 | 457,745.2 | `df25d5b5fc76ed23...` |
 | **Run 3** | `c2-stage5-t7-iq3s-20261027-191616-run3` | 48.8G / 51.1G (95.5%) | **B (GPU1)** | 127,041 | 1,659 | **947.6** | 134.26 | 18.8 | 222.67 | 0.825 | 352,185.7 | `9252ea58d47c0a21...` |
 
-### Batch-Level Symmetry & Overlap Summary
+---
 
-| Run | Symmetric Mean Prefill (tok/s) | Symmetric Mean TTFT (s) | Symmetric Mean Decode (tok/s) | Batch Wall Time (s) | Decode Overlap (s) | Dual-Decode Samples | Host Swap Used |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| **Run 1** (Warm-up from 73.4% cache) | 761.90 | 167.02 | 17.90 | 264.38 | 65.21 | 318 | 81 MiB |
-| **Run 2** (Warm 91.0% cache) | **905.05** | **140.59** | **19.45** | **233.13** | 67.12 | 327 | 81 MiB |
-| **Run 3** (Warm 95.5% cache) | **939.85** | **135.38** | **18.45** | **245.84** | 86.16 | 422 | 81 MiB |
-| **3-Run Mean** | **868.93** | **147.66** | **18.60** | **247.78** | **72.83** | **355.7** | **81 MiB** |
-| **3-Run Median** | **905.05** | **140.59** | **18.45** | **245.84** | **67.12** | **327.0** | **81 MiB** |
-| **Warm Runs 2–3 Mean** | **922.45** | **137.99** | **18.95** | **239.49** | **76.64** | **374.5** | **81 MiB** |
+## 3. Comparison Across All Stage 5 Arms (T1 vs T2 vs T3 vs T4 vs T6 vs T8 vs T7 vs T7-Fixed)
+
+| Metric | T1 (0.1.47 Base) | T2 (+SIMT) | T3 (+WMMA) | T4 (0.1.47 +SIMT+WMMA) | T6-Fixed (0.1.50 Base) | T8 (0.1.50 +SIMT+WMMA) | T7 Unfixed (`jmnargi` Default) | **T7-Fixed ⭐ (`jmnargi` + `SM70_PERF=0` + `WMMA2=1`)** |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **Agent A Prefill Mean (tok/s)** | 741.80 | 875.50 | 794.97 | 883.63 | 747.30 | 871.47 | 863.13 | **889.93** (Med **891.40**, Peak **921.70**) |
+| **Agent B Prefill Mean (tok/s)** | 747.30 | 882.50 | 802.37 | 891.10 | 756.23 | 880.53 | 874.73 | **908.53** (Med **919.40**, Peak **939.00**) |
+| **Symmetric Mean Prefill (tok/s)** | 744.55 | 879.00 | 798.67 | 887.37 | 751.77 | 876.00 | 868.93 | **899.23** (Med **905.40**, Peak **930.35**) |
+| **Symmetric Mean TTFT (s)** | 171.10 | 144.81 | 159.30 | 143.36 | 169.44 | 145.22 | 147.66 | **141.64** (Med **140.55**, Best **136.77**) |
+| **Symmetric Mean Decode (tok/s)** | **21.45** | 21.30 | 21.20 | 21.20 | 21.20 | 20.77 | 18.60 | **21.45** (Med **21.35**, Peak **22.00**) |
+| **Batch Wall Time Mean (s)** | 254.48 | 229.62 | 254.37 | 228.92 | 253.91 | 234.40 | 247.78 | **212.18** (Med **211.70**, Best **205.85**) |
+| **Decode Overlap Mean (s)** | 69.34 | 71.75 | 84.57 | 74.16 | 71.93 | 76.27 | 72.83 | **61.75** |
 
 ---
 
-## 2. Comparison Across All Stage 5 Arms (T1 vs T2 vs T3 vs T4 vs T6 vs T8 vs T7)
+## 4. Technical Root Cause & Resolution Summary
 
-| Metric | T1 (0.1.47 Base) | T2 (+SIMT) | T3 (+WMMA) | T4 (0.1.47 +SIMT+WMMA) | T6-Fixed (0.1.50 Base) | T8 (0.1.50 +SIMT+WMMA) | T7 (`jmnargi` 3-Run Mean) | T7 (`jmnargi` Warm 2–3 Mean) | T7 Peak (Run 3) |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| **Agent A Prefill Mean (tok/s)** | 741.80 | 875.50 | 794.97 | 883.63 | 747.30 | 871.47 | 863.13 | **915.75** | **932.10** |
-| **Agent B Prefill Mean (tok/s)** | 747.30 | 882.50 | 802.37 | 891.10 | 756.23 | 880.53 | 874.73 | **929.15** | **947.60** |
-| **Symmetric Mean Prefill (tok/s)** | 744.55 | 879.00 | 798.67 | 887.37 | 751.77 | 876.00 | 868.93 | **922.45** | **939.85** |
-| **Symmetric Mean TTFT (s)** | 171.10 | 144.81 | 159.30 | 143.36 | 169.44 | 145.22 | 147.66 | **137.99** | **135.38** |
-| **Symmetric Mean Decode (tok/s)** | **21.45** | 21.30 | 21.20 | 21.20 | 21.20 | 20.77 | 18.60 | 18.95 | 18.45 |
-| **Batch Wall Time Mean (s)** | 254.48 | 229.62 | 254.37 | **228.92** | 253.91 | 234.40 | 247.78 | 239.49 | 245.84 |
-| **Decode Overlap Mean (s)** | 69.34 | 71.75 | 84.57 | 74.16 | 71.93 | 76.27 | 72.83 | 76.64 | 86.16 |
-
----
-
-## 3. Technical Analysis of T7 (`jmnargi/Strata-V100@2c9b1dd`)
-
-### A. Prefill Breakthrough (`939.85 tok/s` Symmetric, `947.6 tok/s` Agent B Peak)
-- **PR #74 (IQ3_S WMMA2 128-token grouped tiles)** + **PR #80 (V100 prefill scheduler)** deliver the highest prefill throughput observed on dual V100-SXM2-16GB for `IQ3_S` at 128K context:
-  - Once page cache warmed above 90% in Run 2 (`91.0%`) and Run 3 (`95.5%`), symmetric prefill reached **905.05 tok/s** and **939.85 tok/s** (**+26.2% over T1 baseline**, and **+5.9% over T4's 887.37 tok/s**).
-  - Agent B reached **947.6 tok/s** (`134.26 s` TTFT for 127,041 tokens), shaving **36.8 seconds** off TTFT compared to T1 (`171.10 s`).
-  - Note: Because `docker build` for T7 had evicted ~13.6 GiB of the 51.1 GiB GGUF shard (`37.5G / 51.1G` cached at the start of Run 1), Run 1 served as the page-cache warm-up pass (`761.90 tok/s`) without thrashing thanks to `STRATA_STAGER_SSD=0`, and Runs 2–3 ran at full warm speed (**922.45 tok/s** mean).
-
-### B. Why Decode Dropped to `18.60 tok/s` (-12.3% vs T4 `21.20 tok/s`)
-- Inspecting `[strata]` engine logs and `jmnargi/Strata-V100` `src/core/nv_defaults.cpp` revealed three default behaviors active in `jmnargi/Strata-V100@2c9b1dd` on `sm_70`:
-  1. **`STRATA_ADAPT_OVERLAP=1` (Enabled by default in `nv_defaults.cpp`)**:
-     - On `--mmap-experts` (where there is no pinned RAM expert arena, only the mmap file tier), `STRATA_ADAPT_OVERLAP=1` triggers background adaptive expert swapping (`adaptive: 4 rounds, 96-384 swapped`) during decode while the CPU pool simultaneously fetches missed experts from the mmap file.
-     - Comparing engine logs:
-       - **T4 (Upstream 0.1.47)**: `decode waited 8476.6 ms across 24577 expert fetches (avg 0.345 ms)` -> **21.2 tok/s**
-       - **T7 (`jmnargi@2c9b1dd`)**: `decode waited 21737.3 ms across 52715 expert fetches (avg 0.412 ms)` -> **18.0–19.6 tok/s**
-  2. **`STRATA_SM70_TABLE=1` (Enabled by default in `nv_defaults.cpp`)**:
-     - Alters IQ3_S decode dequantization rounding slightly, causing output token trajectories and lengths (`1311–1980` tokens) to diverge from Upstream 0.1.47/0.1.50 (`1773` tokens on Agent A, `1224` tokens on Agent B).
-  3. **Post-Response Checkpoint Pass (~7.7s extra compute after decode)**:
-     - At the end of every 128K response, `jmnargi` runs `[strata] response-end checkpoint 128696 tokens: 7725.5 ms` and allocates extra VRAM buffers, dropping free VRAM to **`265 MiB`** (`15,880 MiB / 16,384 MiB` used vs `15,214 MiB` in Upstream 0.1.47/0.1.50).
-- **Implication**: While `jmnargi@2c9b1dd` proves that PR #74 (`WMMA2` 128-token tiles) + PR #80 can push V100 128K `IQ3_S` prefill to **~940 tok/s**, **T4 (`Upstream 0.1.47` + `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` + `STRATA_STAGER_SSD=0`)** remains the safer, faster end-to-end production configuration (`228.92 s` wall time, `21.20 tok/s` decode, `1,170 MiB` VRAM headroom, 100% deterministic bit-exact outputs across T1/T2/T6).
+1. **Why Unfixed T7 Decode Dropped to `18.60 tok/s`**:
+   - In `jmnargi/Strata-V100@2c9b1dd`, `src/core/nv_defaults.cpp` enables 16 `sm_70` switches by default (`STRATA_SM70_PERF=1`), which were tuned on a 2-GPU `--layer-split 16` rig where 32 GB of combined VRAM holds nearly all experts in VRAM.
+   - On our independent 1-GPU-per-agent 16 GB `--mmap-experts` topology (where 4,625 expert slots fit in VRAM and ~17% miss to the CPU pool), `STRATA_ADAPT_OVERLAP=1`, `STRATA_SM70_TABLE=1`, and `STRATA_EXPDEC=1` caused adaptive tier swap contention (`decode waited 18.3–21.7s` vs `8.5s`) and extra CUDA graph VRAM consumption.
+2. **How T7-Fixed Achieved Both `900–930 tok/s` Prefill AND `21.45 tok/s` (`22.6 tok/s` Peak) Decode**:
+   - Setting `STRATA_SM70_PERF=0` turned off all 15 decode/table switches in `nv_defaults.cpp`, restoring the clean upstream decode path (`21.45 tok/s` 3-run mean, matching T1's `21.45 tok/s` 100%).
+   - Explicitly passing `STRATA_SELECT_SIMT=1`, `STRATA_PF_WMMA=1`, `STRATA_PF_WMMA2=1`, and `STRATA_STAGER_SSD=0` kept PR #74's grouped 128-token `IQ3_S` WMMA2 kernel and PR #80's V100 prefill scheduler active, yielding **899.23 tok/s mean (`905.40 tok/s` median, `930.35 tok/s` peak) prefill** and cutting 3-run mean batch wall time to **212.18 s** (**-42.30 s faster than T1** and **-16.74 s faster than T4**).
