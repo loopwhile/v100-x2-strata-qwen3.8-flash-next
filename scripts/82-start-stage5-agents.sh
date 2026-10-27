@@ -34,6 +34,20 @@ for preserved in "strata-jmn-iq2xs-agent-a" "strata-jmn-iq2xs-agent-b"; do
   fi
 done
 
+# Check image
+docker image inspect "$IMAGE" >/dev/null 2>&1 || {
+  echo "ERROR: Image $IMAGE does not exist." >&2
+  exit 1
+}
+
+# Clean prior Stage 5 test containers if existed (to free ports)
+for c in "$A_NAME" "$B_NAME"; do
+  if docker ps -a --format '{{.Names}}' | grep -qw "$c"; then
+    echo "Cleaning up prior test container: $c"
+    docker rm -f "$c" >/dev/null
+  fi
+done
+
 # Check ports
 if [ "$MODE" = "both" ] || [ "$MODE" = "a" ]; then
   if ss -tlnp 2>/dev/null | grep -q ":8080 "; then
@@ -47,20 +61,6 @@ if [ "$MODE" = "both" ] || [ "$MODE" = "b" ]; then
     exit 1
   fi
 fi
-
-# Check image
-docker image inspect "$IMAGE" >/dev/null 2>&1 || {
-  echo "ERROR: Image $IMAGE does not exist." >&2
-  exit 1
-}
-
-# Clean prior Stage 5 containers if existed
-for c in "$A_NAME" "$B_NAME"; do
-  if docker ps -a --format '{{.Names}}' | grep -qw "$c"; then
-    echo "Cleaning up prior test container: $c"
-    docker rm -f "$c" >/dev/null
-  fi
-done
 
 start_agent_a() {
   echo "Starting Stage 5 Agent A on Host GPU 0 (cpus: 0-2,6-8, port: 8080) ..."
