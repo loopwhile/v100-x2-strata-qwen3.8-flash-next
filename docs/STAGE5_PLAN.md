@@ -111,10 +111,10 @@ Avoid using a single synthetic 128K cold request as the only representation of O
 - [x] T2 — `STRATA_SELECT_SIMT=1` alone (3 batches: Mean 879.0 tok/s, +18.1% prefill speedup, TTFT -26.3s, Decode 21.3 tok/s, PASS)
 - [x] T3 — `STRATA_PF_WMMA=1` alone (3 batches: Mean 798.7 tok/s, +7.3% prefill speedup, TTFT -11.8s, 84.6s overlap, PASS)
 - [x] T4 — combination: `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` (3 batches: Mean 887.4 tok/s, TTFT 143.4s, Decode 21.2 tok/s, PASS)
-- [ ] T5 — A-only, B-only, A+B resource contention controls
+- [ ] T5 — A-only, B-only, A+B resource contention controls (ON HOLD per user request)
 - [x] T6 — upstream Qwen 0.1.50 isolated source-pinned build and C2 (Unfixed Run 1 hit post-build page-cache eviction -> SSD stager 32-thread thrashing at 247.1 tok/s; Fixed with 100% page-cache restore + `STRATA_STAGER_SSD=0`, 3 batches: Mean 751.8 tok/s, Peak 791.3 tok/s, TTFT 169.4s, Decode 21.2 tok/s, PASS)
-- [ ] T7 — latest selected jmnargi V100 fork isolated source-pinned build and C2
+- [x] T7 — latest selected jmnargi V100 fork (`jmnargi/Strata-V100@2c9b1dd`, PR #74 IQ3_S WMMA2 + PR #80 V100 prefill scheduler) isolated source-pinned build and C2 (3 batches: Mean 868.9 tok/s, Warm 2–3 Mean 922.5 tok/s, Peak 939.9 tok/s / Agent B 947.6 tok/s, TTFT 135.4s best; Decode 18.6 tok/s due to default `STRATA_ADAPT_OVERLAP=1` on `--mmap-experts`, PASS)
 - [x] T8 — upstream Qwen 0.1.50 + `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` (`STRATA_STAGER_SSD=0`) C2 benchmark (3 batches: Mean 876.0 tok/s, TTFT 145.2s, Decode 20.8 tok/s, Wall 234.4s, 0 swap thrashing, PASS)
-- [ ] Compare repeated results, record quality limitations and choose **no promotion** or propose a separately approved next step
+- [x] Compare repeated results, record quality limitations and choose **no promotion** or propose a separately approved next step
 
 **Plan status at creation:** No Stage 5 benchmarks have been run; no conclusions on Stage 5 performance, no Docker runtime settings changed.
