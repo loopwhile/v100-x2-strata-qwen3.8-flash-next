@@ -111,7 +111,7 @@ Avoid using a single synthetic 128K cold request as the only representation of O
 - [x] T3 — `STRATA_PF_WMMA=1` alone (3 batches: Mean 798.7 tok/s, +7.3% prefill speedup, TTFT -11.8s, 84.6s overlap, PASS)
 - [x] T4 — combination: `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` (3 batches: Mean 887.4 tok/s, TTFT 143.4s, Decode 21.2 tok/s, PASS)
 - [ ] T5 — A-only, B-only, A+B resource contention controls
-- [ ] T6 — upstream Qwen 0.1.50 isolated source-pinned build and C2
+- [x] T6 — upstream Qwen 0.1.50 isolated source-pinned build and C2 (FAIL / SEVERE REGRESSION: 247.1 tok/s prefill, 514s TTFT, 34.6K major faults, 2.27GB swap thrashing; Gate stop triggered, containers cleanly stopped)
 - [ ] T7 — latest selected jmnargi V100 fork isolated source-pinned build and C2
 - [ ] Compare repeated results, record quality limitations and choose **no promotion** or propose a separately approved next step
 
