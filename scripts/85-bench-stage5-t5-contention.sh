@@ -50,6 +50,7 @@ run_single() {
 
   docker run --rm \
     --network host \
+    --user "$(id -u):$(id -g)" \
     -e STRATA_DIR=/opt/strata \
     -v "$ROOT:/work" \
     -v "$IQ3S_ROOT:/iq3s:ro" \
