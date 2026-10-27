@@ -10,7 +10,7 @@ A_NAME="strata-s5-agent-a"
 B_NAME="strata-s5-agent-b"
 MODE="${1:-both}" # both, a, or b
 
-# Extra environment flags (e.g. STRATA_SELECT_SIMT=1, STRATA_PF_WMMA=1)
+# Extra environment flags (e.g. STRATA_SELECT_SIMT=1, STRATA_PF_WMMA=1, STRATA_STAGER_SSD=0)
 EXTRA_DOCKER_ENV=()
 if [ -n "${STRATA_SELECT_SIMT:-}" ]; then
   EXTRA_DOCKER_ENV+=("-e" "STRATA_SELECT_SIMT=${STRATA_SELECT_SIMT}")
@@ -23,6 +23,15 @@ if [ -n "${STRATA_PF_WMMA2:-}" ]; then
 fi
 if [ -n "${STRATA_PREFILL_TIMING:-}" ]; then
   EXTRA_DOCKER_ENV+=("-e" "STRATA_PREFILL_TIMING=${STRATA_PREFILL_TIMING}")
+fi
+if [ -n "${STRATA_STAGER_SSD:-}" ]; then
+  EXTRA_DOCKER_ENV+=("-e" "STRATA_STAGER_SSD=${STRATA_STAGER_SSD}")
+fi
+if [ -n "${STRATA_STAGER_THREADS:-}" ]; then
+  EXTRA_DOCKER_ENV+=("-e" "STRATA_STAGER_THREADS=${STRATA_STAGER_THREADS}")
+fi
+if [ -n "${STRATA_IO_PREFETCH:-}" ]; then
+  EXTRA_DOCKER_ENV+=("-e" "STRATA_IO_PREFETCH=${STRATA_IO_PREFETCH}")
 fi
 
 # Safety check: preserved serving agents must never be overwritten
