@@ -39,6 +39,9 @@ RUN set -eux; \
     ls -lah /opt/strata/engine; \
     rm -rf /opt/strata/build /opt/strata/build-vision /opt/strata/build_jmnargi_stage5_v100_engine.py
 
+# Allow Docker bridge internal 0.0.0.0 bind (mapped to host 127.0.0.1:8080/8081) without API key for C2 harness parity
+RUN .venv/bin/python -c 'from pathlib import Path; p=Path("/opt/strata/serve/server.py"); s=p.read_text(); assert "\"127.0.0.1\", \"localhost\", \"::1\"" in s; p.write_text(s.replace("\"127.0.0.1\", \"localhost\", \"::1\"", "\"127.0.0.1\", \"localhost\", \"::1\", \"0.0.0.0\""))'
+
 LABEL org.opencontainers.image.revision="${STRATA_V100_REF}"
 
 VOLUME ["/data"]
