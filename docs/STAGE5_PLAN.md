@@ -106,7 +106,7 @@ Avoid using a single synthetic 128K cold request as the only representation of O
 
 ## 6. Execution checklist (initial state)
 
-- [ ] T1 — 0.1.47 dual IQ3_S baseline (3 batches + host diagnostics)
+- [x] T1 — 0.1.47 dual IQ3_S baseline (3 batches: Cold 703.3 tok/s, Warm 759-771 tok/s, Decode 21.45 tok/s, detailed telemetry captured)
 - [ ] T2 — `STRATA_SELECT_SIMT=1` alone
 - [ ] T3 — `STRATA_PF_WMMA=1` alone
 - [ ] T4 — combination, only if T2/T3 gate passes (otherwise record SKIPPED)
