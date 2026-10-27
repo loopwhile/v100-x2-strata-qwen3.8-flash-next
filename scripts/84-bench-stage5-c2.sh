@@ -105,7 +105,10 @@ done
 stamp="$(date +%Y%m%d-%H%M%S)"
 OUT_HOST="$ROOT/results/c2-stage5-${TEST_ID}-iq3s-$stamp-run${RUN_LABEL}"
 OUT_CONT="/work/results/c2-stage5-${TEST_ID}-iq3s-$stamp-run${RUN_LABEL}"
-mkdir -p "$OUT_HOST"
+mkdir -p "$ROOT/results"
+
+TELEMETRY_TMP="/tmp/stage5-telemetry-$stamp"
+mkdir -p "$TELEMETRY_TMP"
 
 echo
 echo "=== Starting Telemetry & Benchmark Execution ==="
@@ -113,20 +116,24 @@ echo "Output Directory: $OUT_HOST"
 echo
 
 # Telemetry background processes
-grep -E "pgfault|pgmajfault|pgpgin|pgpgout|pswpin|pswpout" /proc/vmstat > "$OUT_HOST/vmstat-proc-before.txt"
-vmstat 1 > "$OUT_HOST/telemetry-vmstat.log" 2>&1 &
+grep -E "pgfault|pgmajfault|pgpgin|pgpgout|pswpin|pswpout" /proc/vmstat > "$TELEMETRY_TMP/vmstat-proc-before.txt"
+vmstat 1 > "$TELEMETRY_TMP/telemetry-vmstat.log" 2>&1 &
 PID_VMSTAT=$!
-iostat -xz 1 > "$OUT_HOST/telemetry-iostat.log" 2>&1 &
+iostat -xz 1 > "$TELEMETRY_TMP/telemetry-iostat.log" 2>&1 &
 PID_IOSTAT=$!
-pidstat -r -u -d 1 > "$OUT_HOST/telemetry-pidstat.log" 2>&1 &
+pidstat -r -u -d 1 > "$TELEMETRY_TMP/telemetry-pidstat.log" 2>&1 &
 PID_PIDSTAT=$!
-nvidia-smi --query-gpu=timestamp,index,temperature.gpu,power.draw,power.limit,utilization.gpu,memory.used,memory.total,clocks.sm --format=csv,noheader -l 1 > "$OUT_HOST/telemetry-gpu.log" 2>&1 &
+nvidia-smi --query-gpu=timestamp,index,temperature.gpu,power.draw,power.limit,utilization.gpu,memory.used,memory.total,clocks.sm --format=csv,noheader -l 1 > "$TELEMETRY_TMP/telemetry-gpu.log" 2>&1 &
 PID_GPU=$!
 
 cleanup_telemetry() {
   kill "$PID_VMSTAT" "$PID_IOSTAT" "$PID_PIDSTAT" "$PID_GPU" 2>/dev/null || true
   wait "$PID_VMSTAT" "$PID_IOSTAT" "$PID_PIDSTAT" "$PID_GPU" 2>/dev/null || true
-  grep -E "pgfault|pgmajfault|pgpgin|pgpgout|pswpin|pswpout" /proc/vmstat > "$OUT_HOST/vmstat-proc-after.txt" 2>/dev/null || true
+  grep -E "pgfault|pgmajfault|pgpgin|pgpgout|pswpin|pswpout" /proc/vmstat > "$TELEMETRY_TMP/vmstat-proc-after.txt" 2>/dev/null || true
+  if [ -d "$OUT_HOST" ]; then
+    mv "$TELEMETRY_TMP"/* "$OUT_HOST/" 2>/dev/null || true
+    rmdir "$TELEMETRY_TMP" 2>/dev/null || true
+  fi
 }
 trap cleanup_telemetry EXIT
 

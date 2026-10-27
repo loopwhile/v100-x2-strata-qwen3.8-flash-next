@@ -35,14 +35,17 @@ run_single() {
   stamp="$(date +%Y%m%d-%H%M%S)"
   out_host="$ROOT/results/c2-stage5-t5-single-${agent}-$stamp"
   out_cont="/work/results/c2-stage5-t5-single-${agent}-$stamp"
-  mkdir -p "$out_host"
+  mkdir -p "$ROOT/results"
+
+  telemetry_tmp="/tmp/stage5-t5-telemetry-$stamp"
+  mkdir -p "$telemetry_tmp"
 
   # Start telemetry
-  vmstat 1 > "$out_host/telemetry-vmstat.log" 2>&1 &
+  vmstat 1 > "$telemetry_tmp/telemetry-vmstat.log" 2>&1 &
   pid_vmstat=$!
-  iostat -xz 1 > "$out_host/telemetry-iostat.log" 2>&1 &
+  iostat -xz 1 > "$telemetry_tmp/telemetry-iostat.log" 2>&1 &
   pid_iostat=$!
-  pidstat -r -u -d 1 > "$out_host/telemetry-pidstat.log" 2>&1 &
+  pidstat -r -u -d 1 > "$telemetry_tmp/telemetry-pidstat.log" 2>&1 &
   pid_pidstat=$!
 
   docker run --rm \
@@ -61,6 +64,10 @@ run_single() {
 
   kill "$pid_vmstat" "$pid_iostat" "$pid_pidstat" 2>/dev/null || true
   wait "$pid_vmstat" "$pid_iostat" "$pid_pidstat" 2>/dev/null || true
+  if [ -d "$out_host" ]; then
+    mv "$telemetry_tmp"/* "$out_host/" 2>/dev/null || true
+    rmdir "$telemetry_tmp" 2>/dev/null || true
+  fi
 
   bash "$ROOT/scripts/83-stop-stage5-agents.sh"
 }
