@@ -33,6 +33,18 @@ fi
 if [ -n "${STRATA_IO_PREFETCH:-}" ]; then
   EXTRA_DOCKER_ENV+=("-e" "STRATA_IO_PREFETCH=${STRATA_IO_PREFETCH}")
 fi
+if [ -n "${STRATA_SM70_PERF:-}" ]; then
+  EXTRA_DOCKER_ENV+=("-e" "STRATA_SM70_PERF=${STRATA_SM70_PERF}")
+fi
+if [ -n "${STRATA_SM70_TABLE:-}" ]; then
+  EXTRA_DOCKER_ENV+=("-e" "STRATA_SM70_TABLE=${STRATA_SM70_TABLE}")
+fi
+if [ -n "${STRATA_ADAPT_OVERLAP:-}" ]; then
+  EXTRA_DOCKER_ENV+=("-e" "STRATA_ADAPT_OVERLAP=${STRATA_ADAPT_OVERLAP}")
+fi
+if [ -n "${STRATA_EXPDEC:-}" ]; then
+  EXTRA_DOCKER_ENV+=("-e" "STRATA_EXPDEC=${STRATA_EXPDEC}")
+fi
 
 # Safety check: preserved serving agents must never be overwritten
 for preserved in "strata-jmn-iq2xs-agent-a" "strata-jmn-iq2xs-agent-b"; do
