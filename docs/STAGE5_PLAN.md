@@ -72,6 +72,7 @@ Keep the following fixed in primary T1–T4/T6/T7 arms unless an explicitly name
 | **T5** | One agent versus simultaneous two | Same 0.1.47 recipe, run A alone and B alone, then both together | Separate host CPU/RAM/page-cache/SSD/PCIe contention from engine effects |
 | **T6** | Official newer Qwen engine | Isolated upstream **Qwen 0.1.50** versus T1 using frozen assets/configs | Measure version-level improvement/regression; confirm release and exact commit at build time |
 | **T7** | Updated Volta fork | Isolated latest selected **jmnargi/Strata-V100** commit versus T1 | Measure IQ3_S-capable WMMA2 and fork improvements with identical topology/workload |
+| **T8** | 0.1.50 + Combined SIMT+WMMA | T6 (`0.1.50` + `STRATA_STAGER_SSD=0`) + **`STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1`** | Measure combined Volta kernel flags on newer upstream 0.1.50 engine versus T4 and T6 |
 
 T2/T3 flags must be injected into **newly created** test containers, e.g. Docker `-e STRATA_SELECT_SIMT=1`. `docker start` of an existing container will not change its environment. Verify the flags actually reached the Strata process; a configured flag with an inapplicable kernel is not a valid optimization test.
 
@@ -113,6 +114,7 @@ Avoid using a single synthetic 128K cold request as the only representation of O
 - [ ] T5 — A-only, B-only, A+B resource contention controls
 - [x] T6 — upstream Qwen 0.1.50 isolated source-pinned build and C2 (Unfixed Run 1 hit post-build page-cache eviction -> SSD stager 32-thread thrashing at 247.1 tok/s; Fixed with 100% page-cache restore + `STRATA_STAGER_SSD=0`, 3 batches: Mean 751.8 tok/s, Peak 791.3 tok/s, TTFT 169.4s, Decode 21.2 tok/s, PASS)
 - [ ] T7 — latest selected jmnargi V100 fork isolated source-pinned build and C2
+- [ ] T8 — upstream Qwen 0.1.50 + `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` (`STRATA_STAGER_SSD=0`) C2 benchmark (3 batches)
 - [ ] Compare repeated results, record quality limitations and choose **no promotion** or propose a separately approved next step
 
 **Plan status at creation:** No Stage 5 benchmarks have been run; no conclusions on Stage 5 performance, no Docker runtime settings changed.

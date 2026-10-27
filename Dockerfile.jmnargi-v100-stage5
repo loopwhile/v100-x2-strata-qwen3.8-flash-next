@@ -1,0 +1,51 @@
+# V100-specific build of jmnargi/Strata-V100 (commit 2c9b1dd, PR #74 IQ3_S WMMA2 + PR #80 V100 prefill scheduler) for Stage 5 T7.
+# Keeps existing strata-v100-jmnargi:9d77749, strata-v100-upstream:0.1.47, and strata-v100-upstream:0.1.50 completely separate.
+FROM nvidia/cuda:12.9.1-devel-ubuntu24.04
+
+ARG STRATA_V100_REF=2c9b1dd7bda3102c4a8e65fbe56c45f5c6882926
+ARG CUDA_ARCHITECTURES=70
+ARG BUILD_VISION=0
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    LANG=C.UTF-8 \
+    STRATA_EXECV=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential ca-certificates curl git libatomic1 libgomp1 \
+      python3 python3-pip python3-venv unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/strata
+
+RUN git init . \
+    && git remote add origin https://github.com/jmnargi/Strata-V100.git \
+    && git fetch --depth 1 origin "${STRATA_V100_REF}" \
+    && git checkout --detach FETCH_HEAD \
+    && git remote remove origin
+
+RUN python3 -m venv .venv \
+    && .venv/bin/pip install --no-cache-dir --upgrade pip \
+    && .venv/bin/pip install --no-cache-dir -r requirements.txt -r requirements-build.txt
+
+COPY docker/build_jmnargi_stage5_v100_engine.py /opt/strata/build_jmnargi_stage5_v100_engine.py
+
+RUN CUDA_ARCHITECTURES="${CUDA_ARCHITECTURES}" BUILD_VISION="${BUILD_VISION}" \
+    .venv/bin/python /opt/strata/build_jmnargi_stage5_v100_engine.py
+
+RUN set -eux; \
+    test -x /opt/strata/engine/strata; \
+    test -f /opt/strata/engine/BUILD.json; \
+    ls -lah /opt/strata/engine; \
+    rm -rf /opt/strata/build /opt/strata/build-vision /opt/strata/build_jmnargi_stage5_v100_engine.py
+
+LABEL org.opencontainers.image.revision="${STRATA_V100_REF}"
+
+VOLUME ["/data"]
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=600s --retries=3 \
+  CMD curl -fs "http://127.0.0.1:${PORT:-8080}/health" || exit 1
+
+ENTRYPOINT ["/opt/strata/.venv/bin/python"]
+CMD ["/opt/strata/serve/server.py", "--engine", "strata", "--config", "/opt/strata/config.json", "--host", "0.0.0.0", "--port", "8080"]
