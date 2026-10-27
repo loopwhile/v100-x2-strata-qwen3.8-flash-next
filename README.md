@@ -6,9 +6,9 @@ The project explores how far legacy Volta hardware can be pushed using [Strata](
 
 This repository documents the experimental progression from initial Volta compatibility through dual-agent deployment, quantization comparisons, upstream engine upgrades, optional V100 tuning, and mixed-quantization co-residency.
 
-> **Stage 5 (planned only):** [IQ3_S optimization test plan](docs/STAGE5_PLAN.md) defines seven software-only experiment types (one conditional), repeated 128K C2 tests, diagnostics, and preservation gates. **No Stage 5 result or production change is implied.**
+> **Stage 5 (completed — IQ3_S software-only optimization):** [Stage 5 plan and results](docs/STAGE5_PLAN.md) executed 3-batch fresh-process 128K C2 replications across upstream 0.1.47 (`T1`–`T4`), upstream 0.1.50 (`T6`, `T8`), and the updated V100 fork (`T7`, `T7-Fixed`). **T7-Fixed** (`jmnargi/Strata-V100@2c9b1dd` + `STRATA_SM70_PERF=0` + `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` + `STRATA_PF_WMMA2=1` + `STRATA_STAGER_SSD=0`) raised IQ3_S 128K prefill from Stage 4-B's 535.00 tok/s to **899.23 tok/s 3-run mean (905.40 tok/s median, 930.35 tok/s batch peak / 939.0 tok/s single-agent peak)** while preserving **21.45 tok/s mean decode (22.6 tok/s peak)** and cutting batch wall time to **212.18 s mean (205.85 s best)**. On pure upstream 0.1.47, **T4** achieved **887.37 tok/s mean prefill** and **21.20 tok/s decode** (`228.92 s` mean wall time).
 
-> **Current performance recommendation:** Two independent **IQ2_XS** agents using **upstream Strata 0.1.47**. Stage 4-C (`STRATA_SM70_TABLE=1`) produced the fastest single-run IQ2_XS results, while vanilla Stage 4-B is a simpler candidate. The preserved Stage 3-A deployment remains available for rollback. A benchmark result does not imply that its containers have been promoted to production.
+> **Current performance recommendations:** For **maximum throughput**, two independent **IQ2_XS** agents using **upstream Strata 0.1.47** remain fastest (**995.70 tok/s** prefill, **39.60 tok/s** decode in Stage 4-C; **981.55 / 38.50 tok/s** in vanilla Stage 4-B). For **higher-precision IQ3_S**, Stage 5 **T7-Fixed** (**899.23 tok/s** prefill, **21.45 tok/s** decode) or upstream **T4** (**887.37 tok/s** prefill, **21.20 tok/s** decode) is recommended. The preserved Stage 3-A deployment remains available for rollback. A benchmark result does not imply that its containers have been promoted to production.
 
 ---
 
@@ -140,9 +140,9 @@ Strata's `--mmap-experts` option reads routed expert weights directly from origi
 
 | Quantization | Role | Observed status |
 | --- | --- | --- |
-| **IQ2_XS** | Performance-oriented deployment | Preferred |
+| **IQ2_XS** | Performance-oriented deployment | Preferred for maximum throughput |
 | IQ3_XXS | Higher-precision candidate | Tested across Stages 2–4 |
-| IQ3_S | Higher-precision candidate | Tested across Stages 2–4 |
+| **IQ3_S** | Higher-precision candidate | Tested across Stages 2–5 (Stage 5 optimized: **899.23 tok/s** prefill, **21.45 tok/s** decode) |
 | UD-Q4_K_XL | High-bit-width feasibility | Functional, impractically slow at 128K ×2 |
 
 Official model-card scores are **not** measurements of real coding-agent task completion on this P520. The repository's C2 results measure inference performance, not code correctness.
@@ -176,6 +176,9 @@ Each agent has its own native pack and log but shares model files with the other
 | Stage 4-A | 0.1.44.1 | `strata-v100-upstream:0.1.44.1` | First upstream migration |
 | Stage 4-B | 0.1.47 | `strata-v100-upstream:0.1.47` | Vanilla newer upstream engine |
 | Stage 4-C | 0.1.47 | `strata-v100-upstream:0.1.47` | Same image, `STRATA_SM70_TABLE=1` |
+| Stage 5 (T1–T4) | 0.1.47 | `strata-v100-upstream:0.1.47` | IQ3_S 3-batch baseline & SIMT/WMMA ablations |
+| Stage 5 (T6, T8) | 0.1.50 | `strata-v100-upstream:0.1.50` | Upstream v0.2.6 Qwen engine 0.1.50 |
+| Stage 5 (T7, T7-Fixed) | 0.1.45.3 (`2c9b1dd`) | `strata-v100-jmnargi:2c9b1dd` | Updated V100 fork (PR #74 IQ3_S WMMA2 + PR #80 prefill scheduler) |
 
 ### 4.1 Why CUDA 12.9.1?
 
@@ -321,6 +324,8 @@ The direct-Strata harness is [`bench/c2_v100_contract.py`](bench/c2_v100_contrac
 ### 6.3 Measurement limits
 
 Most Stage 2–4 arms have **one formal cold C2 batch**, with per-agent observations from that batch. The A/B observations are not separate independent experimental repetitions. In particular, small differences such as 38.50 vs 39.60 tok/s require repeated runs before being considered reliable tuning wins.
+
+In **Stage 5**, every candidate arm (`T1`, `T2`, `T3`, `T4`, `T6-Fixed`, `T7`, `T7-Fixed`, `T8`) was evaluated using **three consecutive fresh-process C2 batches** (`docker restart` before each batch, `requests_kept == 0`), reporting 3-run means, medians, and ranges alongside host `vmstat`, `iostat`, `pidstat`, `fincore`, and GPU telemetry.
 
 Longer generated outputs also change batch wall time. C2 performance numbers are not a direct comparison of coding quality.
 
@@ -549,11 +554,39 @@ Unlike homogeneous agents, the two quantizations cannot share the same file-back
 
 [Detailed report and root cause analysis](artifacts/stage4-results-20261021/stage4-b-mixed-c2-benchmark-summary.md) · [Raw summary](artifacts/stage4-results-20261021/c2-stage4b-mixed-run1-summary.json) · [Antigravity handoff](docs/STAGE4B_MIXED_AGY_HANDOFF.md)
 
+### Stage 5 — IQ3_S software-only optimization (3-batch C2 replications)
+
+**Date:** October 27, 2026. **Model:** Qwen3.8-Flash-Next GSQ-RCO **IQ3_S** (`/srv/models/strata-iq3s`).
+
+Stage 5 investigated whether IQ3_S could recover and surpass its Stage 3-A 128K prefill speed (`721.30 tok/s`) from the Stage 4-B reference (`535.00 tok/s`) while preserving Stage 4-B's ~2× decode gain (`21.35 tok/s`), without changing hardware, GPU power caps (150 W), or the ThinkPad SSH tunnel. Every measured arm executed **three consecutive fresh-process C2 batches** (`--batches 3`).
+
+| ID | Engine / Image | Runtime flags | 3-Run Mean Prefill | 3-Run Median Prefill | Peak Prefill | 3-Run Mean Decode | 3-Run Mean TTFT | 3-Run Mean Wall |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| **T1** | Upstream `0.1.47` | Vanilla baseline | 744.55 | 759.35 | 771.25 | **21.45** | 171.10 s | 254.48 s |
+| **T2** | Upstream `0.1.47` | `STRATA_SELECT_SIMT=1` | 879.00 | 879.10 | 880.10 | 21.30 | 144.81 s | 229.62 s |
+| **T3** | Upstream `0.1.47` | `STRATA_PF_WMMA=1` | 798.67 | 798.75 | 799.20 | 21.20 | 159.30 s | 254.37 s |
+| **T4** | Upstream `0.1.47` | `SELECT_SIMT=1` + `PF_WMMA=1` | **887.37** | **888.55** | **891.15** | **21.20** | **143.36 s** | **228.92 s** |
+| **T6-Unfixed** | Upstream `0.1.50` | Vanilla (post-build 86.7% cache) | 247.10* | 247.10* | 247.10* | 21.30* | 514.12 s* | 599.26 s* |
+| **T6-Fixed** | Upstream `0.1.50` | `STRATA_STAGER_SSD=0` | 751.77 | 741.35 | 791.30 | 21.20 | 169.44 s | 253.91 s |
+| **T8** | Upstream `0.1.50` | `SELECT_SIMT=1` + `PF_WMMA=1` + `STAGER_SSD=0` | 876.00 | 875.85 | 876.95 | 20.77 | 145.22 s | 234.40 s |
+| **T7** | `jmnargi@2c9b1dd` | Default `SM70_PERF=1` + `SIMT=1` + `WMMA=1` + `STAGER_SSD=0` | 868.93 | 905.05 | **939.85** | 18.60 | 147.66 s | 247.78 s |
+| **T7-Fixed** | `jmnargi@2c9b1dd` | `SM70_PERF=0` + `SIMT=1` + `WMMA=1` + `WMMA2=1` + `STAGER_SSD=0` | **899.23** | **905.40** | **930.35** | **21.45** | **141.64 s** | **212.18 s** |
+
+*\*T6-Unfixed was stopped after 1 batch per the Stage 5 thrashing gate and resolved in T6-Fixed. T5 (single-agent contention control) was placed on hold after root-causing the page-cache/stager threshold directly.*
+
+**Key technical findings from Stage 5:**
+
+1. **Linux page-cache 90% threshold & SSD stager thrashing (`STRATA_STAGER_SSD=0`):** Unlike the failed mixed-quant run (86 GiB combined working set), two homogeneous IQ3_S agents share the same 51.1 GiB `00001-of-00002.gguf` shard in the Linux page cache (~41.9 GiB active expert working set). However, when `docker build` or other host I/O pushes GGUF page-cache residency below **90%** (`src->cached_share(256) < 0.90` in `prefill.cpp`), Strata switches from the RAM stager profile (3 threads, 16-slot ring) to the SSD stager profile (32 threads, 128-slot pinned ring = 680 MB extra pinned RAM), causing cyclic LRU page-cache thrashing (`247.1 tok/s` in T6-Unfixed; `535.0 tok/s` in Stage 4-B). Restoring `Active(file)` page cache and setting `STRATA_STAGER_SSD=0` eliminated swap thrashing and stabilized vanilla prefill at **744.55–751.77 tok/s**.
+2. **Upstream 0.1.47 SIMT scorer + Volta FP16 WMMA (`T2`, `T3`, `T4`):** `STRATA_SELECT_SIMT=1` alone (`T2`) improved 3-run mean prefill by **+18.1%** (`879.00 tok/s`) with 100% bit-exact output parity against `T1`. Combining `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` (`T4`) reached **887.37 tok/s** mean prefill (`143.36 s` TTFT, `21.20 tok/s` decode, `228.92 s` batch wall time).
+3. **Updated V100 fork (`jmnargi/Strata-V100@2c9b1dd`, `T7` vs `T7-Fixed`):** PR #74 (`STRATA_PF_WMMA2=1` 128-token grouped tiles for `IQ3_S`) and PR #80 (V100 prefill scheduler) pushed warm prefill above **930–947 tok/s**. In unfixed `T7`, the fork's default `STRATA_SM70_PERF=1` bundle (tuned for 2-GPU `--layer-split 16`) enabled `STRATA_ADAPT_OVERLAP=1`, `STRATA_SM70_TABLE=1`, and `STRATA_EXPDEC=1`, which contended with `--mmap-experts` CPU pool fetches on single 16 GB GPUs and lowered decode to `18.60 tok/s`. Setting `STRATA_SM70_PERF=0` while explicitly keeping `STRATA_SELECT_SIMT=1`, `STRATA_PF_WMMA=1`, `STRATA_PF_WMMA2=1`, and `STRATA_STAGER_SSD=0` (**T7-Fixed**) restored decode to **21.45 tok/s mean (22.6 tok/s peak)** alongside **899.23 tok/s mean (905.40 tok/s median, 930.35 tok/s batch peak / 939.0 tok/s Agent B peak) prefill** and **212.18 s mean (205.85 s best) batch wall time**.
+
+[Stage 5 plan](docs/STAGE5_PLAN.md) · [T1 baseline](artifacts/stage5-results-20261027/stage5-t1-baseline-summary.md) · [T2 SIMT](artifacts/stage5-results-20261027/stage5-t2-simt-summary.md) · [T3 WMMA](artifacts/stage5-results-20261027/stage5-t3-wmma-summary.md) · [T4 combined](artifacts/stage5-results-20261027/stage5-t4-combined-summary.md) · [T6 0.1.50](artifacts/stage5-results-20261027/stage5-t6-engine0150-summary.md) · [T8 0.1.50 combined](artifacts/stage5-results-20261027/stage5-t8-engine0150-combined-summary.md) · [T7 & T7-Fixed V100 fork](artifacts/stage5-results-20261027/stage5-t7-jmnargi-summary.md)
+
 ---
 
 ## 8. Consolidated 128K Results
 
-Values are **arithmetic means of the two agents' per-request rates within one homogeneous C2 batch**, not aggregate server throughput or independent repetitions.
+Values for Stages 2–4 are **arithmetic means of the two agents' per-request rates within one homogeneous C2 batch**; values for Stage 5 are **3-batch means (6 agent requests per arm)** across three consecutive fresh-process C2 batches.
 
 | Stage | Engine | Model | Prefill (tok/s) | Decode (tok/s) | TTFT (s) |
 | --- | --- | --- | ---: | ---: | ---: |
@@ -573,10 +606,17 @@ Values are **arithmetic means of the two agents' per-request rates within one ho
 | **Stage 4-C** | **0.1.47 + SM70 table** | **IQ2_XS** | **995.70** | **39.60** | **127.77** |
 | Stage 4-C | 0.1.47 + SM70 table | IQ3_XXS | 630.70 | 26.05 | 201.60 |
 | Stage 4-C | 0.1.47 + SM70 table | IQ3_S | 468.05 | 20.55 | 271.60 |
+| Stage 5 T1 (3-run mean) | 0.1.47 | IQ3_S | 744.55 | 21.45 | 171.10 |
+| Stage 5 T2 (3-run mean) | 0.1.47 + SIMT | IQ3_S | 879.00 | 21.30 | 144.81 |
+| Stage 5 T3 (3-run mean) | 0.1.47 + WMMA | IQ3_S | 798.67 | 21.20 | 159.30 |
+| **Stage 5 T4 (3-run mean)** | **0.1.47 + SIMT + WMMA** | **IQ3_S** | **887.37** | **21.20** | **143.36** |
+| Stage 5 T6-Fixed (3-run mean) | 0.1.50 + `STAGER_SSD=0` | IQ3_S | 751.77 | 21.20 | 169.44 |
+| Stage 5 T8 (3-run mean) | 0.1.50 + SIMT + WMMA | IQ3_S | 876.00 | 20.77 | 145.22 |
+| **Stage 5 T7-Fixed (3-run mean)** | **`jmnargi@2c9b1dd` + SIMT + WMMA2 (`SM70_PERF=0`)** | **IQ3_S** | **899.23** | **21.45** | **141.64** |
 
 The mixed trial is intentionally not pooled into a homogeneous mean: its quantizations differ and its active-decode-overlap criterion failed.
 
-**Summary of engineering findings:** Newer upstream Strata improved decode substantially; IQ3 decode roughly doubled by Stage 4-B; optional SM70 table tuning had different observed effects by quantization; and the mixed trial demonstrated how host RAM/page-cache pressure can dominate even with separate GPUs. Real coding-task quality remains unmeasured.
+**Summary of engineering findings:** Newer upstream Strata improved decode substantially; IQ3 decode roughly doubled by Stage 4-B; optional SM70 table tuning helped IQ2_XS but hurt single-GPU IQ3_S; the mixed trial demonstrated how unshared host RAM/page-cache working sets can saturate 61 GiB usable RAM; and Stage 5 proved that homogeneous IQ3_S with `STRATA_STAGER_SSD=0`, `STRATA_SELECT_SIMT=1`, and `STRATA_PF_WMMA=1`/`STRATA_PF_WMMA2=1` (`SM70_PERF=0`) achieves **899.23 tok/s mean (930.35 tok/s batch peak) 128K prefill** while retaining **21.45 tok/s decode**. Real coding-task quality remains unmeasured.
 
 ---
 
@@ -588,8 +628,10 @@ v100-x2-strata-qwen3.8-flash-next/
 ├── AGENTS.md
 ├── Dockerfile.v100
 ├── Dockerfile.jmnargi-v100
+├── Dockerfile.jmnargi-v100-stage5
 ├── Dockerfile.upstream-v100
 ├── Dockerfile.upstream-0.1.47
+├── Dockerfile.upstream-0.1.50
 ├── docker/                     Engine build and packaging helpers
 ├── scripts/
 │   ├── 00-12                   Initial validation and original dual agents
@@ -601,7 +643,8 @@ v100-x2-strata-qwen3.8-flash-next/
 │   ├── 63-65                   Stage 4-C IQ2_XS
 │   ├── 66-71                   Stage 4-C IQ3 variants
 │   ├── 72-77                   Stage 4-B IQ3 variants
-│   └── 78-80                   Stage 4-B mixed A/B
+│   ├── 78-80                   Stage 4-B mixed A/B
+│   └── 81-87                   Stage 5 IQ3_S optimization & telemetry
 ├── bench/
 │   ├── api_bench.py
 │   ├── c2_v100_contract.py
@@ -611,11 +654,14 @@ v100-x2-strata-qwen3.8-flash-next/
 │   ├── stage3-configs-20261004/
 │   ├── stage3-results-20261004/
 │   ├── stage4-configs-20261021/
-│   └── stage4-results-20261021/
+│   ├── stage4-results-20261021/
+│   ├── stage5-configs-20261027/
+│   └── stage5-results-20261027/
 ├── docs/
 │   ├── STAGE4_PLAN.md
 │   ├── STAGE4_ANTIGRAVITY_HANDOFF.md
-│   └── STAGE4B_MIXED_AGY_HANDOFF.md
+│   ├── STAGE4B_MIXED_AGY_HANDOFF.md
+│   └── STAGE5_PLAN.md
 └── results/                    Local, gitignored benchmark outputs
 ```
 
@@ -626,7 +672,9 @@ v100-x2-strata-qwen3.8-flash-next/
 | `scripts/20-docker-build-v100.sh` | Original 0.1.31 Volta image |
 | `scripts/54-docker-build-jmnargi-v100.sh` | Stage 3-A 0.1.36 V100 fork |
 | `scripts/55-docker-build-upstream-v100.sh` | Stage 4-A 0.1.44.1 |
-| `scripts/59-docker-build-upstream-0.1.47.sh` | Stage 4-B/C 0.1.47 |
+| `scripts/59-docker-build-upstream-0.1.47.sh` | Stage 4-B/C/5 0.1.47 |
+| `scripts/86-docker-build-upstream-0.1.50.sh` | Stage 5 T6/T8 upstream 0.1.50 (v0.2.6) |
+| `scripts/87-docker-build-jmnargi-stage5.sh` | Stage 5 T7 V100 fork (`2c9b1dd`) |
 
 Do not overwrite preserved tags without an explicit migration and rollback plan.
 
@@ -644,6 +692,7 @@ Do not overwrite preserved tags without an explicit migration and rollback plan.
 | `scripts/74-bench-stage4b-iq3xxs-c2.sh` | Stage 4-B IQ3_XXS |
 | `scripts/77-bench-stage4b-iq3s-c2.sh` | Stage 4-B IQ3_S |
 | `scripts/80-bench-stage4b-mixed-c2.sh` | Stage 4-B mixed |
+| `scripts/84-bench-stage5-c2.sh` | Stage 5 IQ3_S C2 runner with host telemetry (`T1`–`T8`) |
 
 These scripts are **not routine start commands**. They may restart selected test containers to enforce fresh-process measurements.
 
@@ -653,6 +702,8 @@ These scripts are **not routine start commands**. They may restart selected test
 - [Stage 3 results](artifacts/stage3-results-20261004/)
 - [Stage 4 configs](artifacts/stage4-configs-20261021/)
 - [Stage 4 results and SHA-256 receipts](artifacts/stage4-results-20261021/)
+- [Stage 5 configs](artifacts/stage5-configs-20261027/)
+- [Stage 5 results and 3-batch summaries](artifacts/stage5-results-20261027/)
 - [Stage 5 IQ3_S optimization test plan](docs/STAGE5_PLAN.md)
 - [Stage 4 plan](docs/STAGE4_PLAN.md)
 - [Stage 4 Antigravity CLI handoff](docs/STAGE4_ANTIGRAVITY_HANDOFF.md)
@@ -735,35 +786,36 @@ The strongest findings are:
 
 - **True independent inference:** two one-GPU Strata servers passed homogeneous concurrent 128K C2 tests.
 - **Large engine improvements:** mean IQ2_XS decode increased from **22.20 tok/s (Stage 3-A)** to **38.50 tok/s (Stage 4-B)**; Stage 4-C recorded **39.60 tok/s**.
-- **Higher-precision IQ3 options:** IQ3_XXS reached **26.15 tok/s** and IQ3_S **21.35 tok/s** under Stage 4-B, although both had worse 128K prefill/TTFT.
-- **Shared host memory matters:** the mixed-quant experiment suffered severe page-cache and storage contention on the 64 GB host and failed the concurrent-decode C2 requirement.
-- **Quality remains untested locally:** a future matched coding-agent benchmark is required to establish whether IQ3's model-card accuracy gain outweighs lower real-world throughput.
+- **Higher-precision IQ3_S optimization (Stage 5):** combining homogeneous page-cache residency (`STRATA_STAGER_SSD=0`), SIMT QSA scoring (`STRATA_SELECT_SIMT=1`), and Volta FP16 grouped WMMA/WMMA2 tiles (`STRATA_PF_WMMA=1`, `STRATA_PF_WMMA2=1`, `STRATA_SM70_PERF=0`) raised IQ3_S 128K prefill from **535.00 tok/s (Stage 4-B)** to **899.23 tok/s 3-run mean (905.40 tok/s median, 930.35 tok/s batch peak)** in **T7-Fixed** and **887.37 tok/s 3-run mean** in upstream **T4**, while preserving **21.20–21.45 tok/s** decode.
+- **Shared host memory matters:** the mixed-quant experiment suffered severe page-cache and storage contention on the 64 GB host and failed the concurrent-decode C2 requirement, whereas homogeneous agents share the 51.1 GiB GGUF shard in Linux page cache.
+- **Quality remains untested locally:** a future matched coding-agent benchmark is required to establish whether IQ3's model-card accuracy gain outweighs IQ2_XS's higher decode throughput.
 
-### Recommended performance-oriented configuration
+### Recommended configurations (speed vs. precision)
 
-| Component | Selection |
-| --- | --- |
-| Model | Qwen3.8-Flash-Next **IQ2_XS** |
-| Engine | Upstream Strata **0.1.47** |
-| Agents | Two independent Docker servers |
-| GPU allocation | One Tesla V100 16 GB per agent |
-| CPU affinity | A: `0-2,6-8`; B: `3-5,9-11` |
-| Context | 131072 tokens per agent |
-| KV cache | INT8; resident 32768 |
-| Expert access | Native pack and `--mmap-experts` |
-| Storage | Shared read-only GGUF and MTP |
-| Optional tuning | Stage 4-C SM70 table: highest *measured* IQ2_XS result |
-| Rollback | Preserved Stage 3-A 0.1.36 agent pair |
+| Component | Maximum-Throughput Selection (**IQ2_XS**) | High-Precision Selection (**IQ3_S — Stage 5**) |
+| --- | --- | --- |
+| Model | Qwen3.8-Flash-Next **IQ2_XS** | Qwen3.8-Flash-Next **IQ3_S** |
+| Engine / Image | Upstream Strata **0.1.47** (`strata-v100-upstream:0.1.47`) | **T7-Fixed:** `strata-v100-jmnargi:2c9b1dd` *(or **T4:** `strata-v100-upstream:0.1.47`)* |
+| Agents | Two independent Docker servers | Two independent Docker servers |
+| GPU allocation | One Tesla V100 16 GB per agent | One Tesla V100 16 GB per agent |
+| CPU affinity | A: `0-2,6-8`; B: `3-5,9-11` | A: `0-2,6-8`; B: `3-5,9-11` |
+| Context | 131072 tokens per agent | 131072 tokens per agent |
+| KV cache | INT8; resident 32768 | INT8; resident 32768 |
+| Expert access | Native pack and `--mmap-experts` | Native pack and `--mmap-experts` |
+| Storage | Shared read-only GGUF and MTP | Shared read-only GGUF and MTP (`/srv/models/strata-iq3s`) |
+| Runtime flags | Stage 4-C: `STRATA_SM70_TABLE=1` *(or vanilla 4-B)* | **T7-Fixed:** `STRATA_SM70_PERF=0 STRATA_SELECT_SIMT=1 STRATA_PF_WMMA=1 STRATA_PF_WMMA2=1 STRATA_STAGER_SSD=0`<br>**T4 (Upstream):** `STRATA_SELECT_SIMT=1 STRATA_PF_WMMA=1 STRATA_STAGER_SSD=0` |
+| Rollback | Preserved Stage 3-A 0.1.36 agent pair | Preserved Stage 3-A 0.1.36 agent pair |
 
-The best recorded Stage 4-C IQ2_XS **per-agent mean** was:
+The best recorded **per-agent means** across the two recommended tiers are:
 
 ```text
-Prefill:  995.70 tok/s
-Decode:    39.60 tok/s
-TTFT:     127.77 s
+IQ2_XS (Stage 4-C, 1-batch mean):          IQ3_S (Stage 5 T7-Fixed, 3-batch mean / peak):
+  Prefill:  995.70 tok/s                     Prefill:  899.23 tok/s (median 905.40, peak 930.35)
+  Decode:    39.60 tok/s                     Decode:    21.45 tok/s (peak 22.00)
+  TTFT:     127.77 s                         TTFT:     141.64 s     (best 136.77 s)
 ```
 
-This is an arithmetic mean within one dual-agent batch, **not the sum of both agents' throughput**. Repeatable stability and coding quality should be established before final production promotion.
+These values are arithmetic means within dual-agent C2 batches, **not the sum of both agents' throughput**. Repeatable stability and coding quality should be established before final production promotion.
 
 ---
 
@@ -772,7 +824,7 @@ This is an arithmetic mean within one dual-agent batch, **not the sum of both ag
 ### Software and models
 
 - [Strata upstream](https://github.com/Niko1221/Strata)
-- [Strata-V100 fork (Stage 3-A)](https://github.com/jmnargi/Strata-V100)
+- [Strata-V100 fork (Stage 3-A & Stage 5 T7)](https://github.com/jmnargi/Strata-V100)
 - [Qwen3.8-Flash-Next GSQ-RCO GGUF model card](https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF)
 
 ### Volta support
@@ -784,6 +836,8 @@ This is an arithmetic mean within one dual-agent batch, **not the sum of both ag
 
 ### Repository documentation
 
+- [Stage 5 plan and checklist](docs/STAGE5_PLAN.md)
+- [Stage 5 measured results (3-batch summaries)](artifacts/stage5-results-20261027/)
 - [Stage 4 plan](docs/STAGE4_PLAN.md)
 - [Antigravity CLI handoff](docs/STAGE4_ANTIGRAVITY_HANDOFF.md)
 - [Stage 4-B mixed experiment](docs/STAGE4B_MIXED_AGY_HANDOFF.md)
