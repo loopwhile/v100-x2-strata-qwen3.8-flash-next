@@ -114,7 +114,7 @@ Avoid using a single synthetic 128K cold request as the only representation of O
 - [ ] T5 — A-only, B-only, A+B resource contention controls
 - [x] T6 — upstream Qwen 0.1.50 isolated source-pinned build and C2 (Unfixed Run 1 hit post-build page-cache eviction -> SSD stager 32-thread thrashing at 247.1 tok/s; Fixed with 100% page-cache restore + `STRATA_STAGER_SSD=0`, 3 batches: Mean 751.8 tok/s, Peak 791.3 tok/s, TTFT 169.4s, Decode 21.2 tok/s, PASS)
 - [ ] T7 — latest selected jmnargi V100 fork isolated source-pinned build and C2
-- [ ] T8 — upstream Qwen 0.1.50 + `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` (`STRATA_STAGER_SSD=0`) C2 benchmark (3 batches)
+- [x] T8 — upstream Qwen 0.1.50 + `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` (`STRATA_STAGER_SSD=0`) C2 benchmark (3 batches: Mean 876.0 tok/s, TTFT 145.2s, Decode 20.8 tok/s, Wall 234.4s, 0 swap thrashing, PASS)
 - [ ] Compare repeated results, record quality limitations and choose **no promotion** or propose a separately approved next step
 
 **Plan status at creation:** No Stage 5 benchmarks have been run; no conclusions on Stage 5 performance, no Docker runtime settings changed.
