@@ -108,8 +108,8 @@ Avoid using a single synthetic 128K cold request as the only representation of O
 
 - [x] T1 — 0.1.47 dual IQ3_S baseline (3 batches: Cold 703.3 tok/s, Warm 759-771 tok/s, Decode 21.45 tok/s, detailed telemetry captured)
 - [x] T2 — `STRATA_SELECT_SIMT=1` alone (3 batches: Mean 879.0 tok/s, +18.1% prefill speedup, TTFT -26.3s, Decode 21.3 tok/s, PASS)
-- [ ] T3 — `STRATA_PF_WMMA=1` alone
-- [ ] T4 — combination, only if T2/T3 gate passes (otherwise record SKIPPED)
+- [x] T3 — `STRATA_PF_WMMA=1` alone (3 batches: Mean 798.7 tok/s, +7.3% prefill speedup, TTFT -11.8s, 84.6s overlap, PASS)
+- [ ] T4 — combination, only if T2/T3 gate passes (GATE PASSED — ready to run)
 - [ ] T5 — A-only, B-only, A+B resource contention controls
 - [ ] T6 — upstream Qwen 0.1.50 isolated source-pinned build and C2
 - [ ] T7 — latest selected jmnargi V100 fork isolated source-pinned build and C2
