@@ -28,3 +28,7 @@ See [mixed AGY handoff](docs/STAGE4B_MIXED_AGY_HANDOFF.md). This does not
 authorize changing power, overwriting live containers, deleting historical
 agents, enabling SM70_TABLE or modifying the ThinkPad SSH tunnel.
 The mixed test has not been measured or promoted.
+
+## Stage 6 (prepared only; 2026-10-28)
+
+Read [Stage 6 isolated-container prep](docs/STAGE6_PREP.md) before preparing or executing IQ3_S decode tests. Stage 6 holds GPU0/A and GPU1/B independent with the existing CPU affinities, 64 GB shared RAM, same model/SSD, 128K context and 150W GPU caps. No layer split or single-agent promotion. Treat the Stage 5 T7-Fixed image/recipe as a pinned baseline; reserved host loopback ports are 18082/18083, not production 8080/8081. The new scripts must never stop or delete preserved agents; P520 execution requires a separately approved test window.
