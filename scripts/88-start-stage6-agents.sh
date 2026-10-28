@@ -25,7 +25,7 @@ docker image inspect "$IMAGE" >/dev/null 2>&1 || {
   exit 1
 }
 
-EXPECTED_IMAGE_ID="sha256:5b62fa861bbd66bf11600f153e1f277145ed0c41d118a39a6d5fc8c9735147fa"
+EXPECTED_IMAGE_ID="sha256:5b62fa861bbdb346f81b0b3edf88ee21396fb4e59795a14b2b092dfa2e4aa156"
 actual_image_id="$(docker image inspect --format '{{.Id}}' "$IMAGE")"
 if [[ "$actual_image_id" != "$EXPECTED_IMAGE_ID" ]]; then
   echo "ERROR: $IMAGE resolves to unexpected image ID: $actual_image_id" >&2

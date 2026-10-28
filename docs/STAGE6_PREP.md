@@ -19,7 +19,7 @@ Both agents retain the same 64 GB shared host RAM, same physical IQ3_S GGUF mmap
 
 ## Pinned Stage 5 T7-Fixed baseline (NOT a new Stage 6 result)
 
-- Existing **local** image `strata-v100-jmnargi:2c9b1dd` (Docker image ID `sha256:5b62fa861bbd66bf11600f153e1f277145ed0c41d118a39a6d5fc8c9735147fa`, verified by launch and benchmark scripts) (fork source commit `2c9b1dd7bda3102c4a8e65fbe56c45f5c6882926`); Stage 6 **reuses the image**, rather than building a new one. This repo contains its original reproducible Dockerfile `Dockerfile.jmnargi-v100-stage5` and build script `scripts/87-docker-build-jmnargi-stage5.sh`.
+- Existing **local** image `strata-v100-jmnargi:2c9b1dd` (Docker image ID `sha256:5b62fa861bbdb346f81b0b3edf88ee21396fb4e59795a14b2b092dfa2e4aa156`, pinned by launch and benchmark scripts; identified from actual P520 Docker inspection) (fork source commit `2c9b1dd7bda3102c4a8e65fbe56c45f5c6882926`); Stage 6 **reuses the image**, rather than building a new one. This repo contains its original reproducible Dockerfile `Dockerfile.jmnargi-v100-stage5` and build script `scripts/87-docker-build-jmnargi-stage5.sh`.
 - Frozen flags: `STRATA_SM70_PERF=0 STRATA_SELECT_SIMT=1 STRATA_PF_WMMA=1 STRATA_PF_WMMA2=1 STRATA_STAGER_SSD=0`.
 - Frozen args: `--spec 4 --spec-min-p 0.5 --expert-cache auto --prefill auto --max-context 131072 --kv int8 --kv-resident 32768 --mmap-experts`, and same native pack, expert profile and MTP.
 - Archived Stage 5 3-batch baseline: prefill **899.23 tok/s**, decode **21.45 tok/s** *A/B mean*, TTFT **141.64 s**. [Full record](../artifacts/stage5-results-20261027/stage5-t7-jmnargi-summary.md).
@@ -38,6 +38,22 @@ Both agents retain the same 64 GB shared host RAM, same physical IQ3_S GGUF mmap
 | `scripts/92-remove-stage6-only.sh` | Optional explicit reset of *stopped* Stage 6 objects only; required confirmation argument |
 
 Logs are new files under the checkout's gitignored `results/stage6/logs/`; C2 output goes into `results/c2-stage6-*/`. The original model, pack, MTP, image, Stage 5 config/logs and existing containers are not modified.
+
+## Verified P520 image ID and historical receipt discrepancy (2026-10-28)
+
+- The original Stage 5 T7 report cites a Docker image ID ending in `...11600f...` (`sha256:5b62fa861bbd66bf11600f153e1f277145ed0c41d118a39a6d5fc8c9735147fa`). The Stage 6 scripts previously treated that full string as verified; this was an error during Stage 6 preparation.
+- **Actual P520 inspection by Codex CLI** on 2026-10-28 reports `docker image inspect strata-v100-jmnargi:2c9b1dd` ID `sha256:5b62fa861bbdb346f81b0b3edf88ee21396fb4e59795a14b2b092dfa2e4aa156`, created **2026-10-27 19:03:54 +09:00**, with source revision label `2c9b1dd...`. That date precedes the Stage 5 T7 benchmark run, and the two IDs share the initial 12 hex digits; nevertheless, the conflicting full-length archive receipt is **not** independent proof of image identity.
+- The launch and C2 guards now pin the **actual inspected P520 full image ID**. Do not rebuild or retag the baseline image to satisfy either ID.
+- **Before the first Stage 6 run**, verify the native engine SHA256 without touching either GPU or production containers:
+
+```bash
+docker run --rm --entrypoint /usr/bin/sha256sum \
+  strata-v100-jmnargi:2c9b1dd /opt/strata/engine/strata
+# Stage 5 archived native engine SHA256:
+# f0da5abf41115c9c0707751ec940f0f1977d04c690b55713cd19b2b7ba815030
+```
+
+If the engine hash matches, it establishes identical engine bytes to the archived digest (assuming the archived engine digest was captured accurately), even though the historical image ID text is inconsistent. If it does **not** match, stop: inspect Stage 5 receipts and the existing image's build provenance before attributing any Stage 6 comparison to the old baseline. Preserve the original Stage 5 report as historical evidence; do not silently rewrite it.
 
 ## Safety gates (must pass before any P520 execution)
 
