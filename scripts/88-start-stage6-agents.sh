@@ -12,6 +12,18 @@ IMAGE="strata-v100-jmnargi:2c9b1dd"
 A_NAME="strata-s6-iq3s-agent-a"
 B_NAME="strata-s6-iq3s-agent-b"
 CONFIG_DIR="$ROOT/artifacts/stage6-configs-20261028/iq3s"
+ARM_DIR=""
+if [[ -n "${STRATA_S6_ARM_DIR:-}" ]]; then
+  ARM_DIR="$(realpath "${STRATA_S6_ARM_DIR}")"
+  case "$ARM_DIR" in
+    "$ROOT"/results/stage6/arms/s6-*) CONFIG_DIR="$ARM_DIR" ;;
+    *) echo "ERROR: candidate arm must be inside $ROOT/results/stage6/arms/s6-*" >&2; exit 1 ;;
+  esac
+  test -f "$ARM_DIR/experimental-flags.env" || {
+    echo "ERROR: missing candidate experimental-flags.env" >&2; exit 1;
+  }
+  test -f "$ARM_DIR/arm.json" || { echo "ERROR: missing arm.json" >&2; exit 1; }
+fi
 LOG_DIR="$ROOT/results/stage6/logs"
 
 case "$MODE" in both|a|b) ;; *) echo "Usage: $0 [both|a|b]" >&2; exit 2;; esac
@@ -106,6 +118,26 @@ for flag in "${OPTIONAL_FLAGS[@]}"; do
     EXTRA_ENV+=(-e "$flag=$value")
   fi
 done
+
+# Candidate flags are read as DATA, not sourced/executed as a shell program.
+if [[ -n "$ARM_DIR" ]]; then
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ -n "$line" ]] || continue
+    [[ "$line" == *"="* ]] || { echo "ERROR: malformed candidate env line" >&2; exit 1; }
+    key="${line%%=*}"
+    value="${line#*=}"
+    if [[ ! " ${OPTIONAL_FLAGS[*]} " == *" $key "* ]] || [[ ! "$value" =~ ^[0-9]+$ ]]; then
+      echo "ERROR: invalid/unapproved candidate flag: $key" >&2
+      exit 1
+    fi
+    if [[ -v $key ]]; then
+      echo "ERROR: duplicate candidate flag from shell environment: $key" >&2
+      exit 1
+    fi
+    EXTRA_ENV+=(-e "$key=$value")
+  done < "$ARM_DIR/experimental-flags.env"
+  echo "Stage 6 candidate arm directory: $ARM_DIR"
+fi
 
 mkdir -p "$LOG_DIR"
 start_agent() {

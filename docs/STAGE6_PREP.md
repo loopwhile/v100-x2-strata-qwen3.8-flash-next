@@ -1,6 +1,6 @@
 # Stage 6 — isolated IQ3_S dual-agent decode optimization infrastructure
 
-**Status:** Container definitions and launch/stop/C2 scripts prepared in GitHub; **NOT built, started, tested or deployed on P520.**
+**Status (2026-10-28): S6-0 BASELINE COMPLETE on P520; S6-1..S6-7 pending.** Current container infrastructure is active as Stage 6 test tooling, **not a production promotion**. See [full 8-stage plan](STAGE6_PLAN.md) and [Codex handoff](STAGE6_CODEX_HANDOFF.md).
 **Prepared:** 2026-10-28 (Asia/Seoul).
 **Objective:** Two independent IQ3_S agents, **each >=30 decode tokens/s simultaneously** under frozen dual 128K C2; not aggregate throughput, not single-agent performance.
 
@@ -36,6 +36,10 @@ Both agents retain the same 64 GB shared host RAM, same physical IQ3_S GGUF mmap
 | `scripts/90-status-stage6-agents.sh` | Read-only status and /health check |
 | `scripts/91-bench-stage6-c2.sh` | Restart **only** Stage 6 A/B, run frozen C2, archive local results |
 | `scripts/92-remove-stage6-only.sh` | Optional explicit reset of *stopped* Stage 6 objects only; required confirmation argument |
+| `scripts/93-stage6-prepare-arm.py` | Generate fresh, ignored per-arm A+B JSON and experimental flags; never overwrite baseline |
+| `docs/STAGE6_PLAN.md` | Complete S6-0 through S6-7 plan and pass criteria |
+| `docs/STAGE6_CODEX_HANDOFF.md` | Commands to continue from S6-1 without rerunning S6-0 |
+| `docs/STAGE6_RESULT_TEMPLATE.md` | Individual per-arm result receipt fields |
 
 Logs are new files under the checkout's gitignored `results/stage6/logs/`; C2 output goes into `results/c2-stage6-*/`. The original model, pack, MTP, image, Stage 5 config/logs and existing containers are not modified.
 
@@ -64,7 +68,7 @@ If the engine hash matches, it establishes identical engine bytes to the archive
 5. `docker start` does not apply changed environment/JSON. A new arm requires stopping Stage 6 containers, invoking `92-remove-stage6-only.sh --confirm-stage6-only`, then creating Stage 6 containers with revised Stage 6 configuration/explicit flags. These operations affect Stage 6 only. No script automatically removes containers or runs a benchmark upon creation.
 6. Use source-pinned CUDA12.9 Volta-compatible image. Never compile `sm_70` using CUDA13 or change host power caps.
 
-## When a test window has been approved: manual P520 commands (NOT executed yet)
+## Historical S6-0 reproduction commands (ALREADY EXECUTED; do not rerun blindly)
 
 Work from a clean P520 checkout synced using `git pull --ff-only` only if safe and clean. Check the image before running; do not build just to satisfy the preflight without separate approval.
 
@@ -91,7 +95,7 @@ bash scripts/91-bench-stage6-c2.sh s6-baseline 3
 bash scripts/89-stop-stage6-agents.sh
 ```
 
-The benchmark script checks frozen manifest SHA, exact Stage 6 container names/image, both /health model IDs/131072 context, requests_kept=0 after each **Stage 6-only** restart, and saves a sanitized summary under local results. The engine's exact effective environment and Docker inspect records are stored locally; review/redact before publishing.
+The benchmark script checks frozen manifest SHA, exact Stage 6 container names/image, both /health model IDs/131072 context, requests_kept=0 after each **Stage 6-only** restart, and saves a local summary. It now uses the A agent's actual bind-mounted candidate config and checks A/B argument parity; `--diagnostic` allows explicitly labeled profiling runs, while default scored mode forbids profiler flags. The engine's exact effective environment and Docker inspect records are stored locally; review/redact before publishing.
 
 ## Candidate research flags for later Stage 6 experiments
 
@@ -102,4 +106,4 @@ New test containers can be created with selected allowlisted flags exported in t
 - Further tuning (cache policy, pool-worker count, PCIe work balance, KV residency) follows **measured** decode bottlenecks, not presumptions.
 - Never combine a first-time decode optimization with other new changes in a single arm. Start by reproducing the Stage 5 reference (S6-0), then a separate instrumented profiling pass (S6-1).
 
-**This commit does not claim 30 tok/s, does not modify host Docker state, and does not promote Stage 6 to production.**
+**The S6-0 baseline is complete but does not meet 30 tok/s. S6-1..S6-7 still need experimentation. GitHub changes alone do not run or deploy candidate arms on P520.**

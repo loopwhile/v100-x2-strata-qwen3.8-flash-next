@@ -8,7 +8,7 @@ This repository documents the experimental progression from initial Volta compat
 
 > **Stage 5 (completed — IQ3_S software-only optimization):** [Stage 5 plan and results](docs/STAGE5_PLAN.md) executed 3-batch fresh-process 128K C2 replications across upstream 0.1.47 (`T1`–`T4`), upstream 0.1.50 (`T6`, `T8`), and the updated V100 fork (`T7`, `T7-Fixed`). **T7-Fixed** (`jmnargi/Strata-V100@2c9b1dd` + `STRATA_SM70_PERF=0` + `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` + `STRATA_PF_WMMA2=1` + `STRATA_STAGER_SSD=0`) raised IQ3_S 128K prefill from Stage 4-B's 535.00 tok/s to **899.23 tok/s 3-run mean (905.40 tok/s median, 930.35 tok/s batch peak / 939.0 tok/s single-agent peak)** while preserving **21.45 tok/s mean decode (22.6 tok/s peak)** and cutting batch wall time to **212.18 s mean (205.85 s best)**. On pure upstream 0.1.47, **T4** achieved **887.37 tok/s mean prefill** and **21.20 tok/s decode** (`228.92 s` mean wall time).
 
-> **Stage 6 (prepared, NOT run):** [Isolated IQ3_S decode-optimization containers and safety-first execution instructions](docs/STAGE6_PREP.md) reuse Stage 5 T7-Fixed on two independent V100s, with new test containers/loopback ports 18082/18083. The goal is **>=30 tok/s decode on each agent concurrently**; no Stage 6 result or production change is implied.
+> **Stage 6 (in progress — eight stages S6-0..S6-7):** [Full Stage 6 plan](docs/STAGE6_PLAN.md) · [Codex continuation handoff](docs/STAGE6_CODEX_HANDOFF.md) · [container instructions](docs/STAGE6_PREP.md). **S6-0 is COMPLETE:** three valid dual-agent 128K C2 batches ([record](artifacts/stage6-results-20261028/s6-baseline.md)); per-agent decode medians **A 22.3 / B 21.2 tok/s**. **NEXT: S6-1 profiling**, then MTP, kernel, SM70, CPU/PCIe, Expert Cache and final combination. Goal: **A >=30 and B >=30 tok/s simultaneously** for three valid batches; not achieved yet. No production promotion.
 
 > **Current performance recommendations:** For **maximum throughput**, two independent **IQ2_XS** agents using **upstream Strata 0.1.47** remain fastest (**995.70 tok/s** prefill, **39.60 tok/s** decode in Stage 4-C; **981.55 / 38.50 tok/s** in vanilla Stage 4-B). For **higher-precision IQ3_S**, Stage 5 **T7-Fixed** (**899.23 tok/s** prefill, **21.45 tok/s** decode) or upstream **T4** (**887.37 tok/s** prefill, **21.20 tok/s** decode) is recommended. The preserved Stage 3-A deployment remains available for rollback. A benchmark result does not imply that its containers have been promoted to production.
 
@@ -838,7 +838,10 @@ These values are arithmetic means within dual-agent C2 batches, **not the sum of
 
 ### Repository documentation
 
-- [Stage 6 container preparation and decode test plan](docs/STAGE6_PREP.md)
+- [Stage 6 full 8-stage plan](docs/STAGE6_PLAN.md)
+- [Stage 6 Codex continuation handoff](docs/STAGE6_CODEX_HANDOFF.md)
+- [Stage 6 completed S6-0 baseline](artifacts/stage6-results-20261028/s6-baseline.md)
+- [Stage 6 container preparation and ports](docs/STAGE6_PREP.md)
 - [Stage 5 plan and checklist](docs/STAGE5_PLAN.md)
 - [Stage 5 measured results (3-batch summaries)](artifacts/stage5-results-20261027/)
 - [Stage 4 plan](docs/STAGE4_PLAN.md)
