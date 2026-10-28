@@ -26,6 +26,14 @@ echo "$EXPECTED_SHA  $MANIFEST" | sha256sum --check --status || {
  echo "ERROR: frozen C2 manifest SHA256 mismatch" >&2; exit 1;
 }
 docker image inspect "$IMAGE" >/dev/null || exit 1
+EXPECTED_IMAGE_ID="sha256:5b62fa861bbd66bf11600f153e1f277145ed0c41d118a39a6d5fc8c9735147fa"
+actual_image_id="$(docker image inspect --format '{{.Id}}' "$IMAGE")"
+if [[ "$actual_image_id" != "$EXPECTED_IMAGE_ID" ]]; then
+  echo "ERROR: $IMAGE resolves to unexpected image ID: $actual_image_id" >&2
+  echo "Expected pinned Stage 5 T7-Fixed image: $EXPECTED_IMAGE_ID" >&2
+  exit 1
+fi
+
 for name in "$A" "$B"; do
   [[ "$(docker inspect --format '{{.Config.Image}}' "$name" 2>/dev/null || true)" == "$IMAGE" ]] || {
     echo "ERROR: unexpected/missing Stage 6 container $name or image" >&2; exit 1;

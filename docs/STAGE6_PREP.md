@@ -19,7 +19,7 @@ Both agents retain the same 64 GB shared host RAM, same physical IQ3_S GGUF mmap
 
 ## Pinned Stage 5 T7-Fixed baseline (NOT a new Stage 6 result)
 
-- Existing **local** image `strata-v100-jmnargi:2c9b1dd` (fork source commit `2c9b1dd7bda3102c4a8e65fbe56c45f5c6882926`); Stage 6 **reuses the image**, rather than building a new one. This repo contains its original reproducible Dockerfile `Dockerfile.jmnargi-v100-stage5` and build script `scripts/87-docker-build-jmnargi-stage5.sh`.
+- Existing **local** image `strata-v100-jmnargi:2c9b1dd` (Docker image ID `sha256:5b62fa861bbd66bf11600f153e1f277145ed0c41d118a39a6d5fc8c9735147fa`, verified by launch and benchmark scripts) (fork source commit `2c9b1dd7bda3102c4a8e65fbe56c45f5c6882926`); Stage 6 **reuses the image**, rather than building a new one. This repo contains its original reproducible Dockerfile `Dockerfile.jmnargi-v100-stage5` and build script `scripts/87-docker-build-jmnargi-stage5.sh`.
 - Frozen flags: `STRATA_SM70_PERF=0 STRATA_SELECT_SIMT=1 STRATA_PF_WMMA=1 STRATA_PF_WMMA2=1 STRATA_STAGER_SSD=0`.
 - Frozen args: `--spec 4 --spec-min-p 0.5 --expert-cache auto --prefill auto --max-context 131072 --kv int8 --kv-resident 32768 --mmap-experts`, and same native pack, expert profile and MTP.
 - Archived Stage 5 3-batch baseline: prefill **899.23 tok/s**, decode **21.45 tok/s** *A/B mean*, TTFT **141.64 s**. [Full record](../artifacts/stage5-results-20261027/stage5-t7-jmnargi-summary.md).
@@ -53,6 +53,11 @@ Logs are new files under the checkout's gitignored `results/stage6/logs/`; C2 ou
 Work from a clean P520 checkout synced using `git pull --ff-only` only if safe and clean. Check the image before running; do not build just to satisfy the preflight without separate approval.
 
 ```bash
+# Read-only local syntax and JSON validation (does not create/start any container):
+for f in scripts/{88,89,90,91,92}-*.sh; do bash -n "$f"; done
+python3 -m json.tool artifacts/stage6-configs-20261028/iq3s/strata-s6-iq3s-agent-a.json >/dev/null
+python3 -m json.tool artifacts/stage6-configs-20261028/iq3s/strata-s6-iq3s-agent-b.json >/dev/null
+
 docker image inspect strata-v100-jmnargi:2c9b1dd
 docker ps
 nvidia-smi

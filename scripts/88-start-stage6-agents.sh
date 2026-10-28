@@ -25,6 +25,14 @@ docker image inspect "$IMAGE" >/dev/null 2>&1 || {
   exit 1
 }
 
+EXPECTED_IMAGE_ID="sha256:5b62fa861bbd66bf11600f153e1f277145ed0c41d118a39a6d5fc8c9735147fa"
+actual_image_id="$(docker image inspect --format '{{.Id}}' "$IMAGE")"
+if [[ "$actual_image_id" != "$EXPECTED_IMAGE_ID" ]]; then
+  echo "ERROR: $IMAGE resolves to unexpected image ID: $actual_image_id" >&2
+  echo "Expected pinned Stage 5 T7-Fixed image: $EXPECTED_IMAGE_ID" >&2
+  exit 1
+fi
+
 # In all modes reject ANY existing Stage 6 names to prevent overwriting historic test arms.
 for name in "$A_NAME" "$B_NAME"; do
   if docker container inspect "$name" >/dev/null 2>&1; then
