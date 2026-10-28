@@ -1,7 +1,7 @@
 # Stage 6 — IQ3_S dual-agent Decode 30+ optimization: complete execution plan
 
-**Status (2026-10-28): S6-0 COMPLETE; S6-1 through S6-7 PLANNED / NOT YET MEASURED.**
-**Primary next action: S6-1 decode profiling**, not another S6-0 run.
+**Status (2026-10-28): CLOSED — all eight phases recorded; S6-7 candidate combination SKIPPED. Goal NOT MET.**
+**Final result:** [Stage 6 final report](STAGE6_FINAL_REPORT.md). This is an **archived plan, not active work instructions**.
 **Scope:** two independent IQ3_S agents at once, A on GPU0, B on GPU1. Target **>=30 decode tok/s PER AGENT** in each of at least three valid concurrent C2 batches. Aggregate A+B throughput or single-agent throughput does **not** qualify. This is an engineering target, not a prediction.
 
 ## Fixed constraints — never trade away for apparent speed
@@ -19,24 +19,23 @@
 
 Codex committed [the three validated S6-0 runs](../artifacts/stage6-results-20261028/s6-baseline.md) at commit `8199e3b`.
 All three frozen dual-agent C2 batches passed mechanical/overlap/post-health and no prompt-prefix reuse. The **A/B decode medians** across the three independent batches were **22.3 / 21.2 tok/s**. Warm prefill medians were **908.2 / 923.1 tok/s**; the cold first batch was notably slower, so record page-cache warmth explicitly. Stage 5 T7-Fixed historical **A/B mean** was 21.45 tok/s, but that is not a substitute for each agent's Stage 6 result.
-A nuance for S6-1: config is `--spec 4`, while metrics showed `spec=6`, `mtp_max=4`, `lookup=3`. These runtime fields should be identified from pinned source/actual accepted-draft counters; **do not assume `spec=6` means the config silently changed to `--spec 6`**.
+S6-1/S6-2 source investigation clarified runtime spec=6, mtp_max=4, lookup=3 under configured --spec 4: suffix drafting extends the verification window by two. See the [MTP receipt](../artifacts/stage6-results-20261028/s6-2-mtp.md).
 
-## Eight-stage test matrix (each row is a phase, NOT just one benchmark)
+## Eight-stage outcome matrix (retrospective)
 
-| Stage | State | Tests / controlled variable | Required deliverable / progression gate |
-| --- | --- | --- | --- |
-| **S6-0** | **COMPLETE** | T7-Fixed same 2-GPU/2-agent 128K C2; 3 fresh-process batches | Baseline [archived](../artifacts/stage6-results-20261028/s6-baseline.md). **Advance to S6-1**. |
-| **S6-1** | TODO | Both agents, instrumented `STRATA_DECODE_TIMING=1`; optional `STRATA_VERIFY_PROFILE=1`, no scored profiling results | Quantify `tokens/window`, `ms/window`, MTP accepted/offered, GPU compute, waitCPU, waitB/PCIe, waitA/host, expert tier/cache, CPU/GPU contention, file staging, major faults. Baseline bottleneck attribution. |
-| **S6-2** | TODO | MTP `--spec` `4,6,8` x `--spec-min-p` `0.5,0.7`; one candidate per arm; preserve MTP and 128K | Show actual acceptance/tokens/window and verify cost; confirm best candidate with 3 scored dual C2 batches; Stage 3-B spec8 produced almost no IQ3_S gain, so no assumed gain. |
-| **S6-3** | TODO | Individual kernel flags `SIDE_MIXER=2`, `GU_SWIGLU=1`, `GR_UP75=1`, `ATTN_DAILY=1`, `GR_NORM_FAST=1`, `ARGMAX_ROWS_SM70=1`; optionally `Q8_GATHER_WIDE=0` after profile | Test **one flag at a time** against unchanged baseline; check version support, outputs, acceptance/noise; then interleave winning combinations. |
-| **S6-4** | TODO | Separate likely regression-causing SM70 bundle flags `SM70_TABLE=1`, `EXPDEC=1`, `ADAPT_OVERLAP=1` while **keeping `SM70_PERF=0`** | Isolate T7 default bundle's 18.60 tok/s regression; record culprit(s) and avoid harmful combinations; do not re-enable full bundle indiscriminately. |
-| **S6-5** | TODO, PROFILE-GATED | CPU pool-worker count / `--pcie-frac` / adaptive scheduling (one variable at a time **within existing 3-physical-core-per-agent cpusets**) | Show measured improvement in waitCPU/waitB versus added overhead; NO CPU-affinity changes. Skip without matching S6-1 bottleneck evidence. |
-| **S6-6** | TODO, PROFILE-GATED | `--expert-cache` automatic vs bounded manual slots; `--kv-resident` limited alternatives while **preserving 131072 context and INT8 KV** | Measure real GPU slots, expert hit, VRAM reserve, PCIe/CPU waits, TTFT/decode. Stop on VRAM/OOM/cache-stager regressions. Skip unless justified by S6-1. |
-| **S6-7** | TODO | Combine **individually validated** winners, keeping all fixed hardware and C2 rules | Interleaved control/candidate, >=3 independent fresh-process **dual-agent 128K C2** candidate batches, each A>=30 AND B>=30, active overlap, correctness, post-health, output>=1024; report mean/median/range and prefill/TTFT tradeoffs. No silent production promotion. |
+| Phase | Status | Recorded evidence |
+| --- | --- | --- |
+| **S6-0** | COMPLETE: 3 valid C2 batches, A/B median 22.3/21.2 tok/s | [Baseline](../artifacts/stage6-results-20261028/s6-baseline.md) |
+| **S6-1** | DIAGNOSTIC COMPLETE: CPU Expert / GPU waitCPU dominant | [Profile](../artifacts/stage6-results-20261028/s6-1-profile.md) |
+| **S6-2** | SCREENED: 5 MTP candidate batches; no confirmed winner | [MTP](../artifacts/stage6-results-20261028/s6-2-mtp.md) |
+| **S6-3** | SCREENED: 6 decode-kernel candidates; no confirmed winner | [Kernels](../artifacts/stage6-results-20261028/s6-3-kernels.md) |
+| **S6-4** | SCREENED: 3 SM70 candidates; no confirmed winner | [SM70](../artifacts/stage6-results-20261028/s6-4-sm70.md) |
+| **S6-5** | SCREENED: 2 CPU/PCIe candidates; no confirmed winner | [CPU/PCIe](../artifacts/stage6-results-20261028/s6-5-cpu-pcie.md) |
+| **S6-6** | NO VALID WINNER: 1 invalid C2 + 1 startup VRAM-plan failure | [KV/cache](../artifacts/stage6-results-20261028/s6-6-cache.md) |
+| **S6-7** | SKIPPED: assessment only; **no combined or 3-batch candidate run** | [Assessment](../artifacts/stage6-results-20261028/s6-7-assessment.md) |
 
-Do **not** stop Stage 6 at S6-0. After S6-1, follow the next documented stages; if a phase is unhelpful, mark SKIPPED with evidence and continue to the next. Early stopping applies to **unsafe individual candidate arms**, not automatic abandonment of Stage 6. If 30+ is not achieved, preserve a justified best sub-30 recipe and complete the final engineering assessment.
-
-## Test methodology
+Stage 6 is **closed with the 30 tok/s target unmet**. Only S6-0 has replicated Stage 6 dual-agent C2 evidence. Later measurements are largely one-batch screens, not statistically validated speedups, and do not establish any universal performance ceiling. No production promotion occurred.
+## Original test methodology (archived; not active)
 
 1. **Preflight on both hosts:** clean `git status`, `git pull --ff-only` when safe; verify source hashes, both GPU power caps 150W, ports, running processes, Stage 6 container definitions, same inode/model files, host RAM/swap and model file page-cache residency. Do not clear cache, rebuild images, restart preserved production containers or change power caps.
 2. **Candidate isolation:** use `scripts/93-stage6-prepare-arm.py` to create candidate A/B JSON configs in gitignored `results/stage6/arms/<arm-id>/`. Both get identical serving args and optional flags; source model is unchanged. Use `STRATA_S6_ARM_DIR="$PWD/results/stage6/arms/<arm-id>" bash scripts/88-start-stage6-agents.sh both` when the Stage 6 names are absent. Prior arm teardown: `89-stop` then **explicit** `92-remove-stage6-only.sh --confirm-stage6-only` (Stage 6 names only). Do not ever use `docker rm -f` on production/preserved containers.
@@ -47,7 +46,7 @@ Do **not** stop Stage 6 at S6-0. After S6-1, follow the next documented stages; 
 7. **Win/stop rules:** baseline ~21.45 tok/s A/B mean is a reference. Candidate advances only if improvement exceeds batch variability and both agents remain healthy; do not select on mean alone if one GPU regresses. For S6-7, all **six per-agent observations across >=3 independent valid dual batches** must each be >=30 tok/s. Report prefill degradation separately; aim to retain ~899 tok/s Stage 5 reference, but decode 30+ remains primary objective.
 8. **Records:** no invented measurements or optimistic gain percentages. `artifacts/stage6-results-20261028/s6-baseline.md` is immutable historical evidence; append distinct S6-1...S6-7 summaries under `artifacts/stage6-results-20261028/` using [result template](STAGE6_RESULT_TEMPLATE.md). Preserve raw `results/` locally (gitignored).
 
-## Proposed arms (candidate names; NOT yet measured)
+## Original proposed arms (historical; see result receipts for actual tests)
 
 ```text
 S6-1: s6-1-profile                         flags: STRATA_DECODE_TIMING=1, STRATA_VERIFY_PROFILE=1; diagnostic
@@ -61,8 +60,8 @@ S6-7: s6-7-combined-<name>                   only passing winner flags/args
 
 The complete recipe for generating these arms is in [Codex continuation handoff](STAGE6_CODEX_HANDOFF.md). Actual binary support and effective environment must be verified before attributing speedups to a flag. A candidate's performance **cannot** be inferred from the referenced fork's layer-split setup.
 
-## Stage 6 document chain and next step
+## Stage 6 document chain and closure
 
-Read in order: **this plan** → [Codex handoff](STAGE6_CODEX_HANDOFF.md) → [container/port safety prep](STAGE6_PREP.md) → [S6-0 completed receipt](../artifacts/stage6-results-20261028/s6-baseline.md) → [results template](STAGE6_RESULT_TEMPLATE.md).
+Read in order: **[final report](STAGE6_FINAL_REPORT.md)** → [recorded results](../artifacts/stage6-results-20261028/) → **this archived plan** → [historical Codex handoff](STAGE6_CODEX_HANDOFF.md) → [container/port safety prep](STAGE6_PREP.md) → [S6-0 completed receipt](../artifacts/stage6-results-20261028/s6-baseline.md) → [results template](STAGE6_RESULT_TEMPLATE.md).
 
-**NEXT: S6-1 diagnostic. Do not pause after S6-0 or ask to reproduce the already completed baseline unless new evidence shows its data invalid.**
+**CLOSED:** S6-1 was performed, S6-2 through S6-6 results were recorded, and S6-7 combination was skipped due to no verified winner. Future investigations require a new scope; do not resume experiments based on this archived plan.
