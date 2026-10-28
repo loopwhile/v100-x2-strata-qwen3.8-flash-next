@@ -89,11 +89,12 @@ for url in "$A_URL" "$B_URL"; do
   [[ "$count" == 0 ]] || { echo "ERROR: requests_kept=$count at $url" >&2; exit 1; }
 done
 
-# Preserve provenance without committing possibly sensitive docker inspect.
-mkdir -p "$OUT"
-docker inspect "$A" "$B" > "$OUT/stage6-containers-inspect.json"
-docker image inspect "$IMAGE" > "$OUT/stage6-image-inspect.json"
-{ date --iso-8601=seconds; nvidia-smi --query-gpu=index,name,power.limit,memory.used,memory.free,temperature.gpu --format=csv; free -h; } > "$OUT/host-before.txt"
+# The C2 harness creates OUT itself and requires that it does not yet exist.
+# Save pre-run provenance separately, then move it into the results directory.
+receipt_dir="$(mktemp -d "$ROOT/results/.stage6-receipt-XXXXXXXX")"
+docker inspect "$A" "$B" > "$receipt_dir/stage6-containers-inspect.json"
+docker image inspect "$IMAGE" > "$receipt_dir/stage6-image-inspect.json"
+{ date --iso-8601=seconds; nvidia-smi --query-gpu=index,name,power.limit,memory.used,memory.free,temperature.gpu --format=csv; free -h; } > "$receipt_dir/host-before.txt"
 
 set +e
 docker run --rm --network host \
@@ -110,6 +111,9 @@ docker run --rm --network host \
     --out "$OUT_CONT"
 rc=$?
 set -e
+mkdir -p "$OUT"
+mv "$receipt_dir"/* "$OUT/"
+rmdir "$receipt_dir"
 { date --iso-8601=seconds; nvidia-smi --query-gpu=index,name,power.draw,power.limit,memory.used,temperature.gpu --format=csv; free -h; } > "$OUT/host-after.txt"
 if [[ -f "$OUT/summary.json" ]]; then
   cat "$OUT/summary.json"
