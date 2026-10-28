@@ -99,6 +99,10 @@ docker restart "$A" "$B" >/dev/null
 wait_loaded() {
   local url="$1" expected="$2" name="$3"
   for _ in $(seq 1 600); do
+    if [[ "$(docker inspect --format '{{.State.Running}}' "$name" 2>/dev/null || true)" != true ]]; then
+      echo "ERROR: $name exited before becoming healthy; inspect its logs." >&2
+      return 1
+    fi
     if curl --connect-timeout 2 --max-time 3 -fsS "$url/health" 2>/dev/null \
       | python3 -c '
 import json,sys
