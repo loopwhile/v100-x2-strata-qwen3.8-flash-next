@@ -1,6 +1,6 @@
 # Stage 6 — isolated IQ3_S dual-agent decode optimization infrastructure
 
-**Status (2026-10-28): S6-0 BASELINE COMPLETE on P520; S6-1..S6-7 pending.** Current container infrastructure is active as Stage 6 test tooling, **not a production promotion**. See [full 8-stage plan](STAGE6_PLAN.md) and [Codex handoff](STAGE6_CODEX_HANDOFF.md).
+**Status (2026-10-28): CLOSED — 30 tok/s target NOT MET; S6-0..S6-6 outcomes recorded, S6-7 combination SKIPPED.** This page is **historical infrastructure documentation**, not a statement about which containers are currently running. See the [final report](STAGE6_FINAL_REPORT.md), [archived plan](STAGE6_PLAN.md) and [archived Codex handoff](STAGE6_CODEX_HANDOFF.md).
 **Prepared:** 2026-10-28 (Asia/Seoul).
 **Objective:** Two independent IQ3_S agents, **each >=30 decode tokens/s simultaneously** under frozen dual 128K C2; not aggregate throughput, not single-agent performance.
 
@@ -38,8 +38,9 @@ Both agents retain the same 64 GB shared host RAM, same physical IQ3_S GGUF mmap
 | `scripts/92-remove-stage6-only.sh` | Optional explicit reset of *stopped* Stage 6 objects only; required confirmation argument |
 | `scripts/93-stage6-prepare-arm.py` | Generate fresh, ignored per-arm A+B JSON and experimental flags; never overwrite baseline |
 | `docs/STAGE6_PLAN.md` | Complete S6-0 through S6-7 plan and pass criteria |
-| `docs/STAGE6_CODEX_HANDOFF.md` | Commands to continue from S6-1 without rerunning S6-0 |
+| `docs/STAGE6_CODEX_HANDOFF.md` | Archived Stage 6 execution instructions; no automatic continuation |
 | `docs/STAGE6_RESULT_TEMPLATE.md` | Individual per-arm result receipt fields |
+| `docs/STAGE6_FINAL_REPORT.md` | Final evidence register, caveats and failed target |
 
 Logs are new files under the checkout's gitignored `results/stage6/logs/`; C2 output goes into `results/c2-stage6-*/`. The original model, pack, MTP, image, Stage 5 config/logs and existing containers are not modified.
 
@@ -48,7 +49,7 @@ Logs are new files under the checkout's gitignored `results/stage6/logs/`; C2 ou
 - The original Stage 5 T7 report cites a Docker image ID ending in `...11600f...` (`sha256:5b62fa861bbd66bf11600f153e1f277145ed0c41d118a39a6d5fc8c9735147fa`). The Stage 6 scripts previously treated that full string as verified; this was an error during Stage 6 preparation.
 - **Actual P520 inspection by Codex CLI** on 2026-10-28 reports `docker image inspect strata-v100-jmnargi:2c9b1dd` ID `sha256:5b62fa861bbdb346f81b0b3edf88ee21396fb4e59795a14b2b092dfa2e4aa156`, created **2026-10-27 19:03:54 +09:00**, with source revision label `2c9b1dd...`. That date precedes the Stage 5 T7 benchmark run, and the two IDs share the initial 12 hex digits; nevertheless, the conflicting full-length archive receipt is **not** independent proof of image identity.
 - The launch and C2 guards now pin the **actual inspected P520 full image ID**. Do not rebuild or retag the baseline image to satisfy either ID.
-- **Before the first Stage 6 run**, verify the native engine SHA256 without touching either GPU or production containers:
+- **Historical verification:** S6-0 already confirmed that the native engine SHA256 matches the Stage 5 engine. A separately approved future reproduction can repeat this read-only check without touching either GPU or production containers:
 
 ```bash
 docker run --rm --entrypoint /usr/bin/sha256sum \
@@ -61,14 +62,14 @@ If the engine hash matches, it establishes identical engine bytes to the archive
 
 ## Safety gates (must pass before any P520 execution)
 
-1. All of this commit is **GitHub file preparation only**. A Git commit cannot create an actual P520 Docker container. Do not treat prepared files as tested deployment.
+1. **Original preparation boundary:** GitHub commits alone did not deploy the original containers. Stage 6 was subsequently run on P520 and documented. This closure commit does not create, stop, delete or restart any P520 containers.
 2. **Do not stop an existing production or experiment agent automatically.** The start script rejects running `strata-*` containers and ANY active NVIDIA compute PID. This intentionally prevents starting Stage 6 on busy GPUs, even though the host ports differ. The user must explicitly approve a test window and decide how to stop any running pair.
 3. Never delete/recreate `strata-jmn-iq2xs-agent-a/b`, the preserved Stage 5 pair, original images, GGUF, native packs, historical benchmark evidence, or the persistent ThinkPad `strata-tunnel.service`. The latter's `18080/18081` local endpoints and P520 `8080/8081` remain unchanged.
 4. **P520 18082/18083 are loopback-only**; they are *not* exposed on Tailscale or the ThinkPad SSH tunnel. To use them from ThinkPad, establish a separate user-approved SSH forwarding, using **different ThinkPad local ports**, e.g. `ssh -N -L 28082:127.0.0.1:18082 -L 28083:127.0.0.1:18083 p520`; do not edit the existing tunnel service.
 5. `docker start` does not apply changed environment/JSON. A new arm requires stopping Stage 6 containers, invoking `92-remove-stage6-only.sh --confirm-stage6-only`, then creating Stage 6 containers with revised Stage 6 configuration/explicit flags. These operations affect Stage 6 only. No script automatically removes containers or runs a benchmark upon creation.
 6. Use source-pinned CUDA12.9 Volta-compatible image. Never compile `sm_70` using CUDA13 or change host power caps.
 
-## Historical S6-0 reproduction commands (ALREADY EXECUTED; do not rerun blindly)
+## Historical S6-0 reproduction commands (ALREADY EXECUTED; no active testing authorization)
 
 Work from a clean P520 checkout synced using `git pull --ff-only` only if safe and clean. Check the image before running; do not build just to satisfy the preflight without separate approval.
 
@@ -97,13 +98,13 @@ bash scripts/89-stop-stage6-agents.sh
 
 The benchmark script checks frozen manifest SHA, exact Stage 6 container names/image, both /health model IDs/131072 context, requests_kept=0 after each **Stage 6-only** restart, and saves a local summary. It now uses the A agent's actual bind-mounted candidate config and checks A/B argument parity; `--diagnostic` allows explicitly labeled profiling runs, while default scored mode forbids profiler flags. The engine's exact effective environment and Docker inspect records are stored locally; review/redact before publishing.
 
-## Candidate research flags for later Stage 6 experiments
+## Archived Stage 6 experimental flags (not active tuning instructions)
 
 New test containers can be created with selected allowlisted flags exported in the shell, e.g. `STRATA_SIDE_MIXER=2 bash scripts/88-start-stage6-agents.sh both`. Supported research toggles include `STRATA_SIDE_MIXER`, `STRATA_GU_SWIGLU`, `STRATA_GR_UP75`, `STRATA_ATTN_DAILY`, `STRATA_GR_NORM_FAST`, `STRATA_ARGMAX_ROWS_SM70`, `STRATA_SM70_TABLE`, `STRATA_EXPDEC`, `STRATA_ADAPT_OVERLAP` and `STRATA_Q8_GATHER_WIDE`. Keep source-version support and actual effective kernel activation under review.
 
 - Diagnostic-only: `STRATA_DECODE_TIMING=1 STRATA_VERIFY_PROFILE=1`. These perturb measured decode timings. **Never use with scored C2**; the benchmark script refuses profiling-enabled containers.
 - MTP settings (`--spec`, `--spec-min-p`) are in the new Stage 6 JSON configs and should be changed only in dedicated candidate branches/files; the committed baseline JSON remains a reference.
 - Further tuning (cache policy, pool-worker count, PCIe work balance, KV residency) follows **measured** decode bottlenecks, not presumptions.
-- Never combine a first-time decode optimization with other new changes in a single arm. Start by reproducing the Stage 5 reference (S6-0), then a separate instrumented profiling pass (S6-1).
+- The original test protocol changed one experimental dimension at a time; S6-0 and S6-1 were already performed. Any future testing requires new scope, safety preflight and approval.
 
-**The S6-0 baseline is complete but does not meet 30 tok/s. S6-1..S6-7 still need experimentation. GitHub changes alone do not run or deploy candidate arms on P520.**
+**Stage 6 CLOSED:** No validated A/B 30 tok/s candidate. S6-7 combination was **not run**; see [final report](STAGE6_FINAL_REPORT.md). These commands remain only for audit/reproduction, not for automatic execution. This docs update does not modify containers or services.

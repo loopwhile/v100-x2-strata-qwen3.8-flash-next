@@ -8,7 +8,7 @@ This repository documents the experimental progression from initial Volta compat
 
 > **Stage 5 (completed — IQ3_S software-only optimization):** [Stage 5 plan and results](docs/STAGE5_PLAN.md) executed 3-batch fresh-process 128K C2 replications across upstream 0.1.47 (`T1`–`T4`), upstream 0.1.50 (`T6`, `T8`), and the updated V100 fork (`T7`, `T7-Fixed`). **T7-Fixed** (`jmnargi/Strata-V100@2c9b1dd` + `STRATA_SM70_PERF=0` + `STRATA_SELECT_SIMT=1` + `STRATA_PF_WMMA=1` + `STRATA_PF_WMMA2=1` + `STRATA_STAGER_SSD=0`) raised IQ3_S 128K prefill from Stage 4-B's 535.00 tok/s to **899.23 tok/s 3-run mean (905.40 tok/s median, 930.35 tok/s batch peak / 939.0 tok/s single-agent peak)** while preserving **21.45 tok/s mean decode (22.6 tok/s peak)** and cutting batch wall time to **212.18 s mean (205.85 s best)**. On pure upstream 0.1.47, **T4** achieved **887.37 tok/s mean prefill** and **21.20 tok/s decode** (`228.92 s` mean wall time).
 
-> **Stage 6 (in progress — eight stages S6-0..S6-7):** [Full Stage 6 plan](docs/STAGE6_PLAN.md) · [Codex continuation handoff](docs/STAGE6_CODEX_HANDOFF.md) · [container instructions](docs/STAGE6_PREP.md). **S6-0 is COMPLETE:** three valid dual-agent 128K C2 batches ([record](artifacts/stage6-results-20261028/s6-baseline.md)); per-agent decode medians **A 22.3 / B 21.2 tok/s**. **NEXT: S6-1 profiling**, then MTP, kernel, SM70, CPU/PCIe, Expert Cache and final combination. Goal: **A >=30 and B >=30 tok/s simultaneously** for three valid batches; not achieved yet. No production promotion.
+> **Stage 6 (CLOSED — 2026-10-28; 30 tok/s NOT MET):** [Final report](docs/STAGE6_FINAL_REPORT.md) · [Phase results](artifacts/stage6-results-20261028/) · [archived plan](docs/STAGE6_PLAN.md). Original independent IQ3_S Agent A/B topology and 128K context were retained. **Only S6-0 was replicated for three valid dual-agent C2 batches (A/B decode medians 22.3 / 21.2 tok/s).** S6-1 profiling and S6-2–S6-6 single-batch candidate screens found no verified winner; **S6-7 combination was SKIPPED**, not tested. No 30 tok/s success or production promotion.
 
 > **Current performance recommendations:** For **maximum throughput**, two independent **IQ2_XS** agents using **upstream Strata 0.1.47** remain fastest (**995.70 tok/s** prefill, **39.60 tok/s** decode in Stage 4-C; **981.55 / 38.50 tok/s** in vanilla Stage 4-B). For **higher-precision IQ3_S**, Stage 5 **T7-Fixed** (**899.23 tok/s** prefill, **21.45 tok/s** decode) or upstream **T4** (**887.37 tok/s** prefill, **21.20 tok/s** decode) is recommended. The preserved Stage 3-A deployment remains available for rollback. A benchmark result does not imply that its containers have been promoted to production.
 
@@ -586,9 +586,22 @@ Stage 5 investigated whether IQ3_S could recover and surpass its Stage 3-A 128K 
 
 ---
 
+### Stage 6 — IQ3_S decode optimization (completed, target unmet)
+
+**October 28, 2026.** Same P520 hardware, V100 GPU0/A and GPU1/B, fixed CPU affinities, shared 64GB RAM/SSD/model, 150W caps and 131072 context throughout. **Goal:** each independent agent decode >=30 tok/s simultaneously for three valid C2 batches.
+
+| Stage 6 fully replicated baseline | Agent A | Agent B |
+| --- | ---: | ---: |
+| Decode median, 3 batches | **22.3 tok/s** | **21.2 tok/s** |
+| Prefill median, 3 batches | 908.2 tok/s | 923.1 tok/s |
+
+S6-0 valid; S6-1 profiled CPU Expert/GPU waitCPU; S6-2 MTP, S6-3 kernels, S6-4 SM70, S6-5 CPU/PCIe and S6-6 cache/KV were screened without a confirmed two-agent winner. Most candidates had only one C2 batch or failed validity/startup. **S6-7 was assessment only; no candidate combination or final 3-batch validation was performed.** The 30 tok/s per-agent goal remains **unmet**. No production promotion.
+
+**Complete evidence:** [Stage 6 final report](docs/STAGE6_FINAL_REPORT.md) · [S6-0..S6-7 receipts](artifacts/stage6-results-20261028/).
+
 ## 8. Consolidated 128K Results
 
-Values for Stages 2–4 are **arithmetic means of the two agents' per-request rates within one homogeneous C2 batch**; values for Stage 5 are **3-batch means (6 agent requests per arm)** across three consecutive fresh-process C2 batches.
+Values for Stages 2–4 are **arithmetic means of the two agents' per-request rates within one homogeneous C2 batch**; values for Stage 5 are **3-batch means (6 agent requests per arm)**; Stage 6 A/B decode medians are separately calculated across three S6-0 batches and **not pooled** into this comparison table across three consecutive fresh-process C2 batches.
 
 | Stage | Engine | Model | Prefill (tok/s) | Decode (tok/s) | TTFT (s) |
 | --- | --- | --- | ---: | ---: | ---: |
@@ -646,7 +659,8 @@ v100-x2-strata-qwen3.8-flash-next/
 │   ├── 66-71                   Stage 4-C IQ3 variants
 │   ├── 72-77                   Stage 4-B IQ3 variants
 │   ├── 78-80                   Stage 4-B mixed A/B
-│   └── 81-87                   Stage 5 IQ3_S optimization & telemetry
+│   ├── 81-87                   Stage 5 IQ3_S optimization & telemetry
+│   └── 88-93                   Stage 6 independent-agent test & config tools
 ├── bench/
 │   ├── api_bench.py
 │   ├── c2_v100_contract.py
@@ -658,12 +672,19 @@ v100-x2-strata-qwen3.8-flash-next/
 │   ├── stage4-configs-20261021/
 │   ├── stage4-results-20261021/
 │   ├── stage5-configs-20261027/
-│   └── stage5-results-20261027/
+│   ├── stage5-results-20261027/
+│   ├── stage6-configs-20261028/
+│   └── stage6-results-20261028/
 ├── docs/
 │   ├── STAGE4_PLAN.md
 │   ├── STAGE4_ANTIGRAVITY_HANDOFF.md
 │   ├── STAGE4B_MIXED_AGY_HANDOFF.md
-│   └── STAGE5_PLAN.md
+│   ├── STAGE5_PLAN.md
+│   ├── STAGE6_PLAN.md
+│   ├── STAGE6_FINAL_REPORT.md
+│   ├── STAGE6_PREP.md
+│   ├── STAGE6_CODEX_HANDOFF.md
+│   └── STAGE6_RESULT_TEMPLATE.md
 └── results/                    Local, gitignored benchmark outputs
 ```
 
@@ -695,6 +716,8 @@ Do not overwrite preserved tags without an explicit migration and rollback plan.
 | `scripts/77-bench-stage4b-iq3s-c2.sh` | Stage 4-B IQ3_S |
 | `scripts/80-bench-stage4b-mixed-c2.sh` | Stage 4-B mixed |
 | `scripts/84-bench-stage5-c2.sh` | Stage 5 IQ3_S C2 runner with host telemetry (`T1`–`T8`) |
+| `scripts/91-bench-stage6-c2.sh` | Stage 6 dual 128K C2 diagnostics and scoring runner |
+| `scripts/93-stage6-prepare-arm.py` | Isolated Stage 6 candidate-config generator |
 
 These scripts are **not routine start commands**. They may restart selected test containers to enforce fresh-process measurements.
 
@@ -706,6 +729,8 @@ These scripts are **not routine start commands**. They may restart selected test
 - [Stage 4 results and SHA-256 receipts](artifacts/stage4-results-20261021/)
 - [Stage 5 configs](artifacts/stage5-configs-20261027/)
 - [Stage 5 results and 3-batch summaries](artifacts/stage5-results-20261027/)
+- [Stage 6 closure report](docs/STAGE6_FINAL_REPORT.md)
+- [Stage 6 recorded results](artifacts/stage6-results-20261028/)
 - [Stage 5 IQ3_S optimization test plan](docs/STAGE5_PLAN.md)
 - [Stage 4 plan](docs/STAGE4_PLAN.md)
 - [Stage 4 Antigravity CLI handoff](docs/STAGE4_ANTIGRAVITY_HANDOFF.md)
@@ -838,8 +863,9 @@ These values are arithmetic means within dual-agent C2 batches, **not the sum of
 
 ### Repository documentation
 
+- [Stage 6 final report — closed, target unmet](docs/STAGE6_FINAL_REPORT.md)
 - [Stage 6 full 8-stage plan](docs/STAGE6_PLAN.md)
-- [Stage 6 Codex continuation handoff](docs/STAGE6_CODEX_HANDOFF.md)
+- [Stage 6 archived Codex handoff](docs/STAGE6_CODEX_HANDOFF.md)
 - [Stage 6 completed S6-0 baseline](artifacts/stage6-results-20261028/s6-baseline.md)
 - [Stage 6 container preparation and ports](docs/STAGE6_PREP.md)
 - [Stage 5 plan and checklist](docs/STAGE5_PLAN.md)
