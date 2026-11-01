@@ -10,7 +10,7 @@ This repository documents the experimental progression from initial Volta compat
 
 > **Stage 6 (CLOSED — 2026-10-28; 30 tok/s NOT MET):** [Final report](docs/STAGE6_FINAL_REPORT.md) · [Phase results](artifacts/stage6-results-20261028/) · [archived plan](docs/STAGE6_PLAN.md). Original independent IQ3_S Agent A/B topology and 128K context were retained. **Only S6-0 was replicated for three valid dual-agent C2 batches (A/B decode medians 22.3 / 21.2 tok/s).** S6-1 profiling and S6-2–S6-6 single-batch candidate screens found no verified winner; **S6-7 combination was SKIPPED**, not tested. No 30 tok/s success or production promotion.
 
-> **Stage 7 (PLANNED — Strata Qwen engine 0.1.54 validation across quantizations):** [Stage 7 plan](docs/STAGE7_PLAN.md). This is an **upstream engine upgrade/evaluation stage**, **not an IQ3_XXS-only stage**. IQ2_XS, IQ3_XXS and IQ3_S are model-specific candidates; UD-Q4_K_XL and additional quantizations remain optional with separate feasibility gates. The first detailed IQ3_XXS matrix proposes 0.1.54 vanilla/SIMT/WMMA/stager comparisons (3 fresh-process 128K C2 batches per selected arm). **No 0.1.54 build, new benchmark result, service change or promotion has occurred.**
+> **Stage 7 (IN PROGRESS — Strata 0.1.54 validation across quantizations):** [Main plan](docs/STAGE7_PLAN.md) · [Completed IQ3_XXS 18/18 C2 report](artifacts/stage7-results-20261101/stage7-iq3xxs-final-report.md) · [Additional S7-XXS-8..12 tests, NOT RUN](docs/STAGE7_IQ3XXS_OPT_PLAN.md). IQ3_XXS is **one Stage 7 model**, not the full stage: IQ2_XS / IQ3_S remain untested at 0.1.54. On IQ3_XXS the best measured 0.1.54 setting is SIMT=1 (prefill **992.6 / 1000.5 tok/s**, decode **25.0 / 24.6 tok/s**). 15 additional scored C2 batches are now prepared, not executed; no production promotion.
 
 > **Current performance recommendations:** For **maximum throughput**, two independent **IQ2_XS** agents using **upstream Strata 0.1.47** remain fastest (**995.70 tok/s** prefill, **39.60 tok/s** decode in Stage 4-C; **981.55 / 38.50 tok/s** in vanilla Stage 4-B). For **higher-precision IQ3_S**, Stage 5 **T7-Fixed** (**899.23 tok/s** prefill, **21.45 tok/s** decode) or upstream **T4** (**887.37 tok/s** prefill, **21.20 tok/s** decode) is recommended. The preserved Stage 3-A deployment remains available for rollback. A benchmark result does not imply that its containers have been promoted to production.
 
@@ -603,9 +603,9 @@ S6-0 valid; S6-1 profiled CPU Expert/GPU waitCPU; S6-2 MTP, S6-3 kernels, S6-4 S
 
 **Complete evidence:** [Stage 6 final report](docs/STAGE6_FINAL_REPORT.md) · [S6-0..S6-7 receipts](artifacts/stage6-results-20261028/).
 
-### Stage 7 — upstream Strata 0.1.54 validation (PLANNED; no tests run)
+### Stage 7 — upstream Strata 0.1.54 validation (IN PROGRESS; IQ3_XXS 18/18 PASS)
 
-Stage 7 is defined by the **engine version**, not by IQ3_XXS. The plan covers **IQ2_XS, IQ3_XXS and IQ3_S** as distinct model-specific upgrade candidates, with **UD-Q4_K_XL** only as a separately gated optional feasibility candidate. For IQ3_XXS, [Stage 7 plan](docs/STAGE7_PLAN.md) provides an initial 0.1.54 vanilla/SIMT/WMMA/SSD-stager matrix (6 selected arms × 3 valid C2 batches; optional seventh arm is not authorized). Other quantizations require their own suitable arms. Historical Stage 4–6 scores remain unchanged and are **not** being rerun solely to make a new baseline. GPU-clock/page-cache differences must be noted in comparisons. No 0.1.54 image, runtime containers, C2 results or production changes have been made.
+Stage 7 evaluates the **upstream 0.1.54 engine across quantizations**, not just IQ3_XXS. IQ3_XXS S7-XXS-1..6 completed **18/18 valid dual-agent 128K C2 batches**; the [verified report](artifacts/stage7-results-20261101/stage7-iq3xxs-final-report.md) found SIMT=1 the best tested 0.1.54 option, without verified speed gain over Stage 5. The [optimization extension](docs/STAGE7_IQ3XXS_OPT_PLAN.md) adds **S7-XXS-8..12 (15 scored C2 batches, NOT RUN)**: SIMT2, GDN recurrence, INT8 KV gather, SM70_TABLE and prefill 4096, plus optional diagnostic. Use isolated [runner 99](scripts/99-stage7-iq3xxs-opt-c2.sh); original runner and receipts remain unchanged. IQ2_XS/IQ3_S remain separate candidates; no production change or promotion. Stage 5 cross-date comparisons still have clock/cache confounders.
 
 ---
 
@@ -874,7 +874,9 @@ These values are arithmetic means within dual-agent C2 batches, **not the sum of
 
 ### Repository documentation
 
-- [Stage 7 plan — upstream Strata 0.1.54, multiple model quantizations (planned)](docs/STAGE7_PLAN.md)
+- [Stage 7 plan — upstream Strata 0.1.54, multiple model quantizations (in progress)](docs/STAGE7_PLAN.md)
+- [Stage 7 IQ3_XXS completed final report — 18/18 C2 PASS](artifacts/stage7-results-20261101/stage7-iq3xxs-final-report.md)
+- [Stage 7 IQ3_XXS optimization extension — S7-XXS-8..12, NOT RUN](docs/STAGE7_IQ3XXS_OPT_PLAN.md)
 - [Stage 6 final report — closed, target unmet](docs/STAGE6_FINAL_REPORT.md)
 - [Stage 6 full 8-stage plan](docs/STAGE6_PLAN.md)
 - [Stage 6 archived Codex handoff](docs/STAGE6_CODEX_HANDOFF.md)

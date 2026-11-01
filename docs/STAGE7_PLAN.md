@@ -1,6 +1,6 @@
 # Stage 7 — Strata Qwen engine 0.1.54 validation across model quantizations
 
-**Status: PLANNED — documentation only. No Strata 0.1.54 image built, no C2 runs performed, and no deployment promoted.**  
+**Status: IN PROGRESS — 0.1.54 built, IQ3_XXS S7-XXS-1..6 18/18 C2 PASS (2026-11-01); IQ3_XXS S7-XXS-8..12 PREPARED / NOT RUN; additional quantizations pending. No production promotion.**  
 **Created:** 2026-11-01 (Asia/Seoul)  
 **Target engine:** upstream [Niko1221/Strata v0.2.8](https://github.com/Niko1221/Strata/releases/tag/v0.2.8), **Qwen engine 0.1.54** (the application version is 0.2.8, not 0.1.54). Pin an exact upstream source SHA at build time.
 
@@ -60,21 +60,25 @@ All rows use the **same upstream 0.1.54 binary** and the frozen IQ3_XXS assets. 
 
 | ID | Upstream engine | Runtime override | Historical reference | C2 batches | Status |
 | --- | --- | --- | --- | ---: | --- |
-| S7-XXS-1 | 0.1.54 | Vanilla: no experimental switch forced | Stage 5 T1 (0.1.47 vanilla) | 3 | PLANNED |
-| S7-XXS-2 | 0.1.54 | `STRATA_SELECT_SIMT=1` | Stage 5 T2 | 3 | PLANNED |
-| S7-XXS-3 | 0.1.54 | `STRATA_PF_WMMA=1` | Stage 5 T3 | 3 | PLANNED |
-| S7-XXS-4 | 0.1.54 | `STRATA_SELECT_SIMT=1 STRATA_PF_WMMA=1` | Stage 5 T4 | 3 | PLANNED |
-| S7-XXS-5 | 0.1.54 | `STRATA_STAGER_SSD=0` | Stage 5 T6-Fixed is 0.1.50, not a same-engine match | 3 | PLANNED |
-| S7-XXS-6 | 0.1.54 | `STRATA_SELECT_SIMT=1 STRATA_PF_WMMA=1 STRATA_STAGER_SSD=0` | Stage 5 T8 (0.1.50) | 3 | PLANNED |
+| S7-XXS-1 | 0.1.54 | Vanilla: no experimental switch forced | Stage 5 T1 (0.1.47 vanilla) | 3 | COMPLETED 3/3 (2026-11-01) |
+| S7-XXS-2 | 0.1.54 | `STRATA_SELECT_SIMT=1` | Stage 5 T2 | 3 | COMPLETED 3/3 (2026-11-01) |
+| S7-XXS-3 | 0.1.54 | `STRATA_PF_WMMA=1` | Stage 5 T3 | 3 | COMPLETED 3/3 (2026-11-01) |
+| S7-XXS-4 | 0.1.54 | `STRATA_SELECT_SIMT=1 STRATA_PF_WMMA=1` | Stage 5 T4 | 3 | COMPLETED 3/3 (2026-11-01) |
+| S7-XXS-5 | 0.1.54 | `STRATA_STAGER_SSD=0` | Stage 5 T6-Fixed is 0.1.50, not a same-engine match | 3 | COMPLETED 3/3 (2026-11-01) |
+| S7-XXS-6 | 0.1.54 | `STRATA_SELECT_SIMT=1 STRATA_PF_WMMA=1 STRATA_STAGER_SSD=0` | Stage 5 T8 (0.1.50) | 3 | COMPLETED 3/3 (2026-11-01) |
 | S7-XXS-7 (conditional) | 0.1.54 | `STRATA_SELECT_SIMT=1 STRATA_PF_WMMA=1 STRATA_PF_WMMA2=1 STRATA_STAGER_SSD=0` | Exploratory; **not** a reproduction of the fork's T7-Fixed | 3 | NOT AUTHORIZED / OPTIONAL |
 
-**18 planned C2 batches for S7-XXS-1 through S7-XXS-6; 3 additional batches only if S7-XXS-7 is separately selected.** This is an **IQ3_XXS submatrix**, not the whole Stage 7.
+**S7-XXS-1 through S7-XXS-6 completed 18/18 valid C2 batches; S7-XXS-7 remains optional / not run.** This is an **IQ3_XXS submatrix**, not the whole Stage 7.
 
 Notes:
 - S7-XXS-2 intentionally preserves T2's single SIMT override; do **not** quietly force `STRATA_STAGER_SSD=0` in that arm. Stager intervention belongs in separate arms. New 0.1.54 default behavior still may differ; record it.
 - The old Stage 5 **T7 / T7-Fixed** use `jmnargi/Strata-V100@2c9b1dd`, its own scheduling/kernels and `STRATA_SM70_PERF` semantics. They cannot be recreated just by copying environment variables into upstream 0.1.54.
 - `STRATA_PF_WMMA2=1` must be source- and log-verified as actually applicable to IQ3_XXS before treating S7-XXS-7 as an optimization result.
 - Stage 5 T2 historical per-agent 3-batch medians: prefill **1010.4 / 1019.2 tok/s**, decode **25.9 / 26.7 tok/s**, TTFT **125.91 / 124.86 s**, median batch wall **203.41 s**. T7-Fixed historical prefill **1030.7 / 1044.9**, decode **26.6 / 26.7 tok/s**. These were not all measured at the same GPU clock/page-cache condition. See [Stage 5 IQ3_XXS matrix](../artifacts/stage5-results-20261029/stage5-iq3xxs-matrix-summary.md) and [T7-Fixed receipt](../artifacts/stage5-results-20261029/stage5-iq3xxs-t7fixed-summary.md).
+
+### 3.1a IQ3_XXS additional optimization arms (PREPARED, NOT RUN)
+
+See [Stage 7 IQ3_XXS optimization extension](STAGE7_IQ3XXS_OPT_PLAN.md): new S7-XXS-8..12 (SIMT2, GDN recurrence, INT8 KV gather, SM70_TABLE, prefill 4096), **15 planned C2 batches, none executed**, plus an optional non-scored diagnostic. The existing 18/18 completed runs and `scripts/97-stage7-iq3xxs-c2.sh` are preserved; only new `scripts/99-stage7-iq3xxs-opt-c2.sh` may be used for extension IDs after separate execution approval. S7-XXS-13 is conditional/not implemented. Stage 7 remains an engine-level multi-quantization evaluation.
 
 ### 3.2 IQ2_XS: engine-upgrade assessment (model-specific)
 
@@ -112,8 +116,9 @@ Record one row per model + arm, with engine SHA, quantization, effective runtime
 | Work item | Status |
 | --- | --- |
 | Stage 7 scope defined as upstream Strata 0.1.54 validation across quantizations | DOCUMENTED |
-| 0.1.54 source SHA, binary build and dedicated image | NOT STARTED |
-| IQ3_XXS S7-XXS-1 to S7-XXS-6 | PLANNED, NOT RUN |
+| 0.1.54 source SHA, binary build and dedicated image | BUILT; image/source IDs recorded in IQ3_XXS final report |
+| IQ3_XXS S7-XXS-1 to S7-XXS-6 | COMPLETED (18/18 valid C2 PASS) |
+| IQ3_XXS S7-XXS-8 to S7-XXS-12 | PREPARED, NOT RUN (15 planned C2; optional diagnostic non-scored) |
 | IQ2_XS model-specific 0.1.54 matrix | CANDIDATE, NOT RUN |
 | IQ3_S model-specific 0.1.54 matrix | CANDIDATE, REQUIRES ASSET CHECK |
 | UD-Q4_K_XL additional feasibility | OPTIONAL, NOT RUN |

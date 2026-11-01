@@ -39,14 +39,14 @@ The mixed test has not been measured or promoted.
 - The Stage 6 runners (scripts/88-92) and isolated-arm generator (scripts/93-stage6-prepare-arm.py) are retained for audit. **Do not execute or resume tests automatically because the archived plan or handoff says NEXT or proceed.** New experiments or production operations require separately approved scope.
 - This documentation closure is GitHub-only; no container, GPU, power, server, model or tunnel change is implied.
 
-## Stage 7 (PLANNED — Strata Qwen engine 0.1.54, NOT IQ3_XXS-only)
+## Stage 7 (IN PROGRESS — Strata Qwen engine 0.1.54, NOT IQ3_XXS-only)
 
 **Read first:** [Stage 7 plan](docs/STAGE7_PLAN.md). Stage 7 tests the **upstream 0.1.54 engine** across distinct Qwen3.8-Flash-Next GGUF quantizations. Candidate arms include **IQ2_XS, IQ3_XXS and IQ3_S**; UD-Q4_K_XL is optional and capacity-gated. IQ3_XXS's Stage 5 T1–T8 history is only one model's comparison, not the definition of Stage 7.
 
-- **This is documentation only:** no 0.1.54 image/build, benchmark run, model restoration, service interruption or production promotion is authorized by this commit. Run experiments only after separate execution approval and live-host preflight.
+- **Verified existing progress:** upstream 0.1.54 was built and IQ3_XXS S7-XXS-1..6 completed 18/18 valid C2 batches; see [final report](artifacts/stage7-results-20261101/stage7-iq3xxs-final-report.md). The **new** S7-XXS-8..12 experiments are prepared in GitHub, **NOT RUN**. No model restoration, service interruption or production promotion is authorized by this commit. Require separate execution approval and live-host preflight.
 - Pin upstream v0.2.8's **Qwen engine 0.1.54** source SHA and use CUDA 12.x / `sm_70` in a **new** Docker image, preserving all existing images, containers, ports and model assets. Do not use CUDA 13 on V100.
 - Keep two independent single-V100 131072-context agents, original C2 workload/hash, CPU pinning, INT8 KV and model-matched native packs. Use **three valid fresh-process 128K C2 batches per selected arm**, with no prompt-prefix reuse and decoded overlap; archive invalid runs.
 - **Do not rerun older 0.1.47/0.1.50/fork arms just for a new baseline.** Compare against historical results with the known GPU-clock and Linux page-cache caveats; do not claim causal version wins from non-interleaved data.
-- For IQ3_XXS, the proposed S7-XXS-1–6 matrix varies vanilla, SIMT, WMMA and SSD-stager flags on 0.1.54. Do not force `STRATA_STAGER_SSD=0` silently into its T2-equivalent SIMT arm. Optional WMMA2 requires validation of its actual IQ3_XXS code path.
+- IQ3_XXS S7-XXS-1..6 are **completed**. For new tests follow [S7-XXS-8..12 extension](docs/STAGE7_IQ3XXS_OPT_PLAN.md), using **only** new `scripts/99-stage7-iq3xxs-opt-c2.sh`; original `scripts/97-stage7-iq3xxs-c2.sh` and 18/18 results remain untouched. Use independent 3-batch C2 per arm with S7-XXS-2 as an archived 0.1.54 reference. An optional diagnostic is non-scored. S7-XXS-7 WMMA2 and S7-XXS-13 conditional combination are **not** authorized to execute. Do not inject SSD=0 or WMMA into SIMT-only controls.
 - Choose **separate** runtime candidate settings for IQ2_XS and IQ3_S; do not copy IQ3_XXS defaults blindly. IQ3_S archive restoration requires disk/hash and active-service checks, not deletion of other models. Stage 6 is closed and is not reopened by Stage 7.
 - Preserve power/clock settings, operating tunnel, serving ports, Stage 3–6 results and rollback paths. Use dedicated Stage 7 names and keep empirical metrics separate from claims.
