@@ -18,7 +18,7 @@ Reference **S7-XXS-2 (SIMT=1)**, 3-run per-agent medians: Prefill **992.6 / 1000
 | **S7-XXS-DIAG-1 (optional)** | SIMT=1 plus `STRATA_PREFILL_TIMING=1 STRATA_DECODE_TIMING=1 STRATA_VERIFY_PROFILE=1` | **Profiling only (non-scored)** | 1 | **PROFILE_PASS_NOT_SCORED** |
 | **S7-XXS-13** | SIMT=1 plus `STRATA_SM70_TABLE=1` (confirmed winning combination) | Combined | 3 | **3/3 PASS** — prefill 1004.2 / 1010.6, decode 26.5 / 26.1 |
 
-**Planned: 15 new scored C2 batches + optional 1 diagnostic. Executed: 14 scored + 1 diagnostic** (`xxs-12-3` intentionally not run). Existing optional S7-XXS-7 (WMMA2) remains separate and not approved for execution. These tests do not complete the entire multi-model Stage 7; IQ2_XS and IQ3_S are still pending.
+**Original extension budget: 15 scored C2 batches + optional 1 diagnostic; actual S7-XXS-8..13 completed: 17 scored + 1 diagnostic** (`xxs-12-3` intentionally not run; `xxs-13-1..3` later added). Existing optional S7-XXS-7 remains separate. **The next S7-XXS-14..16 Fork-port test plan is documented separately** at [STAGE7_IQ3XXS_FORK_PORT_PLAN.md](STAGE7_IQ3XXS_FORK_PORT_PLAN.md); none of those three arms has been run. These results do not complete the multi-model Stage 7: IQ2_XS and IQ3_S remain pending.
 
 ## Interpretation of earlier speedups
 
@@ -31,7 +31,7 @@ Reference **S7-XXS-2 (SIMT=1)**, 3-run per-agent medians: Prefill **992.6 / 1000
 
 ## Frozen environment and safety
 
-Use **new runner** [`scripts/99-stage7-iq3xxs-opt-c2.sh`](../scripts/99-stage7-iq3xxs-opt-c2.sh). Original `scripts/97-stage7-iq3xxs-c2.sh` and its 18/18 results are unchanged. New IDs `xxs-{8,9,10,11,12}-{1,2,3}` or optional `xxs-diag-1` write only to `results/stage7-iq3xxs-opt/<id>/` and refuse any overwrite/retry.
+Use **new runner** [`scripts/99-stage7-iq3xxs-opt-c2.sh`](../scripts/99-stage7-iq3xxs-opt-c2.sh). Original `scripts/97-stage7-iq3xxs-c2.sh` and its 18/18 results are unchanged. Existing IDs `xxs-{8,9,10,11,12,13}-{1,2,3}` (except intentionally unrun `xxs-12-3`) and `xxs-diag-1` use `results/stage7-iq3xxs-opt/<id>/` with no overwrite/retry. The separate **S7-XXS-14..16** track uses a *different runner and directory*; do not reuse this script for the new arms.
 
 Keep pinned upstream **v0.2.8 / engine 0.1.54**, source `870aedd9e1ebe1c91f94da93b59af17729f6c5c0`, image ID `sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246`. Keep 2 independent Tesla V100 16GB, A GPU0 cpuset `0-2,6-8`, B GPU1 cpuset `3-5,9-11`, 1110MHz ceiling, 150W cap, 131072 context, INT8 KV resident 32768, MTP spec 4 / min-p 0.5, matching IQ3_XXS native pack and model.
 
@@ -47,7 +47,7 @@ bash -n scripts/99-stage7-iq3xxs-opt-c2.sh
 timeout 1800 bash scripts/99-stage7-iq3xxs-opt-c2.sh xxs-8-1
 ```
 
-Run each remaining ID **manually**; no automatic sweep or retry is included. New candidate S7-XXS-13 is intentionally not executable until selected. Preserve failed receipts and raw data; C2 PASS does not establish coding/Tool Call quality.
+**Historical example only; these measured IDs are closed.** Do not rerun or recycle the 8..13 IDs. Future 14..16 experiments have a [separate plan](STAGE7_IQ3XXS_FORK_PORT_PLAN.md) and new runner. Preserve failed receipts and raw data; C2 PASS does not establish coding/Tool Call quality.
 
 ## Evidence
 
