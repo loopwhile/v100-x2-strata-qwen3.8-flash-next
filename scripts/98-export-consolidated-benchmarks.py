@@ -562,6 +562,7 @@ def collect_records():
         "XXS-10": ("S7-XXS-10", "STRATA_Q8_GATHER_WIDE=0", "Decode INT8-KV gather non-wide"),
         "XXS-11": ("S7-XXS-11", "STRATA_SM70_TABLE=1", "Decode V100 expert/GEMV/HC lookup tables"),
         "XXS-12": ("S7-XXS-12", "STRATA_SELECT_SIMT=1 + prefill 4096", "Prefill chunk 4096 (stopped early, n=2)"),
+        "XXS-13": ("S7-XXS-13", "STRATA_SELECT_SIMT=1 + STRATA_SM70_TABLE=1", "Optimal confirmed combination (SIMT=1 + SM70_TABLE=1)"),
         "XXS-DIAG": ("S7-XXS-DIAG-1", "SIMT=1, TIMING/PROFILE (Diagnostic)", "Non-scored diagnostic profiling"),
     }
 
@@ -572,7 +573,7 @@ def collect_records():
             prefix = d.name.rsplit("-", 1)[0].upper()
             opt_groups.setdefault(prefix, []).append(d)
 
-        for prefix in ["XXS-8", "XXS-9", "XXS-10", "XXS-11", "XXS-12", "XXS-DIAG"]:
+        for prefix in ["XXS-8", "XXS-9", "XXS-10", "XXS-11", "XXS-12", "XXS-13", "XXS-DIAG"]:
             if prefix not in opt_groups:
                 continue
             bdirs = opt_groups[prefix]
@@ -737,7 +738,7 @@ def export_markdown(records, path):
         "S5-IQ3XXS-T1", "S5-IQ3XXS-T2", "S5-IQ3XXS-T7-Fixed",
         "S6-0",
         "S7-XXS-1", "S7-XXS-2", "S7-XXS-4",
-        "S7-XXS-8", "S7-XXS-9", "S7-XXS-10", "S7-XXS-11", "S7-XXS-12"
+        "S7-XXS-8", "S7-XXS-9", "S7-XXS-10", "S7-XXS-11", "S7-XXS-12", "S7-XXS-13"
     ]
     
     rec_by_arm = {r["arm_id"]: r for r in records if r["run_type"] in ("baseline", "median (3 batches)", "3-run mean", "mixed_quant", "tuning", "feasibility", "mean (2 batches, stopped early)")}

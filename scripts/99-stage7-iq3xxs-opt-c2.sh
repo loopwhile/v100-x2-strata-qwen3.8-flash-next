@@ -4,7 +4,7 @@ set -Eeuo pipefail
 # Each ID is a single bounded fresh-process C2. Never retry/reuse an ID.
 ROOT="$HOME/v100-x2-strata-qwen3.8-flash-next"
 ID="${1:?batch id required}"
-case "$ID" in xxs-[89]-[123]|xxs-1[012]-[123]|xxs-diag-1) ;; *) echo 'invalid new test ID' >&2; exit 2;; esac
+case "$ID" in xxs-[89]-[123]|xxs-1[0123]-[123]|xxs-diag-1) ;; *) echo 'invalid new test ID' >&2; exit 2;; esac
 IMAGE=strata-v100-upstream:0.1.54
 IMAGE_ID=sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246
 DIR="$ROOT/results/stage7-iq3xxs-opt/$ID"
@@ -26,12 +26,12 @@ flags=()
 # Change one axis versus archived S7-XXS-2 (SIMT=1).
 case "$ID" in
  xxs-8-*) flags+=(-e STRATA_SELECT_SIMT=2);;
- xxs-9-*|xxs-1[012]-*|xxs-diag-1) flags+=(-e STRATA_SELECT_SIMT=1);;
+ xxs-9-*|xxs-1[0123]-*|xxs-diag-1) flags+=(-e STRATA_SELECT_SIMT=1);;
 esac
 case "$ID" in
  xxs-9-*) flags+=(-e STRATA_GDN_REC_WARP=2);;
  xxs-10-*) flags+=(-e STRATA_Q8_GATHER_WIDE=0);;
- xxs-11-*) flags+=(-e STRATA_SM70_TABLE=1);;
+ xxs-11-*|xxs-13-*) flags+=(-e STRATA_SM70_TABLE=1);;
  xxs-diag-1) flags+=(-e STRATA_PREFILL_TIMING=1 -e STRATA_DECODE_TIMING=1 -e STRATA_VERIFY_PROFILE=1);;
 esac
 printf '%s\n' "${flags[@]}" > "$DIR/overrides.txt"
