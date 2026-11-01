@@ -35,6 +35,11 @@ Comparing representative operational baselines, optimization peaks, and version 
 | **Stage 7** | Strata 0.1.54 | IQ3_XXS | Vanilla (기본) | PASS | 880.9 / 884.0 | 144.4 / 143.9 | **24.0 / 24.4** | 58.6 / 69 °C | 87.4 / 194.3 W | 57.9 / 66 °C | 91.8 / 199.3 W |
 | **Stage 7** | Strata 0.1.54 | IQ3_XXS | SIMT=1 | PASS | 992.6 / 1000.5 | 128.2 / 127.2 | **25.0 / 24.6** | 59.8 / 69 °C | 90.5 / 177.2 W | 58.3 / 66 °C | 92.8 / 182.5 W |
 | **Stage 7** | Strata 0.1.54 | IQ3_XXS | SIMT=1, WMMA=1 | PASS | 988.1 / 994.4 | 128.8 / 127.9 | **24.6 / 24.4** | 57.9 / 66 °C | 81.6 / 167.6 W | 56.9 / 63 °C | 83.4 / 180.8 W |
+| **Stage 7** | Strata 0.1.54 | IQ3_XXS | STRATA_SELECT_SIMT=2 | PASS | 1002.1 / 1008.0 | 127.0 / 126.2 | **26.3 / 25.9** | 62.1 / 69 °C | 105.4 / 177.1 W | 60.3 / 66 °C | 105.5 / 184.9 W |
+| **Stage 7** | Strata 0.1.54 | IQ3_XXS | STRATA_GDN_REC_WARP=2 | PASS | 1005.9 / 1014.3 | 126.5 / 125.4 | **26.4 / 25.7** | 62.8 / 69 °C | 106.3 / 184.1 W | 60.1 / 66 °C | 105.4 / 189.2 W |
+| **Stage 7** | Strata 0.1.54 | IQ3_XXS | STRATA_Q8_GATHER_WIDE=0 | PASS | 1004.9 / 1012.4 | 126.6 / 125.7 | **26.1 / 25.8** | 62.9 / 70 °C | 106.0 / 179.8 W | 60.4 / 66 °C | 105.9 / 187.4 W |
+| **Stage 7** | Strata 0.1.54 | IQ3_XXS | STRATA_SM70_TABLE=1 | PASS | 1004.4 / 1011.2 | 126.7 / 125.8 | **26.7 / 26.3** | 63.2 / 70 °C | 104.4 / 177.7 W | 60.7 / 66 °C | 108.0 / 189.7 W |
+| **Stage 7** | Strata 0.1.54 | IQ3_XXS | STRATA_SELECT_SIMT=1 + prefill 4096 | PASS | 635.2 / 640.2 | 200.1 / 198.6 | **26.3 / 27.2** | 59.7 / 64 °C | 92.5 / 154.5 W | 58.2 / 62 °C | 93.8 / 162.2 W |
 
 ---
 
@@ -62,6 +67,11 @@ Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during fu
 | **Stage 7** S7-XXS-4 | IQ3_XXS | Strata 0.1.54 | SIMT=1, WMMA=1 | 57.9 °C | 66 °C | 81.6 W | 167.6 W | 56.9 °C | 63 °C | 83.4 W | 180.8 W |
 | **Stage 7** S7-XXS-5 | IQ3_XXS | Strata 0.1.54 | STRATA_STAGER_SSD=0 | 60.3 °C | 70 °C | 91.4 W | 193.7 W | 58.7 °C | 66 °C | 95.8 W | 203.5 W |
 | **Stage 7** S7-XXS-6 | IQ3_XXS | Strata 0.1.54 | SIMT=1, WMMA=1, SSD=0 | 58.0 °C | 66 °C | 83.8 W | 176.0 W | 57.0 °C | 63 °C | 86.4 W | 183.6 W |
+| **Stage 7** S7-XXS-8 | IQ3_XXS | Strata 0.1.54 | STRATA_SELECT_SIMT=2 | 62.1 °C | 69 °C | 105.4 W | 177.1 W | 60.3 °C | 66 °C | 105.5 W | 184.9 W |
+| **Stage 7** S7-XXS-9 | IQ3_XXS | Strata 0.1.54 | STRATA_GDN_REC_WARP=2 | 62.8 °C | 69 °C | 106.3 W | 184.1 W | 60.1 °C | 66 °C | 105.4 W | 189.2 W |
+| **Stage 7** S7-XXS-10 | IQ3_XXS | Strata 0.1.54 | STRATA_Q8_GATHER_WIDE=0 | 62.9 °C | 70 °C | 106.0 W | 179.8 W | 60.4 °C | 66 °C | 105.9 W | 187.4 W |
+| **Stage 7** S7-XXS-11 | IQ3_XXS | Strata 0.1.54 | STRATA_SM70_TABLE=1 | 63.2 °C | 70 °C | 104.4 W | 177.7 W | 60.7 °C | 66 °C | 108.0 W | 189.7 W |
+| **Stage 7** S7-XXS-12 | IQ3_XXS | Strata 0.1.54 | STRATA_SELECT_SIMT=1 + prefill 4096 | 59.7 °C | 64 °C | 92.5 W | 154.5 W | 58.2 °C | 62 °C | 93.8 W | 162.2 W |
 
 ---
 
@@ -140,6 +150,26 @@ Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during fu
 | Stage 7 | `xxs-6-1` | IQ3_XXS | S7-XXS-6 run 1 | PASS | 986.9 / 994.3 | 128.9 / 128.0 | 24.9 / 24.5 | 58.1/66°C | 85.4/176.0W | 56.9/63°C | 87.6/175.3W | Batch run 1 |
 | Stage 7 | `xxs-6-2` | IQ3_XXS | S7-XXS-6 run 2 | PASS | 989.7 / 998.0 | 128.6 / 127.5 | 24.3 / 24.2 | 58.0/66°C | 81.5/174.7W | 56.9/63°C | 85.5/183.6W | Batch run 2 |
 | Stage 7 | `xxs-6-3` | IQ3_XXS | S7-XXS-6 run 3 | PASS | 990.6 / 995.6 | 128.4 / 127.8 | 24.8 / 24.6 | 57.9/66°C | 84.5/173.6W | 57.0/63°C | 86.1/181.4W | Batch run 3 |
+| Stage 7 | `s7-xxs-8-median` | IQ3_XXS | STRATA_SELECT_SIMT=2 | PASS | 1002.1 / 1008.0 | 127.0 / 126.2 | 26.3 / 25.9 | 62.1/69°C | 105.4/177.1W | 60.3/66°C | 105.5/184.9W | Stage 7 0.1.54 IQ3_XXS verified median (3 batches) |
+| Stage 7 | `xxs-8-1` | IQ3_XXS | S7-XXS-8 run 1 | PASS | 1002.3 / 1008.0 | 126.9 / 126.2 | 26.2 / 25.9 | 60.8/67°C | 105.2/177.1W | 59.7/65°C | 107.3/180.0W | Batch run 1 |
+| Stage 7 | `xxs-8-2` | IQ3_XXS | S7-XXS-8 run 2 | PASS | 1000.3 / 1007.5 | 127.2 / 126.3 | 26.4 / 25.9 | 62.5/69°C | 107.7/171.9W | 60.6/66°C | 105.9/175.4W | Batch run 2 |
+| Stage 7 | `xxs-8-3` | IQ3_XXS | S7-XXS-8 run 3 | PASS | 1002.1 / 1011.3 | 127.0 / 125.8 | 26.3 / 25.9 | 63.1/69°C | 103.4/173.8W | 60.7/66°C | 103.2/184.9W | Batch run 3 |
+| Stage 7 | `s7-xxs-9-median` | IQ3_XXS | STRATA_GDN_REC_WARP=2 | PASS | 1005.9 / 1014.3 | 126.5 / 125.4 | 26.4 / 25.7 | 62.8/69°C | 106.3/184.1W | 60.1/66°C | 105.4/189.2W | Stage 7 0.1.54 IQ3_XXS verified median (3 batches) |
+| Stage 7 | `xxs-9-1` | IQ3_XXS | S7-XXS-9 run 1 | PASS | 1007.3 / 1014.3 | 126.3 / 125.4 | 26.7 / 26.0 | 63.1/69°C | 106.1/184.1W | 60.3/66°C | 106.4/185.5W | Batch run 1 |
+| Stage 7 | `xxs-9-2` | IQ3_XXS | S7-XXS-9 run 2 | PASS | 1005.9 / 1014.9 | 126.5 / 125.3 | 25.7 / 25.7 | 62.6/69°C | 106.5/175.8W | 60.0/66°C | 103.7/178.4W | Batch run 2 |
+| Stage 7 | `xxs-9-3` | IQ3_XXS | S7-XXS-9 run 3 | PASS | 1004.6 / 1011.2 | 126.6 / 125.8 | 26.4 / 24.9 | 62.6/69°C | 106.2/179.1W | 60.1/66°C | 106.1/189.2W | Batch run 3 |
+| Stage 7 | `s7-xxs-10-median` | IQ3_XXS | STRATA_Q8_GATHER_WIDE=0 | PASS | 1004.9 / 1012.4 | 126.6 / 125.7 | 26.1 / 25.8 | 62.9/70°C | 106.0/179.8W | 60.4/66°C | 105.9/187.4W | Stage 7 0.1.54 IQ3_XXS verified median (3 batches) |
+| Stage 7 | `xxs-10-1` | IQ3_XXS | S7-XXS-10 run 1 | PASS | 1004.9 / 1012.4 | 126.6 / 125.7 | 25.9 / 25.8 | 62.6/69°C | 105.0/177.4W | 60.2/65°C | 107.1/179.5W | Batch run 1 |
+| Stage 7 | `xxs-10-2` | IQ3_XXS | S7-XXS-10 run 2 | PASS | 1004.9 / 1014.2 | 126.6 / 125.4 | 26.3 / 26.8 | 63.0/70°C | 107.2/176.0W | 60.8/66°C | 107.5/179.9W | Batch run 2 |
+| Stage 7 | `xxs-10-3` | IQ3_XXS | S7-XXS-10 run 3 | PASS | 1002.5 / 1010.1 | 126.9 / 126.0 | 26.1 / 25.8 | 63.2/70°C | 105.9/179.8W | 60.3/66°C | 103.0/187.4W | Batch run 3 |
+| Stage 7 | `s7-xxs-11-median` | IQ3_XXS | STRATA_SM70_TABLE=1 | PASS | 1004.4 / 1011.2 | 126.7 / 125.8 | 26.7 / 26.3 | 63.2/70°C | 104.4/177.7W | 60.7/66°C | 108.0/189.7W | Stage 7 0.1.54 IQ3_XXS verified median (3 batches) |
+| Stage 7 | `xxs-11-1` | IQ3_XXS | S7-XXS-11 run 1 | PASS | 1003.5 / 1011.1 | 126.8 / 125.8 | 26.7 / 26.3 | 63.3/70°C | 102.6/177.7W | 60.6/66°C | 104.0/173.0W | Batch run 1 |
+| Stage 7 | `xxs-11-2` | IQ3_XXS | S7-XXS-11 run 2 | PASS | 1004.4 / 1013.2 | 126.7 / 125.6 | 26.7 / 26.3 | 63.1/70°C | 103.8/173.5W | 60.7/66°C | 111.4/186.2W | Batch run 2 |
+| Stage 7 | `xxs-11-3` | IQ3_XXS | S7-XXS-11 run 3 | PASS | 1006.0 / 1011.2 | 126.5 / 125.8 | 26.7 / 27.1 | 63.2/70°C | 106.8/172.8W | 60.9/66°C | 108.6/189.7W | Batch run 3 |
+| Stage 7 | `s7-xxs-12-median` | IQ3_XXS | STRATA_SELECT_SIMT=1 + prefill 4096 | PASS | 635.2 / 640.2 | 200.1 / 198.6 | 26.3 / 27.2 | 59.7/64°C | 92.5/154.5W | 58.2/62°C | 93.8/162.2W | Stage 7 0.1.54 IQ3_XXS verified mean (2 batches, stopped early) |
+| Stage 7 | `xxs-12-1` | IQ3_XXS | S7-XXS-12 run 1 | PASS | 635.0 / 639.2 | 200.2 / 198.9 | 26.0 / 27.3 | 59.8/64°C | 92.6/154.5W | 58.2/62°C | 94.3/156.2W | Batch run 1 |
+| Stage 7 | `xxs-12-2` | IQ3_XXS | S7-XXS-12 run 2 | PASS | 635.4 / 641.1 | 200.1 / 198.3 | 26.6 / 27.2 | 59.6/64°C | 92.4/153.2W | 58.1/62°C | 93.4/162.2W | Batch run 2 |
+| Stage 7 | `xxs-diag-1` | IQ3_XXS | S7-XXS-DIAG-1 run 1 | PROFILE_PASS_NOT_SCORED | 993.3 / 1003.6 | 128.1 / 126.8 | 25.8 / 25.7 | 57.7/65°C | 104.3/174.5W | 58.6/64°C | 106.2/182.4W | Non-scored diagnostic profiling run |
 
 ---
 
@@ -152,7 +182,14 @@ Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during fu
    - Enabling `STRATA_SELECT_SIMT=1` (S7-XXS-2) boosted prefill to **996.55 tok/s median (992.6 / 1000.5, +12.9%)** and decode to **25.0 / 24.6 tok/s**.
    - WMMA flags did not alter runtime execution for IQ3_XXS (S7-XXS-3: 885.5 / 890.0 tok/s; S7-XXS-4: 988.1 / 994.4 tok/s).
    - Disabling SSD stager (`STRATA_STAGER_SSD=0`, S7-XXS-5) yielded identical throughput (~885.4 / 892.0 tok/s) but increased GPU power consumption from 87W to 91W on GPU0 and 92W to 96W on GPU1.
-4. **Physical Power & Thermal Profile:**
+4. **Stage 7 Engine 0.1.54 IQ3_XXS Optimization Flag Screen (S7-XXS-8..12):**
+   - `STRATA_SM70_TABLE=1` (S7-XXS-11) was the **only consistent signal**, achieving **−1.4 to −2.0% decode time** on identical-output pairs.
+   - `STRATA_SELECT_SIMT=2` (S7-XXS-8) showed no prefill gain (−0.3% vs same-session SIMT=1 control).
+   - `STRATA_GDN_REC_WARP=2` (S7-XXS-9) prefill (+0.1–0.25%) was within noise while modifying FP32 summation order.
+   - `STRATA_Q8_GATHER_WIDE=0` (S7-XXS-10) showed no measurable decode effect.
+   - `--prefill 4096` (S7-XXS-12) regressed prefill by **−36.7%** (TTFT ~126 s → ~200 s) and was stopped after 2 batches.
+   - Common-mode shift: all arms showed ~1.2% higher prefill than archived S7-XXS-2, including decode-only switches, confirming cross-date confounders.
+5. **Physical Power & Thermal Profile:**
    - Sustained decode power is low (~45–75 W) with SM clocks steady at 1110 MHz.
    - Dense 128K prefill draws 120–140 W average with transient spikes up to 166–204 W, causing dynamic clock throttling down to 795–1050 MHz to stay within the 150W TDP envelope.
    - Operating temperatures never exceeded 70 °C, comfortably below V100's 85 °C thermal throttle point.

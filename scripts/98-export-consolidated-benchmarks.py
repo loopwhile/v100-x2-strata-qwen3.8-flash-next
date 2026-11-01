@@ -550,6 +550,140 @@ def collect_records():
             "notes": f"Batch run {bidx}"
         })
 
+    # -------------------------------------------------------------
+    # Stage 7 Optimization Arms (Strata 0.1.54, IQ3_XXS S7-XXS-8..12 + DIAG-1)
+    # Verified against artifacts/stage7-results-20261101/stage7-iq3xxs-opt-report.md
+    # and results/stage7-iq3xxs-opt/<id>/ raw receipts
+    # -------------------------------------------------------------
+    s7_opt_dir = REPO_ROOT / "results" / "stage7-iq3xxs-opt"
+    s7_opt_arm_meta = {
+        "XXS-8": ("S7-XXS-8", "STRATA_SELECT_SIMT=2", "Prefill QSA SIMT2"),
+        "XXS-9": ("S7-XXS-9", "STRATA_GDN_REC_WARP=2", "Prefill GDN recurrence warp 2"),
+        "XXS-10": ("S7-XXS-10", "STRATA_Q8_GATHER_WIDE=0", "Decode INT8-KV gather non-wide"),
+        "XXS-11": ("S7-XXS-11", "STRATA_SM70_TABLE=1", "Decode V100 expert/GEMV/HC lookup tables"),
+        "XXS-12": ("S7-XXS-12", "STRATA_SELECT_SIMT=1 + prefill 4096", "Prefill chunk 4096 (stopped early, n=2)"),
+        "XXS-DIAG": ("S7-XXS-DIAG-1", "SIMT=1, TIMING/PROFILE (Diagnostic)", "Non-scored diagnostic profiling"),
+    }
+
+    if s7_opt_dir.exists():
+        import statistics
+        opt_groups = {}
+        for d in sorted(s7_opt_dir.glob("xxs-*")):
+            prefix = d.name.rsplit("-", 1)[0].upper()
+            opt_groups.setdefault(prefix, []).append(d)
+
+        for prefix in ["XXS-8", "XXS-9", "XXS-10", "XXS-11", "XXS-12", "XXS-DIAG"]:
+            if prefix not in opt_groups:
+                continue
+            bdirs = opt_groups[prefix]
+            arm_id, cfg, notes = s7_opt_arm_meta[prefix]
+
+            batch_rows = []
+            for d in bdirs:
+                bidx = d.name.rsplit("-", 1)[1]
+                with open(d / "c2" / "summary.json") as f:
+                    s = json.load(f)
+                reqs = {r["label"]: r for r in s["requests"]}
+                v = (d / "verdict").read_text().strip() if (d / "verdict").exists() else "PASS"
+
+                t_data = {"0": {"p": [], "t": []}, "1": {"p": [], "t": []}}
+                telem_p = d / "gpu-telemetry.csv"
+                if telem_p.exists():
+                    with open(telem_p) as f:
+                        reader = csv.reader(f)
+                        for row in reader:
+                            if len(row) == 8:
+                                g = row[1].strip()
+                                if g in t_data:
+                                    try:
+                                        pwr = float(row[3].split()[0])
+                                        temp = int(row[2])
+                                        if pwr > 60:
+                                            t_data[g]["p"].append(pwr)
+                                            t_data[g]["t"].append(temp)
+                                    except ValueError:
+                                        pass
+                def stats_fn(arr):
+                    return (round(sum(arr)/len(arr), 1), max(arr)) if arr else (None, None)
+                g0_p_avg, g0_p_pk = stats_fn(t_data["0"]["p"])
+                g0_t_avg, g0_t_pk = stats_fn(t_data["0"]["t"])
+                g1_p_avg, g1_p_pk = stats_fn(t_data["1"]["p"])
+                g1_t_avg, g1_t_pk = stats_fn(t_data["1"]["t"])
+
+                pfa = reqs["A"]["prefill_tok_s"]
+                pfb = reqs["B"]["prefill_tok_s"]
+                tta = round(reqs["A"]["ttft_s"], 2)
+                ttb = round(reqs["B"]["ttft_s"], 2)
+                deca = reqs["A"]["decode_tok_s"]
+                decb = reqs["B"]["decode_tok_s"]
+                outa = reqs["A"]["output_tokens"]
+                outb = reqs["B"]["output_tokens"]
+                wall = round(s["batch_wall_s"], 2)
+
+                batch_rows.append({
+                    "stage": "Stage 7",
+                    "arm_id": f"{arm_id}-#{bidx}",
+                    "run_id": d.name,
+                    "run_type": "batch" if prefix != "XXS-DIAG" else "diagnostic",
+                    "engine": "Strata 0.1.54",
+                    "quant": "IQ3_XXS",
+                    "config": f"{arm_id} run {bidx}",
+                    "c2_verdict": v,
+                    "prefill_a": pfa, "prefill_b": pfb, "prefill_mean": round((pfa+pfb)/2, 2),
+                    "ttft_a": tta, "ttft_b": ttb, "ttft_mean": round((tta+ttb)/2, 2),
+                    "decode_a": deca, "decode_b": decb, "decode_mean": round((deca+decb)/2, 2),
+                    "out_tokens_a": outa, "out_tokens_b": outb,
+                    "wall_s": wall,
+                    "gpu0_t_avg": g0_t_avg, "gpu0_t_peak": g0_t_pk,
+                    "gpu0_p_avg": g0_p_avg, "gpu0_p_peak": g0_p_pk,
+                    "gpu1_t_avg": g1_t_avg, "gpu1_t_peak": g1_t_pk,
+                    "gpu1_p_avg": g1_p_avg, "gpu1_p_peak": g1_p_pk,
+                    "notes": f"Batch run {bidx}" if prefix != "XXS-DIAG" else "Non-scored diagnostic profiling run"
+                })
+
+            if prefix != "XXS-DIAG":
+                n_batches = len(batch_rows)
+                run_type_label = f"median ({n_batches} batches)" if n_batches == 3 else f"mean ({n_batches} batches, stopped early)"
+                med_pfa = statistics.median([r["prefill_a"] for r in batch_rows])
+                med_pfb = statistics.median([r["prefill_b"] for r in batch_rows])
+                med_tta = statistics.median([r["ttft_a"] for r in batch_rows])
+                med_ttb = statistics.median([r["ttft_b"] for r in batch_rows])
+                med_deca = statistics.median([r["decode_a"] for r in batch_rows])
+                med_decb = statistics.median([r["decode_b"] for r in batch_rows])
+                med_wall = statistics.median([r["wall_s"] for r in batch_rows])
+
+                avg_g0_t = round(sum(r["gpu0_t_avg"] for r in batch_rows)/n_batches, 1)
+                pk_g0_t = max(r["gpu0_t_peak"] for r in batch_rows)
+                avg_g0_p = round(sum(r["gpu0_p_avg"] for r in batch_rows)/n_batches, 1)
+                pk_g0_p = max(r["gpu0_p_peak"] for r in batch_rows)
+
+                avg_g1_t = round(sum(r["gpu1_t_avg"] for r in batch_rows)/n_batches, 1)
+                pk_g1_t = max(r["gpu1_t_peak"] for r in batch_rows)
+                avg_g1_p = round(sum(r["gpu1_p_avg"] for r in batch_rows)/n_batches, 1)
+                pk_g1_p = max(r["gpu1_p_peak"] for r in batch_rows)
+
+                records.append({
+                    "stage": "Stage 7",
+                    "arm_id": arm_id,
+                    "run_id": f"{arm_id.lower()}-median",
+                    "run_type": run_type_label,
+                    "engine": "Strata 0.1.54",
+                    "quant": "IQ3_XXS",
+                    "config": cfg,
+                    "c2_verdict": "PASS",
+                    "prefill_a": med_pfa, "prefill_b": med_pfb, "prefill_mean": round((med_pfa+med_pfb)/2, 2),
+                    "ttft_a": med_tta, "ttft_b": med_ttb, "ttft_mean": round((med_tta+med_ttb)/2, 2),
+                    "decode_a": med_deca, "decode_b": med_decb, "decode_mean": round((med_deca+med_decb)/2, 2),
+                    "out_tokens_a": 1024, "out_tokens_b": 1024,
+                    "wall_s": med_wall,
+                    "gpu0_t_avg": avg_g0_t, "gpu0_t_peak": pk_g0_t,
+                    "gpu0_p_avg": avg_g0_p, "gpu0_p_peak": pk_g0_p,
+                    "gpu1_t_avg": avg_g1_t, "gpu1_t_peak": pk_g1_t,
+                    "gpu1_p_avg": avg_g1_p, "gpu1_p_peak": pk_g1_p,
+                    "notes": f"Stage 7 0.1.54 IQ3_XXS verified {run_type_label}"
+                })
+            records.extend(batch_rows)
+
     return records
 
 def export_csv(records, path):
@@ -602,10 +736,11 @@ def export_markdown(records, path):
         "S5-IQ3S-T1", "S5-IQ3S-T4", "S5-IQ3S-T7-Fixed",
         "S5-IQ3XXS-T1", "S5-IQ3XXS-T2", "S5-IQ3XXS-T7-Fixed",
         "S6-0",
-        "S7-XXS-1", "S7-XXS-2", "S7-XXS-4"
+        "S7-XXS-1", "S7-XXS-2", "S7-XXS-4",
+        "S7-XXS-8", "S7-XXS-9", "S7-XXS-10", "S7-XXS-11", "S7-XXS-12"
     ]
     
-    rec_by_arm = {r["arm_id"]: r for r in records if r["run_type"] in ("baseline", "median (3 batches)", "3-run mean", "mixed_quant", "tuning", "feasibility")}
+    rec_by_arm = {r["arm_id"]: r for r in records if r["run_type"] in ("baseline", "median (3 batches)", "3-run mean", "mixed_quant", "tuning", "feasibility", "mean (2 batches, stopped early)")}
     for aid in summary_arms:
         r = rec_by_arm.get(aid)
         if not r: continue
@@ -631,7 +766,7 @@ def export_markdown(records, path):
     lines.append("| :--- | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |")
 
     for r in records:
-        if r["run_type"] in ("median (3 batches)", "3-run mean") and r["gpu0_t_avg"] is not None:
+        if r["run_type"] in ("median (3 batches)", "3-run mean", "mean (2 batches, stopped early)") and r["gpu0_t_avg"] is not None:
             lines.append(
                 f"| **{r['stage']}** {r['arm_id']} | {r['quant']} | {r['engine']} | {r['config']} | "
                 f"{fmt(r['gpu0_t_avg'], 1, ' °C')} | {fmt(r['gpu0_t_peak'], 0, ' °C')} | {fmt(r['gpu0_p_avg'], 1, ' W')} | {fmt(r['gpu0_p_peak'], 1, ' W')} | "
@@ -668,7 +803,14 @@ def export_markdown(records, path):
     lines.append("   - Enabling `STRATA_SELECT_SIMT=1` (S7-XXS-2) boosted prefill to **996.55 tok/s median (992.6 / 1000.5, +12.9%)** and decode to **25.0 / 24.6 tok/s**.")
     lines.append("   - WMMA flags did not alter runtime execution for IQ3_XXS (S7-XXS-3: 885.5 / 890.0 tok/s; S7-XXS-4: 988.1 / 994.4 tok/s).")
     lines.append("   - Disabling SSD stager (`STRATA_STAGER_SSD=0`, S7-XXS-5) yielded identical throughput (~885.4 / 892.0 tok/s) but increased GPU power consumption from 87W to 91W on GPU0 and 92W to 96W on GPU1.")
-    lines.append("4. **Physical Power & Thermal Profile:**")
+    lines.append("4. **Stage 7 Engine 0.1.54 IQ3_XXS Optimization Flag Screen (S7-XXS-8..12):**")
+    lines.append("   - `STRATA_SM70_TABLE=1` (S7-XXS-11) was the **only consistent signal**, achieving **−1.4 to −2.0% decode time** on identical-output pairs.")
+    lines.append("   - `STRATA_SELECT_SIMT=2` (S7-XXS-8) showed no prefill gain (−0.3% vs same-session SIMT=1 control).")
+    lines.append("   - `STRATA_GDN_REC_WARP=2` (S7-XXS-9) prefill (+0.1–0.25%) was within noise while modifying FP32 summation order.")
+    lines.append("   - `STRATA_Q8_GATHER_WIDE=0` (S7-XXS-10) showed no measurable decode effect.")
+    lines.append("   - `--prefill 4096` (S7-XXS-12) regressed prefill by **−36.7%** (TTFT ~126 s → ~200 s) and was stopped after 2 batches.")
+    lines.append("   - Common-mode shift: all arms showed ~1.2% higher prefill than archived S7-XXS-2, including decode-only switches, confirming cross-date confounders.")
+    lines.append("5. **Physical Power & Thermal Profile:**")
     lines.append("   - Sustained decode power is low (~45–75 W) with SM clocks steady at 1110 MHz.")
     lines.append("   - Dense 128K prefill draws 120–140 W average with transient spikes up to 166–204 W, causing dynamic clock throttling down to 795–1050 MHz to stay within the 150W TDP envelope.")
     lines.append("   - Operating temperatures never exceeded 70 °C, comfortably below V100's 85 °C thermal throttle point.")
