@@ -1,6 +1,6 @@
 # Stage 7 — Strata Qwen engine 0.1.54 validation across model quantizations
 
-**Status: IN PROGRESS — 0.1.54 built, IQ3_XXS S7-XXS-1..6 18/18 C2 PASS (2026-11-01); IQ3_XXS S7-XXS-8..12 EXECUTED (14 scored + 1 diagnostic C2 PASS; S7-XXS-12 stopped at 2 batches); additional quantizations pending. No production promotion.**  
+**Status: IN PROGRESS — 0.1.54 built, IQ3_XXS S7-XXS-1..6 18/18 C2 PASS (2026-11-01); IQ3_XXS S7-XXS-8..13 EXECUTED (17 scored + 1 diagnostic C2 PASS; S7-XXS-12 stopped at 2 batches); additional quantizations pending. No production promotion.**  
 **Created:** 2026-11-01 (Asia/Seoul)  
 **Target engine:** upstream [Niko1221/Strata v0.2.8](https://github.com/Niko1221/Strata/releases/tag/v0.2.8), **Qwen engine 0.1.54** (the application version is 0.2.8, not 0.1.54). Pin an exact upstream source SHA at build time.
 
@@ -78,7 +78,7 @@ Notes:
 
 ### 3.1a IQ3_XXS additional optimization arms (EXECUTED 2026-11-01)
 
-See [Stage 7 IQ3_XXS optimization extension](STAGE7_IQ3XXS_OPT_PLAN.md) and the [S7-XXS-8..12 result report](../artifacts/stage7-results-20261101/stage7-iq3xxs-opt-report.md): S7-XXS-8..12 (SIMT2, GDN recurrence, INT8 KV gather, SM70_TABLE, prefill 4096). **14 scored C2 batches + 1 non-scored diagnostic, all mechanical PASS**; S7-XXS-12 was stopped by the operator after 2 batches. Same-session results: SIMT2 prefill −0.3%; GDN_REC_WARP=2 within noise (numerics changed, quality unchecked); Q8_GATHER_WIDE=0 no measurable effect; SM70_TABLE=1 the only consistent signal (−1.4 to −2.0% decode time on identical-output pairs); prefill 4096 −36.7% prefill. Cross-date comparisons against archived S7-XXS-2 show a common-mode shift and are not causal. The existing 18/18 completed runs and `scripts/97-stage7-iq3xxs-c2.sh` are preserved. No promotion. Stage 7 remains an engine-level multi-quantization evaluation.
+See [Stage 7 IQ3_XXS optimization extension](STAGE7_IQ3XXS_OPT_PLAN.md) and the [S7-XXS-8..13 result report](../artifacts/stage7-results-20261101/stage7-iq3xxs-opt-report.md): S7-XXS-8..13 (SIMT2, GDN recurrence, INT8 KV gather, SM70_TABLE, prefill 4096, and confirmed combination S7-XXS-13). **17 scored C2 batches + 1 non-scored diagnostic, all mechanical PASS**; S7-XXS-12 was stopped by the operator after 2 batches. Same-session results: SIMT2 prefill −0.3%; GDN_REC_WARP=2 within noise (numerics changed, quality unchecked); Q8_GATHER_WIDE=0 no measurable effect; SM70_TABLE=1 the only consistent signal (−1.4 to −2.0% decode time on identical-output pairs); prefill 4096 −36.7% prefill. S7-XXS-13 confirmed SIMT=1 + SM70_TABLE=1 across 3 batches with <0.06% prefill variance vs S7-XXS-11. Cross-date comparisons against archived S7-XXS-2 show a common-mode shift and are not causal. The existing 18/18 completed runs and `scripts/97-stage7-iq3xxs-c2.sh` are preserved. No promotion. Stage 7 remains an engine-level multi-quantization evaluation.
 
 ### 3.2 IQ2_XS: engine-upgrade assessment (model-specific)
 
@@ -118,7 +118,7 @@ Record one row per model + arm, with engine SHA, quantization, effective runtime
 | Stage 7 scope defined as upstream Strata 0.1.54 validation across quantizations | DOCUMENTED |
 | 0.1.54 source SHA, binary build and dedicated image | BUILT; image/source IDs recorded in IQ3_XXS final report |
 | IQ3_XXS S7-XXS-1 to S7-XXS-6 | COMPLETED (18/18 valid C2 PASS) |
-| IQ3_XXS S7-XXS-8 to S7-XXS-12 | EXECUTED (8–11: 3/3 PASS each; 12: 2/2 PASS, stopped early; diagnostic non-scored PASS) — [report](../artifacts/stage7-results-20261101/stage7-iq3xxs-opt-report.md) |
+| IQ3_XXS S7-XXS-8 to S7-XXS-13 | EXECUTED (8–11 & 13: 3/3 PASS each; 12: 2/2 PASS, stopped early; diagnostic non-scored PASS) — [report](../artifacts/stage7-results-20261101/stage7-iq3xxs-opt-report.md) |
 | IQ2_XS model-specific 0.1.54 matrix | CANDIDATE, NOT RUN |
 | IQ3_S model-specific 0.1.54 matrix | CANDIDATE, REQUIRES ASSET CHECK |
 | UD-Q4_K_XL additional feasibility | OPTIONAL, NOT RUN |

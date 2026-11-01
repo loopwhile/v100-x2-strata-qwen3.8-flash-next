@@ -1,6 +1,6 @@
 # Stage 7 — IQ3_XXS additional 0.1.54 optimization tests
 
-**Status: EXECUTED (2026-11-01 19:09–20:13 KST).** S7-XXS-8..11 3 batches each, S7-XXS-12 2 batches (stopped early by operator), DIAG-1 1 non-scored batch — **15/15 C2 mechanical PASS**. See the [S7-XXS-8..12 result report](../artifacts/stage7-results-20261101/stage7-iq3xxs-opt-report.md). Stage 7 validates **Strata engine 0.1.54 across quantizations**; IQ3_XXS is only one model. S7-XXS-1..6 already completed 18/18 C2 PASS. No production promotion.
+**Status: EXECUTED (2026-11-01 19:09–20:51 KST).** S7-XXS-8..11 and S7-XXS-13 3 batches each, S7-XXS-12 2 batches (stopped early by operator), DIAG-1 1 non-scored batch — **18/18 C2 mechanical PASS** (17 scored + 1 diagnostic). See the [S7-XXS-8..13 result report](../artifacts/stage7-results-20261101/stage7-iq3xxs-opt-report.md). Stage 7 validates **Strata engine 0.1.54 across quantizations**; IQ3_XXS is only one model. S7-XXS-1..6 already completed 18/18 C2 PASS. No production promotion.
 
 > **Result summary (empirical, same-session):** SIMT2 prefill −0.3% vs same-session SIMT=1 control; GDN_REC_WARP=2 +0.1–0.25% (within noise, numerics changed, quality not checked); Q8_GATHER_WIDE=0 no measurable effect; **SM70_TABLE=1 was the only consistent signal: −1.4 to −2.0% decode time on identical-output pairs** versus the other tested configurations; `--prefill 4096` regressed prefill by −36.7% (TTFT ~126 → ~200 s). Comparisons to archived S7-XXS-2 show a common-mode ~+1.2% prefill shift across all arms and are not causal evidence. Nothing was promoted.
 
@@ -16,7 +16,7 @@ Reference **S7-XXS-2 (SIMT=1)**, 3-run per-agent medians: Prefill **992.6 / 1000
 | **S7-XXS-11** | SIMT=1 plus `STRATA_SM70_TABLE=1` | Decode V100 expert/GEMV/HC kernels | 3 | **3/3 PASS** — decode time −1.4 to −2.0% on identical outputs |
 | **S7-XXS-12** | SIMT=1 plus config `--prefill 4096` (replaces `auto` = chunk 8192) | Prefill chunk size | 3 | **2/2 PASS, stopped early** — prefill 635.2 / 640.2 (−36.7%) |
 | **S7-XXS-DIAG-1 (optional)** | SIMT=1 plus `STRATA_PREFILL_TIMING=1 STRATA_DECODE_TIMING=1 STRATA_VERIFY_PROFILE=1` | **Profiling only (non-scored)** | 1 | **PROFILE_PASS_NOT_SCORED** |
-| **S7-XXS-13 (conditional)** | Combine **only individually confirmed improvements**, requires separate recipe | Combined | 3 if chosen | Not prepared |
+| **S7-XXS-13** | SIMT=1 plus `STRATA_SM70_TABLE=1` (confirmed winning combination) | Combined | 3 | **3/3 PASS** — prefill 1004.2 / 1010.6, decode 26.5 / 26.1 |
 
 **Planned: 15 new scored C2 batches + optional 1 diagnostic. Executed: 14 scored + 1 diagnostic** (`xxs-12-3` intentionally not run). Existing optional S7-XXS-7 (WMMA2) remains separate and not approved for execution. These tests do not complete the entire multi-model Stage 7; IQ2_XS and IQ3_S are still pending.
 

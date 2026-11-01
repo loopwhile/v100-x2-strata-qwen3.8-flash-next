@@ -40,6 +40,7 @@ Comparing representative operational baselines, optimization peaks, and version 
 | **Stage 7** | Strata 0.1.54 | IQ3_XXS | STRATA_Q8_GATHER_WIDE=0 | PASS | 1004.9 / 1012.4 | 126.6 / 125.7 | **26.1 / 25.8** | 62.9 / 70 °C | 106.0 / 179.8 W | 60.4 / 66 °C | 105.9 / 187.4 W |
 | **Stage 7** | Strata 0.1.54 | IQ3_XXS | STRATA_SM70_TABLE=1 | PASS | 1004.4 / 1011.2 | 126.7 / 125.8 | **26.7 / 26.3** | 63.2 / 70 °C | 104.4 / 177.7 W | 60.7 / 66 °C | 108.0 / 189.7 W |
 | **Stage 7** | Strata 0.1.54 | IQ3_XXS | STRATA_SELECT_SIMT=1 + prefill 4096 | PASS | 635.2 / 640.2 | 200.1 / 198.6 | **26.3 / 27.2** | 59.7 / 64 °C | 92.5 / 154.5 W | 58.2 / 62 °C | 93.8 / 162.2 W |
+| **Stage 7** | Strata 0.1.54 | IQ3_XXS | STRATA_SELECT_SIMT=1 + STRATA_SM70_TABLE=1 | PASS | 1004.2 / 1010.6 | 126.7 / 125.9 | **26.5 / 26.1** | 60.7 / 69 °C | 104.3 / 178.5 W | 59.6 / 66 °C | 106.3 / 189.0 W |
 
 ---
 
@@ -72,6 +73,7 @@ Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during fu
 | **Stage 7** S7-XXS-10 | IQ3_XXS | Strata 0.1.54 | STRATA_Q8_GATHER_WIDE=0 | 62.9 °C | 70 °C | 106.0 W | 179.8 W | 60.4 °C | 66 °C | 105.9 W | 187.4 W |
 | **Stage 7** S7-XXS-11 | IQ3_XXS | Strata 0.1.54 | STRATA_SM70_TABLE=1 | 63.2 °C | 70 °C | 104.4 W | 177.7 W | 60.7 °C | 66 °C | 108.0 W | 189.7 W |
 | **Stage 7** S7-XXS-12 | IQ3_XXS | Strata 0.1.54 | STRATA_SELECT_SIMT=1 + prefill 4096 | 59.7 °C | 64 °C | 92.5 W | 154.5 W | 58.2 °C | 62 °C | 93.8 W | 162.2 W |
+| **Stage 7** S7-XXS-13 | IQ3_XXS | Strata 0.1.54 | STRATA_SELECT_SIMT=1 + STRATA_SM70_TABLE=1 | 60.7 °C | 69 °C | 104.3 W | 178.5 W | 59.6 °C | 66 °C | 106.3 W | 189.0 W |
 
 ---
 
@@ -169,6 +171,10 @@ Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during fu
 | Stage 7 | `s7-xxs-12-median` | IQ3_XXS | STRATA_SELECT_SIMT=1 + prefill 4096 | PASS | 635.2 / 640.2 | 200.1 / 198.6 | 26.3 / 27.2 | 59.7/64°C | 92.5/154.5W | 58.2/62°C | 93.8/162.2W | Stage 7 0.1.54 IQ3_XXS verified mean (2 batches, stopped early) |
 | Stage 7 | `xxs-12-1` | IQ3_XXS | S7-XXS-12 run 1 | PASS | 635.0 / 639.2 | 200.2 / 198.9 | 26.0 / 27.3 | 59.8/64°C | 92.6/154.5W | 58.2/62°C | 94.3/156.2W | Batch run 1 |
 | Stage 7 | `xxs-12-2` | IQ3_XXS | S7-XXS-12 run 2 | PASS | 635.4 / 641.1 | 200.1 / 198.3 | 26.6 / 27.2 | 59.6/64°C | 92.4/153.2W | 58.1/62°C | 93.4/162.2W | Batch run 2 |
+| Stage 7 | `s7-xxs-13-median` | IQ3_XXS | STRATA_SELECT_SIMT=1 + STRATA_SM70_TABLE=1 | PASS | 1004.2 / 1010.6 | 126.7 / 125.9 | 26.5 / 26.1 | 60.7/69°C | 104.3/178.5W | 59.6/66°C | 106.3/189.0W | Stage 7 0.1.54 IQ3_XXS verified median (3 batches) |
+| Stage 7 | `xxs-13-1` | IQ3_XXS | S7-XXS-13 run 1 | PASS | 1004.6 / 1012.2 | 126.6 / 125.7 | 26.7 / 26.2 | 57.6/65°C | 105.5/167.7W | 57.9/64°C | 104.9/186.6W | Batch run 1 |
+| Stage 7 | `xxs-13-2` | IQ3_XXS | S7-XXS-13 run 2 | PASS | 1004.2 / 1010.1 | 126.7 / 126.0 | 25.9 / 26.1 | 61.8/68°C | 103.2/173.5W | 60.4/66°C | 104.0/182.2W | Batch run 2 |
+| Stage 7 | `xxs-13-3` | IQ3_XXS | S7-XXS-13 run 3 | PASS | 1003.0 / 1010.6 | 126.8 / 125.9 | 26.5 / 26.1 | 62.7/69°C | 104.3/178.5W | 60.4/66°C | 109.9/189.0W | Batch run 3 |
 | Stage 7 | `xxs-diag-1` | IQ3_XXS | S7-XXS-DIAG-1 run 1 | PROFILE_PASS_NOT_SCORED | 993.3 / 1003.6 | 128.1 / 126.8 | 25.8 / 25.7 | 57.7/65°C | 104.3/174.5W | 58.6/64°C | 106.2/182.4W | Non-scored diagnostic profiling run |
 
 ---
