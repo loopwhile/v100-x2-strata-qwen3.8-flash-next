@@ -4,6 +4,9 @@ Diagnostic only: `STRATA_DECODE_TIMING=1`, `STRATA_VERIFY_PROFILE=1`; profiling 
 
 | Metric | A | B |
 | --- | ---: | ---: |
+| Prefill tok/s | 923.6 | 936.4 |
+| TTFT s | 137.75 | 135.93 |
+| Decode tok/s | 20.5 | 21.0 |
 | Decode windows | 700 | 553 |
 | Tokens/window | 2.30 | 2.21 |
 | Total ms/window | 112.13 | 105.37 |

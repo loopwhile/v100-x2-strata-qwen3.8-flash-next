@@ -597,6 +597,7 @@ Stage 5 investigated whether IQ3_S could recover and surpass its Stage 3-A 128K 
 | --- | ---: | ---: |
 | Decode median, 3 batches | **22.3 tok/s** | **21.2 tok/s** |
 | Prefill median, 3 batches | 908.2 tok/s | 923.1 tok/s |
+| TTFT median, 3 batches | 140.09 s | 137.84 s |
 
 S6-0 valid; S6-1 profiled CPU Expert/GPU waitCPU; S6-2 MTP, S6-3 kernels, S6-4 SM70, S6-5 CPU/PCIe and S6-6 cache/KV were screened without a confirmed two-agent winner. Most candidates had only one C2 batch or failed validity/startup. **S6-7 was assessment only; no candidate combination or final 3-batch validation was performed.** The 30 tok/s per-agent goal remains **unmet**. No production promotion.
 
