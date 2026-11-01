@@ -10,6 +10,8 @@ This repository documents the experimental progression from initial Volta compat
 
 > **Stage 6 (CLOSED — 2026-10-28; 30 tok/s NOT MET):** [Final report](docs/STAGE6_FINAL_REPORT.md) · [Phase results](artifacts/stage6-results-20261028/) · [archived plan](docs/STAGE6_PLAN.md). Original independent IQ3_S Agent A/B topology and 128K context were retained. **Only S6-0 was replicated for three valid dual-agent C2 batches (A/B decode medians 22.3 / 21.2 tok/s).** S6-1 profiling and S6-2–S6-6 single-batch candidate screens found no verified winner; **S6-7 combination was SKIPPED**, not tested. No 30 tok/s success or production promotion.
 
+> **Stage 7 (PLANNED — Strata Qwen engine 0.1.54 validation across quantizations):** [Stage 7 plan](docs/STAGE7_PLAN.md). This is an **upstream engine upgrade/evaluation stage**, **not an IQ3_XXS-only stage**. IQ2_XS, IQ3_XXS and IQ3_S are model-specific candidates; UD-Q4_K_XL and additional quantizations remain optional with separate feasibility gates. The first detailed IQ3_XXS matrix proposes 0.1.54 vanilla/SIMT/WMMA/stager comparisons (3 fresh-process 128K C2 batches per selected arm). **No 0.1.54 build, new benchmark result, service change or promotion has occurred.**
+
 > **Current performance recommendations:** For **maximum throughput**, two independent **IQ2_XS** agents using **upstream Strata 0.1.47** remain fastest (**995.70 tok/s** prefill, **39.60 tok/s** decode in Stage 4-C; **981.55 / 38.50 tok/s** in vanilla Stage 4-B). For **higher-precision IQ3_S**, Stage 5 **T7-Fixed** (**899.23 tok/s** prefill, **21.45 tok/s** decode) or upstream **T4** (**887.37 tok/s** prefill, **21.20 tok/s** decode) is recommended. The preserved Stage 3-A deployment remains available for rollback. A benchmark result does not imply that its containers have been promoted to production.
 
 ---
@@ -181,6 +183,7 @@ Each agent has its own native pack and log but shares model files with the other
 | Stage 5 (T1–T4) | 0.1.47 | `strata-v100-upstream:0.1.47` | IQ3_S 3-batch baseline & SIMT/WMMA ablations |
 | Stage 5 (T6, T8) | 0.1.50 | `strata-v100-upstream:0.1.50` | Upstream v0.2.6 Qwen engine 0.1.50 |
 | Stage 5 (T7, T7-Fixed) | 0.1.45.3 (`2c9b1dd`) | `strata-v100-jmnargi:2c9b1dd` | Updated V100 fork (PR #74 IQ3_S WMMA2 + PR #80 prefill scheduler) |
+| **Stage 7 (planned; multiple model-specific arms)** | **0.1.54** | `strata-v100-upstream:0.1.54` **(proposed; not built)** | Upstream Qwen engine 0.1.54 evaluation across quantizations; see [Stage 7 plan](docs/STAGE7_PLAN.md) |
 
 ### 4.1 Why CUDA 12.9.1?
 
@@ -599,6 +602,12 @@ S6-0 valid; S6-1 profiled CPU Expert/GPU waitCPU; S6-2 MTP, S6-3 kernels, S6-4 S
 
 **Complete evidence:** [Stage 6 final report](docs/STAGE6_FINAL_REPORT.md) · [S6-0..S6-7 receipts](artifacts/stage6-results-20261028/).
 
+### Stage 7 — upstream Strata 0.1.54 validation (PLANNED; no tests run)
+
+Stage 7 is defined by the **engine version**, not by IQ3_XXS. The plan covers **IQ2_XS, IQ3_XXS and IQ3_S** as distinct model-specific upgrade candidates, with **UD-Q4_K_XL** only as a separately gated optional feasibility candidate. For IQ3_XXS, [Stage 7 plan](docs/STAGE7_PLAN.md) provides an initial 0.1.54 vanilla/SIMT/WMMA/SSD-stager matrix (6 selected arms × 3 valid C2 batches; optional seventh arm is not authorized). Other quantizations require their own suitable arms. Historical Stage 4–6 scores remain unchanged and are **not** being rerun solely to make a new baseline. GPU-clock/page-cache differences must be noted in comparisons. No 0.1.54 image, runtime containers, C2 results or production changes have been made.
+
+---
+
 ## 8. Consolidated 128K Results
 
 Values for Stages 2–4 are **arithmetic means of the two agents' per-request rates within one homogeneous C2 batch**; values for Stage 5 are **3-batch means (6 agent requests per arm)**; Stage 6 A/B decode medians are separately calculated across three S6-0 batches and **not pooled** into this comparison table across three consecutive fresh-process C2 batches.
@@ -682,6 +691,7 @@ v100-x2-strata-qwen3.8-flash-next/
 │   ├── STAGE5_PLAN.md
 │   ├── STAGE6_PLAN.md
 │   ├── STAGE6_FINAL_REPORT.md
+│   ├── STAGE7_PLAN.md            # 0.1.54 engine validation across quantizations
 │   ├── STAGE6_PREP.md
 │   ├── STAGE6_CODEX_HANDOFF.md
 │   └── STAGE6_RESULT_TEMPLATE.md
@@ -863,6 +873,7 @@ These values are arithmetic means within dual-agent C2 batches, **not the sum of
 
 ### Repository documentation
 
+- [Stage 7 plan — upstream Strata 0.1.54, multiple model quantizations (planned)](docs/STAGE7_PLAN.md)
 - [Stage 6 final report — closed, target unmet](docs/STAGE6_FINAL_REPORT.md)
 - [Stage 6 full 8-stage plan](docs/STAGE6_PLAN.md)
 - [Stage 6 archived Codex handoff](docs/STAGE6_CODEX_HANDOFF.md)
