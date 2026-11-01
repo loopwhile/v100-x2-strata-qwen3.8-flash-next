@@ -1,0 +1,15 @@
+# Resume the preserved, successful 15 engine compilation after fixing CMake PATH.
+# Full clean reproduction is Dockerfile.stage7-v100-wmma2.
+FROM sha256:199f65f5ef61ca44a218f35a9dafe84fbb19cda5a7aea3dd6facc4bb0015dc2f
+RUN test "$(git rev-parse HEAD)" = 870aedd9e1ebe1c91f94da93b59af17729f6c5c0 \
+    && git apply --reverse --check /tmp/stage7-wmma2.patch \
+    && .venv/bin/python -c 'import json,setup; m=json.load(open("engine/BUILD.json")); assert m["src"]==setup.source_hash(setup.ENGINE_SOURCES) and m["version"]=="0.1.54" and m["archs"]==[70]' \
+    && .venv/bin/cmake -S . -B build -DSTRATA_BUILD_TESTS=ON \
+    && .venv/bin/cmake --build build --target pf_wmma_parity -j 4 \
+    && sha256sum engine/strata /tmp/stage7-wmma2.patch > /opt/strata/STAGE7_PORT.sha256 \
+    && git diff --stat > /opt/strata/STAGE7_PORT.stat
+LABEL stage7.upstream="870aedd9e1ebe1c91f94da93b59af17729f6c5c0" \
+      stage7.fork="2c9b1dd7bda3102c4a8e65fbe56c45f5c6882926" \
+      stage7.arm="15-wmma2-128x64"
+ENTRYPOINT ["/opt/strata/.venv/bin/python"]
+CMD ["/opt/strata/serve/server.py", "--engine", "strata", "--config", "/opt/strata/config.json", "--host", "0.0.0.0", "--port", "8080"]

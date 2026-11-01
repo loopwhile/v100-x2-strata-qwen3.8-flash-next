@@ -1,0 +1,12 @@
+S7_CUPTI subscription=0
+S7_WMMA_LEAN eligible: Xs skipped, Hh aliases xn16, DQ ring omitted
+strata: prefill plan: chunk 8192, ring 96 kept: file set 34.9 GiB fits the page cache 50.7 GiB -> about 0.0 GB read from the drive per 32768-token prompt (4 chunks)
+strata serve: the prompt path borrows 2173 CUDA0 cache slots (3.48 GiB)
+S7_CUPTI kernel=_ZN6strata7kernels46_GLOBAL__N__cddacff6_13_iq_kernels_cu_8289e10f26gemm_iq_f16_grouped_kernelILi256ELb0ELb0EEEviPKhmmiPK6__halfiPKiS9_iPfi result=0
+S7_CUPTI kernel=_ZN6strata7kernels46_GLOBAL__N__cddacff6_13_iq_kernels_cu_8289e10f21gemm_iq_f16_w2_kernelILi20ELi128ELi64EEEvPKhmmiPK6__halfiPKiS9_iPfii result=0
+S7_WMMA2 launched ty=20 K=640 out=2560 ids=0 tile=128x64
+S7_CUPTI kernel=_ZN6strata7kernels46_GLOBAL__N__cddacff6_13_iq_kernels_cu_8289e10f26gemm_iq_f16_grouped_kernelILi128ELb1ELb0EEEviPKhmmiPK6__halfiPKiS9_iPfi result=0
+S7_CUPTI kernel=_ZN6strata7kernels46_GLOBAL__N__cddacff6_13_iq_kernels_cu_8289e10f21gemm_iq_f16_w2_kernelILi22ELi128ELi64EEEvPKhmmiPK6__halfiPKiS9_iPfii result=0
+S7_WMMA2 launched ty=22 K=2560 out=1280 ids=1 tile=128x64
+S7_CUPTI kernel=_ZN6strata7kernels46_GLOBAL__N__cddacff6_13_iq_kernels_cu_8289e10f21gemm_iq_f16_w2_kernelILi18ELi128ELi64EEEvPKhmmiPK6__halfiPKiS9_iPfii result=0
+S7_WMMA2 launched ty=18 K=2560 out=1280 ids=1 tile=128x64

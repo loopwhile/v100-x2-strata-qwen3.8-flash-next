@@ -1,0 +1,128 @@
+--- a/src/prefill/prefill.cpp
++++ b/src/prefill/prefill.cpp
+@@ -1420,6 +1420,31 @@
+ }
+ // the FP16 buffers (Xs, Hh): the FP16 path's, or pf_wmma's activations and down input
+ bool fp16_bufs(const MmqPlan& mp) { return mp.fallback || pf_wmma(); }
++// S7 selective WMMA_LEAN adaptation of fork 2c9b1dd: skip gathered FP16
++// input, alias the down input to dead xn16 scratch, and omit the fallback DQ
++// ring. Keep upstream's group weights, MMQ buffers and scheduling unchanged.
++// The exact same predicate is used for accounting, carving and every reader.
++bool wmma_lean() {
++    static const bool enabled = [] {
++        const char* e = std::getenv("STRATA_PF_WMMA_LEAN");
++        if (!e || e[0] != '1' || !pf_wmma()) return false;
++        int n = 0, dev = 0, major = 0, minor = 0;
++        if (cudaGetDeviceCount(&n) != cudaSuccess || n != 1 || cudaGetDevice(&dev) != cudaSuccess ||
++            cudaDeviceGetAttribute(&major, cudaDevAttrComputeCapabilityMajor, dev) != cudaSuccess ||
++            cudaDeviceGetAttribute(&minor, cudaDevAttrComputeCapabilityMinor, dev) != cudaSuccess || major != 7 || minor != 0)
++            return false;
++        const auto& mp = mmq_plan();
++        const auto& lay = strata::kernels::cpu::expert_layout();
++        if (!mp.any || mp.fallback || !lay.native || lay.fmt.empty()) return false;
++        for (const auto& f : lay.fmt)
++            if ((f.gu_type != 16 && f.gu_type != 17 && f.gu_type != 18 && f.gu_type != 21 && f.gu_type != 22 && f.gu_type != 23) ||
++                (f.d_type != 20 && f.d_type != 42) || f.tail_off || f.had_gu || f.had_d) return false;
++        static_assert(D >= K * 640, "xn16 must hold all routed down inputs");
++        std::fprintf(stderr, "S7_WMMA_LEAN eligible: Xs skipped, Hh aliases xn16, DQ ring omitted\n");
++        return true;
++    }();
++    return enabled;
++}
+ // #136 P3: a layout whose chunks run the fused experts (STRATA_PF_FUSED=1, the Q2_0 pack, a streamed chunk of
+ // stream_all_min() tokens or more).  Its GU, H and Xq hold only the fused path's grouping tables, int8 H and per-token
+ // int8 activations, and Hq nothing: ~100 KB a token less than MMQ's FP32 GU / H and per-slot q8_1 rows, which is what
+@@ -1446,9 +1471,9 @@
+     Alloc a; a.count_only = true; bool ok = true;
+     a.take<float>(T * n_expert, ok); a.take<float>(T * K, ok); a.take<int32_t>(T * K, ok); a.take<int32_t>(T * K, ok);
+     a.take<int32_t>(T * K, ok);
+-    if (fp16_bufs(mp)) a.take<uint16_t>(T * K * N, ok);
++    if (fp16_bufs(mp) && !wmma_lean()) a.take<uint16_t>(T * K * N, ok);
+     a.take<float>(mb.gu, ok);
+-    if (fp16_bufs(mp)) a.take<uint16_t>(T * K * 640, ok);
++    if (fp16_bufs(mp) && !wmma_lean()) a.take<uint16_t>(T * K * 640, ok);
+     a.take<float>(T * K * N, ok); a.take<float>(T * 640, ok);
+     a.take<float>(T * 640, ok); a.take<uint16_t>(T * 640, ok); a.take<float>(T * N, ok); a.take<float>(T, ok);
+     if (mp.any) {
+@@ -1814,9 +1839,9 @@
+         m.logits = c.take<float>(T * m.g->n_expert, ok); m.w = c.take<float>(T * K, ok); m.ids = c.take<int32_t>(T * K, ok);
+         m.slot_dev = c.take<int32_t>(T * K, ok); m.src_dev = c.take<int32_t>(T * K, ok);
+         const MmqPlan& mp = mmq_plan();
+-        m.Xs = fp16_bufs(mp) ? c.take<uint16_t>(T * K * N, ok) : nullptr;
++        m.Xs = fp16_bufs(mp) && !wmma_lean() ? c.take<uint16_t>(T * K * N, ok) : nullptr;
+         m.GU = c.take<float>(mb.gu, ok);
+-        m.Hh = fp16_bufs(mp) ? c.take<uint16_t>(T * K * 640, ok) : nullptr;
++        m.Hh = wmma_lean() ? m.xn16 : (fp16_bufs(mp) ? c.take<uint16_t>(T * K * 640, ok) : nullptr);
+         m.Dm = c.take<float>(T * K * N, ok);
+         m.sgate = c.take<float>(T * 640, ok); m.sup = c.take<float>(T * 640, ok); m.sh_h = c.take<uint16_t>(T * 640, ok);
+         m.shared = c.take<float>(T * N, ok); m.sg = c.take<float>(T, ok);
+@@ -1832,7 +1857,8 @@
+         }
+         if (base == nullptr) ok = false;
+     }
+-    for (int i = 0; i < DQ; ++i) { m.dq_gu[i] = o.take<uint16_t>(1280 * 2560, ok); m.dq_d[i] = o.take<uint16_t>(2560 * 640, ok); }
++    if (!wmma_lean())
++        for (int i = 0; i < DQ; ++i) { m.dq_gu[i] = o.take<uint16_t>(1280 * 2560, ok); m.dq_d[i] = o.take<uint16_t>(2560 * 640, ok); }
+     if (mmq_plan().any) {
+         const MmqPlan& mp = mmq_plan();
+         m.ids_identity = o.take<int32_t>(T * K, ok);
+@@ -2572,7 +2598,8 @@
+     const int64_t max_blocks = ss.qsa_states[ss.qsa_primary()].max_cells / s.idx_block + 2;
+     o.take<uint8_t>((size_t) std::max({gdn_set_bytes(T), qsa_set_bytes(T, cap, max_blocks, 256, 32, s),
+                                        moe_set_bytes(T, g.n_expert, fused_layout(T, src))}), ok);
+-    for (int i = 0; i < DQ; ++i) { o.take<uint16_t>(1280 * 2560, ok); o.take<uint16_t>(2560 * 640, ok); }
++    if (!wmma_lean())
++        for (int i = 0; i < DQ; ++i) { o.take<uint16_t>(1280 * 2560, ok); o.take<uint16_t>(2560 * 640, ok); }
+     if (mmq_plan().any) {
+         const MmqPlan& mp = mmq_plan();
+         o.take<int32_t>(T * K, ok);
+@@ -4234,6 +4261,10 @@
+ #if STRATA_EXPERT_NIBBLE_BUILT
+                     if (fused_l && nib_l.on) core::nibble::fatal(l, "the prompt path's fused experts", "they read GGUF blocks");
+ #endif
++                    if (wmma_lean() && (!use_mmq || fused_l || had_gu || had_d)) {
++                        err = "prefill: WMMA_LEAN cannot take a fused or fallback expert path";
++                        return false;
++                    }
+                     if (fused_l) {
+                         if (static bool said = false; !said) {
+                             said = true;
+@@ -4658,6 +4689,10 @@
+                             err = "prefill: an IQ1_M layer in the MMQ grouping needs the WMMA tiles, which this chunk cannot take";
+                             return false;
+                         }
++                        if (wmma_lean() && (!wmma_l || m.fused_bufs || had_gu || had_d)) {
++                            err = "prefill: WMMA_LEAN reader predicate drift (FP16 fallback buffers omitted)";
++                            return false;
++                        }
+                         const size_t mmq_gub = use_mmq ? mmq::matrix_bytes(mmq_gt, 1280, N) : 0;
+                         const size_t mmq_db = use_mmq ? mmq::matrix_bytes(mmq_dt, N, 640) : 0;
+                         bool ws_layer = false;   // STRATA_MMQ_WS: this layer's products weight-stationary (below)
+@@ -4672,7 +4707,7 @@
+                             // (slot_dev, the inverse of src_dev).
+                             // NVFP4 w4a4 activations carry a per-row scale (Xscale): that mode keeps the gather.
+                             if (wmma_l) {   // FP16 rows (pf_wmma); APR: Hadamard-folded gate/up take H, rotated in fp16 storage as the FP16 path does
+-                                gather_rows16(m.mixed_h, m.src_dev, m.Xs, T * K, N, m.cs);
++                                if (!wmma_lean()) gather_rows16(m.mixed_h, m.src_dev, m.Xs, T * K, N, m.cs);
+                                 if (had_gu) strata::kernels::hadamard_rows_f16(m.Xs, T * K, N, had_block, had_sx, m.cs);
+                             } else {
+                                 if (had_gu) {
+@@ -5303,8 +5338,8 @@
+                                 if (wmma_l) {   // pf_wmma: gate/up, SwiGLU to FP16, down - the group in 2 tile launches
+                                     const int32_t* dnb = m.bounds_dev + n + 1 + g * (MMQ_GROUP + 1);
+                                     const bool ok1 = strata::kernels::gemm_iq_f16_grouped(
+-                                        mmq_gt, m.grp_gu, mmq_gub, 1280, (int) N, m.Xs, (int) N, m.bounds_dev + j0, ngx,
+-                                        (int) maxr, m.GU, 1280, m.cs);
++                                        mmq_gt, m.grp_gu, mmq_gub, 1280, (int) N, wmma_lean() ? m.mixed_h : m.Xs, (int) N, m.bounds_dev + j0, ngx,
++                                        (int) maxr, m.GU, 1280, m.cs, wmma_lean() ? m.src_dev : nullptr);
+                                     swiglu_split_f16(m.GU + r0 * 1280, m.Hh + r0 * 640, nr, 640, !lay.native, m.cs);
+                                     if (had_d)   // APR: folded down weights take H (s * h), rotated in fp16 storage as the FP16 path does
+                                         strata::kernels::hadamard_rows_f16(m.Hh + r0 * 640, nr, 640, had_block, had_sh, m.cs);
+@@ -5970,6 +6005,7 @@
+         why = "a routing or row debug dump";
+         return 0;
+     }
++    if (wmma_lean()) { why = "WMMA_LEAN requires guarded run_impl"; return 0; }
+     const MmqPlan& mp = mmq_plan();
+     if ((int64_t) mp.layer.size() < g.n_layers) { why = "the expert plan has fewer layers than the model"; return 0; }
+     // each layer's experts on MMQ, or (port, 2026-10-24) on run_impl's FP16 path; the buffers each one needs

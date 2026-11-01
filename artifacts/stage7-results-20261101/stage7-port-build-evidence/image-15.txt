@@ -1,0 +1,33 @@
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2025 NVIDIA Corporation
+Built on Tue_May_27_02:21:03_PDT_2025
+Cuda compilation tools, release 12.9, V12.9.86
+Build cuda_12.9.r12.9/compiler.36037853_0
+870aedd9e1ebe1c91f94da93b59af17729f6c5c0
+ include/strata/kernels/iq_kernels.hpp |   2 +-
+ src/kernels/cuda/iq_kernels.cu        | 251 +++++++++++++++++++++++++---------
+ src/kernels/pf_wmma_parity.cpp        |  20 ++-
+ 3 files changed, 204 insertions(+), 69 deletions(-)
+7e6a7f11ed23c00e88f117d831293a539a718f5861c02979bc8570c05ac6e8a8  engine/strata
+{
+ "source": "local",
+ "version": "0.1.54",
+ "archs": [
+  70
+ ],
+ "vision": "none",
+ "cuda_dirs": [
+  "/usr/local/cuda/bin",
+  "/usr/local/cuda/lib64"
+ ],
+ "src": "a015eaf71d217f87",
+ "vision_src": null
+}CMAKE_CUDA_ARCHITECTURES:UNINITIALIZED=70
+CMAKE_CUDA_COMPILER:STRING=/usr/local/cuda/bin/nvcc
+STRATA_EXPERIMENTAL_SM60:BOOL=ON
+ELF file    1: strata.1.sm_70.cubin
+ELF file    2: strata.2.sm_70.cubin
+ELF file    3: strata.3.sm_70.cubin
+ELF file    4: strata.4.sm_70.cubin
+ELF file    5: strata.5.sm_70.cubin
+0.1.54

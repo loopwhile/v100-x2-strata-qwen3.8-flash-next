@@ -16,6 +16,7 @@ import sys
 import csv
 import json
 import glob
+import statistics
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -567,7 +568,6 @@ def collect_records():
     }
 
     if s7_opt_dir.exists():
-        import statistics
         opt_groups = {}
         for d in sorted(s7_opt_dir.glob("xxs-*")):
             prefix = d.name.rsplit("-", 1)[0].upper()
@@ -685,6 +685,67 @@ def collect_records():
                 })
             records.extend(batch_rows)
 
+    records.extend(collect_stage7_port_records())
+    return records
+
+
+def collect_stage7_port_records():
+    """Closed 14..16 arms from committed receipts; no local raw-log dependency."""
+    artifact_dir = REPO_ROOT / "artifacts" / "stage7-results-20261101"
+    receipt = json.loads((artifact_dir / "stage7-iq3xxs-14-16-receipts.json").read_text())
+    telemetry = json.loads((artifact_dir / "stage7-iq3xxs-14-16-telemetry.json").read_text())["runs"]
+    configs = {
+        14: ("Strata 0.1.54", "SIMT=1 + SM70_TABLE=1 + PF_WMMA=1"),
+        15: ("Strata 0.1.54 + WMMA2 port", "SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1"),
+        16: ("Strata 0.1.54 + WMMA2/LEAN port", "SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 + PF_WMMA_LEAN=1"),
+    }
+    assert receipt["scored_count"] == 9
+    records = []
+    for arm, (engine, config) in configs.items():
+        batches = sorted((r for r in receipt["records"] if r["arm"] == arm), key=lambda r: r["id"])
+        assert [r["id"] for r in batches] == [f"xxs-{arm}-{n}" for n in (1, 2, 3)]
+        batch_rows = []
+        for batch in batches:
+            summary = batch["c2"]
+            assert summary["pass_mechanical"] and summary["active_overlap"] and summary["post_health"]
+            a, b = summary["requests"]
+            assert [a["prompt_tokens"], b["prompt_tokens"]] == [126967, 126968]
+            assert all(r["output_tokens"] >= 1024 and r["cache_n"] == r["cached_tokens"] == 0 and r["finish_reason"] == "stop" for r in (a, b))
+            row = {
+                "stage": "Stage 7", "arm_id": f"S7-XXS-{arm}-#{batch['id'].rsplit('-', 1)[1]}",
+                "run_id": batch["id"], "run_type": "batch", "engine": engine,
+                "quant": "IQ3_XXS", "config": config, "c2_verdict": "PASS",
+                "out_tokens_a": a["output_tokens"], "out_tokens_b": b["output_tokens"],
+                "wall_s": round(summary["batch_wall_s"], 2),
+            }
+            for key, source_key in (("prefill", "prefill_tok_s"), ("ttft", "ttft_s"), ("decode", "decode_tok_s")):
+                row[f"{key}_a"] = round(a[source_key], 2)
+                row[f"{key}_b"] = round(b[source_key], 2)
+                row[f"{key}_mean"] = round((a[source_key] + b[source_key]) / 2, 2)
+            for gpu in (0, 1):
+                t = telemetry[batch["id"]][str(gpu)]
+                row.update({f"gpu{gpu}_t_avg": t["temp_mean_c"], f"gpu{gpu}_t_peak": t["temp_peak_c"],
+                            f"gpu{gpu}_p_avg": t["power_mean_w"], f"gpu{gpu}_p_peak": t["power_peak_w"]})
+            cache = "/".join(str(batch["details"][s]["expert_page_cache_percent"]) for s in "ab")
+            vm = batch["host_vmstat_delta"]
+            row["notes"] = (f"Closed scored batch; expert page cache A/B {cache}%; host major faults {vm['pgmajfault']}; "
+                            f"swap in/out pages {vm['pswpin']}/{vm['pswpout']}; image {batch['image_id']}; no causal speedup claim")
+            batch_rows.append(row)
+        aggregate = dict(batch_rows[0])
+        aggregate.update(arm_id=f"S7-XXS-{arm}", run_id=f"s7-xxs-{arm}-median", run_type="median (3 batches)")
+        for key in ("prefill", "ttft", "decode"):
+            for suffix in ("a", "b"):
+                aggregate[f"{key}_{suffix}"] = statistics.median(row[f"{key}_{suffix}"] for row in batch_rows)
+            aggregate[f"{key}_mean"] = round((aggregate[f"{key}_a"] + aggregate[f"{key}_b"]) / 2, 2)
+        for key in ("out_tokens_a", "out_tokens_b", "wall_s"):
+            aggregate[key] = statistics.median(row[key] for row in batch_rows)
+        for gpu in (0, 1):
+            for metric in ("t", "p"):
+                aggregate[f"gpu{gpu}_{metric}_avg"] = round(statistics.mean(row[f"gpu{gpu}_{metric}_avg"] for row in batch_rows), 1)
+                aggregate[f"gpu{gpu}_{metric}_peak"] = max(row[f"gpu{gpu}_{metric}_peak"] for row in batch_rows)
+        aggregate["notes"] = (f"3/3 C2 PASS; closed; measured output-token medians; image {batches[0]['image_id']}; "
+                              "cache/swap/output/MTP differences prevent causal throughput claims; no quality suite or promotion")
+        records.extend([aggregate, *batch_rows])
     return records
 
 def export_csv(records, path):
@@ -720,6 +781,8 @@ def export_markdown(records, path):
     lines.append("- **Repository master CSV dataset:** [`docs/consolidated-benchmarks.csv`](consolidated-benchmarks.csv)")
     lines.append("- **Frozen C2 Workload Manifest:** `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`")
     lines.append("- **Hardware Baseline:** Dual independent agents (GPU 0 / cpuset `0-2,6-8` vs GPU 1 / cpuset `3-5,9-11`), INT8 KV, frozen prompts (~126,967 tokens each), minimum output 1024 tokens.")
+    lines.append("- **S7-XXS-14..16:** 9/9 scored C2 PASS, three batches each; all IDs closed. [Report](../artifacts/stage7-results-20261101/stage7-iq3xxs-14-16-report.md), [source/build audit](../artifacts/stage7-results-20261101/stage7-iq3xxs-port-source-audit.md). Arms 15/16 use separate 0.1.54-derived port images. Diagnostics are excluded from their scored rows; cache/swap variation prevents causal speedup claims.")
+    lines.append("- **Telemetry convention:** S7-XXS-8..16 temperature/power rows use 1-second samples with power >60 W across the process lifetime, including loading. Arm averages are unweighted means of batch averages; peaks are maxima. These are not isolated decode/prefill power measurements. S7-XXS-14..16 aggregate output counts are measured medians; older 1024 summary entries may denote only the contract minimum. A/B mean columns are descriptive averages, not summed throughput.")
     lines.append("")
     lines.append("---")
     lines.append("")
@@ -738,7 +801,8 @@ def export_markdown(records, path):
         "S5-IQ3XXS-T1", "S5-IQ3XXS-T2", "S5-IQ3XXS-T7-Fixed",
         "S6-0",
         "S7-XXS-1", "S7-XXS-2", "S7-XXS-4",
-        "S7-XXS-8", "S7-XXS-9", "S7-XXS-10", "S7-XXS-11", "S7-XXS-12", "S7-XXS-13"
+        "S7-XXS-8", "S7-XXS-9", "S7-XXS-10", "S7-XXS-11", "S7-XXS-12", "S7-XXS-13",
+        "S7-XXS-14", "S7-XXS-15", "S7-XXS-16"
     ]
     
     rec_by_arm = {r["arm_id"]: r for r in records if r["run_type"] in ("baseline", "median (3 batches)", "3-run mean", "mixed_quant", "tuning", "feasibility", "mean (2 batches, stopped early)")}
@@ -802,7 +866,7 @@ def export_markdown(records, path):
     lines.append("3. **Stage 7 Engine 0.1.54 on IQ3_XXS:**")
     lines.append("   - Vanilla 0.1.54 achieved **882.45 tok/s prefill median (880.9 / 884.0)** and **24.20 tok/s decode median (24.0 / 24.4)**.")
     lines.append("   - Enabling `STRATA_SELECT_SIMT=1` (S7-XXS-2) boosted prefill to **996.55 tok/s median (992.6 / 1000.5, +12.9%)** and decode to **25.0 / 24.6 tok/s**.")
-    lines.append("   - WMMA flags did not alter runtime execution for IQ3_XXS (S7-XXS-3: 885.5 / 890.0 tok/s; S7-XXS-4: 988.1 / 994.4 tok/s).")
+    lines.append("   - Earlier WMMA arms showed no established throughput gain (S7-XXS-3: 885.5 / 890.0 tok/s; S7-XXS-4: 988.1 / 994.4 tok/s); those timings alone do not prove dispatch. Later arm-14 diagnostic launches verified generic WMMA execution on this model pack.")
     lines.append("   - Disabling SSD stager (`STRATA_STAGER_SSD=0`, S7-XXS-5) yielded identical throughput (~885.4 / 892.0 tok/s) but increased GPU power consumption from 87W to 91W on GPU0 and 92W to 96W on GPU1.")
     lines.append("4. **Stage 7 Engine 0.1.54 IQ3_XXS Optimization Flag Screen (S7-XXS-8..12):**")
     lines.append("   - `STRATA_SM70_TABLE=1` (S7-XXS-11) was the **only consistent signal**, achieving **−1.4 to −2.0% decode time** on identical-output pairs.")
@@ -815,6 +879,10 @@ def export_markdown(records, path):
     lines.append("   - Sustained decode power is low (~45–75 W) with SM clocks steady at 1110 MHz.")
     lines.append("   - Dense 128K prefill draws 120–140 W average with transient spikes up to 166–204 W, causing dynamic clock throttling down to 795–1050 MHz to stay within the 150W TDP envelope.")
     lines.append("   - Operating temperatures never exceeded 70 °C, comfortably below V100's 85 °C thermal throttle point.")
+    lines.append("6. **S7-XXS-14..16 selective ports (9/9 C2 PASS, closed):**")
+    lines.append("   - Arm 14: prefill **997.6 / 1006.6**, decode **26.4 / 26.2** tok/s. Arm 15 (verified IQ3_XXS WMMA2 port): **961.2 / 969.6**, **26.3 / 26.1**. Arm 16 (+LEAN): **990.8 / 998.7**, **26.4 / 27.0**. All values are per-agent 3-batch medians.")
+    lines.append("   - LEAN reduced loaned cache slots **2489→2173** with chunk 8192/ring 96 unchanged. This is an observed allocation effect, not a throughput guarantee.")
+    lines.append("   - First port-image batches had 95% expert-page-cache residency and substantial host swap/major faults; later runs warmed to 100%. Every valid first batch is retained. No causal WMMA2/LEAN speedup, quality result or production promotion is established.")
 
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")

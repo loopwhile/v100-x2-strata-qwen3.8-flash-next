@@ -1,0 +1,14 @@
+# Isolated Stage 7 source port; immutable upstream image remains untouched.
+FROM sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246
+COPY docker/patches/stage7-wmma2.patch /tmp/stage7-wmma2.patch
+RUN test "$(git rev-parse HEAD)" = 870aedd9e1ebe1c91f94da93b59af17729f6c5c0 \
+    && git apply --check /tmp/stage7-wmma2.patch && git apply /tmp/stage7-wmma2.patch
+COPY docker/build_upstream_0154_v100_engine.py /opt/strata/build_stage7.py
+RUN CUDA_ARCHITECTURES=70 BUILD_VISION=0 .venv/bin/python /opt/strata/build_stage7.py \
+    && .venv/bin/cmake -S . -B build -DSTRATA_BUILD_TESTS=ON \
+    && .venv/bin/cmake --build build --target pf_wmma_parity -j 4 \
+    && sha256sum engine/strata /tmp/stage7-wmma2.patch > /opt/strata/STAGE7_PORT.sha256 \
+    && git diff --stat > /opt/strata/STAGE7_PORT.stat
+LABEL stage7.upstream="870aedd9e1ebe1c91f94da93b59af17729f6c5c0" \
+      stage7.fork="2c9b1dd7bda3102c4a8e65fbe56c45f5c6882926" \
+      stage7.arm="15-wmma2-128x64"

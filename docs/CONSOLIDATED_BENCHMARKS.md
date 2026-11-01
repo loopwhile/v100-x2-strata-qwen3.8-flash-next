@@ -5,6 +5,8 @@ This document aggregates all formal benchmark evaluations, candidate screenings,
 - **Repository master CSV dataset:** [`docs/consolidated-benchmarks.csv`](consolidated-benchmarks.csv)
 - **Frozen C2 Workload Manifest:** `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`
 - **Hardware Baseline:** Dual independent agents (GPU 0 / cpuset `0-2,6-8` vs GPU 1 / cpuset `3-5,9-11`), INT8 KV, frozen prompts (~126,967 tokens each), minimum output 1024 tokens.
+- **S7-XXS-14..16:** 9/9 scored C2 PASS, three batches each; all IDs closed. [Report](../artifacts/stage7-results-20261101/stage7-iq3xxs-14-16-report.md), [source/build audit](../artifacts/stage7-results-20261101/stage7-iq3xxs-port-source-audit.md). Arms 15/16 use separate 0.1.54-derived port images. Diagnostics are excluded from their scored rows; cache/swap variation prevents causal speedup claims.
+- **Telemetry convention:** S7-XXS-8..16 temperature/power rows use 1-second samples with power >60 W across the process lifetime, including loading. Arm averages are unweighted means of batch averages; peaks are maxima. These are not isolated decode/prefill power measurements. S7-XXS-14..16 aggregate output counts are measured medians; older 1024 summary entries may denote only the contract minimum. A/B mean columns are descriptive averages, not summed throughput.
 
 ---
 
@@ -41,6 +43,9 @@ Comparing representative operational baselines, optimization peaks, and version 
 | **Stage 7** | Strata 0.1.54 | IQ3_XXS | STRATA_SM70_TABLE=1 | PASS | 1004.4 / 1011.2 | 126.7 / 125.8 | **26.7 / 26.3** | 63.2 / 70 °C | 104.4 / 177.7 W | 60.7 / 66 °C | 108.0 / 189.7 W |
 | **Stage 7** | Strata 0.1.54 | IQ3_XXS | STRATA_SELECT_SIMT=1 + prefill 4096 | PASS | 635.2 / 640.2 | 200.1 / 198.6 | **26.3 / 27.2** | 59.7 / 64 °C | 92.5 / 154.5 W | 58.2 / 62 °C | 93.8 / 162.2 W |
 | **Stage 7** | Strata 0.1.54 | IQ3_XXS | STRATA_SELECT_SIMT=1 + STRATA_SM70_TABLE=1 | PASS | 1004.2 / 1010.6 | 126.7 / 125.9 | **26.5 / 26.1** | 60.7 / 69 °C | 104.3 / 178.5 W | 59.6 / 66 °C | 106.3 / 189.0 W |
+| **Stage 7** | Strata 0.1.54 | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 | PASS | 997.6 / 1006.6 | 127.5 / 126.5 | **26.4 / 26.2** | 58.2 / 65 °C | 99.0 / 172.9 W | 57.8 / 64 °C | 98.5 / 177.6 W |
+| **Stage 7** | Strata 0.1.54 + WMMA2 port | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 | PASS | 961.2 / 969.6 | 132.3 / 131.2 | **26.3 / 26.1** | 59.7 / 66 °C | 102.1 / 171.9 W | 58.3 / 64 °C | 97.8 / 183.3 W |
+| **Stage 7** | Strata 0.1.54 + WMMA2/LEAN port | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 + PF_WMMA_LEAN=1 | PASS | 990.8 / 998.7 | 128.4 / 127.4 | **26.4 / 27.0** | 60.1 / 66 °C | 100.9 / 171.6 W | 58.1 / 64 °C | 98.5 / 198.8 W |
 
 ---
 
@@ -74,6 +79,9 @@ Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during fu
 | **Stage 7** S7-XXS-11 | IQ3_XXS | Strata 0.1.54 | STRATA_SM70_TABLE=1 | 63.2 °C | 70 °C | 104.4 W | 177.7 W | 60.7 °C | 66 °C | 108.0 W | 189.7 W |
 | **Stage 7** S7-XXS-12 | IQ3_XXS | Strata 0.1.54 | STRATA_SELECT_SIMT=1 + prefill 4096 | 59.7 °C | 64 °C | 92.5 W | 154.5 W | 58.2 °C | 62 °C | 93.8 W | 162.2 W |
 | **Stage 7** S7-XXS-13 | IQ3_XXS | Strata 0.1.54 | STRATA_SELECT_SIMT=1 + STRATA_SM70_TABLE=1 | 60.7 °C | 69 °C | 104.3 W | 178.5 W | 59.6 °C | 66 °C | 106.3 W | 189.0 W |
+| **Stage 7** S7-XXS-14 | IQ3_XXS | Strata 0.1.54 | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 | 58.2 °C | 65 °C | 99.0 W | 172.9 W | 57.8 °C | 64 °C | 98.5 W | 177.6 W |
+| **Stage 7** S7-XXS-15 | IQ3_XXS | Strata 0.1.54 + WMMA2 port | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 | 59.7 °C | 66 °C | 102.1 W | 171.9 W | 58.3 °C | 64 °C | 97.8 W | 183.3 W |
+| **Stage 7** S7-XXS-16 | IQ3_XXS | Strata 0.1.54 + WMMA2/LEAN port | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 + PF_WMMA_LEAN=1 | 60.1 °C | 66 °C | 100.9 W | 171.6 W | 58.1 °C | 64 °C | 98.5 W | 198.8 W |
 
 ---
 
@@ -176,6 +184,18 @@ Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during fu
 | Stage 7 | `xxs-13-2` | IQ3_XXS | S7-XXS-13 run 2 | PASS | 1004.2 / 1010.1 | 126.7 / 126.0 | 25.9 / 26.1 | 61.8/68°C | 103.2/173.5W | 60.4/66°C | 104.0/182.2W | Batch run 2 |
 | Stage 7 | `xxs-13-3` | IQ3_XXS | S7-XXS-13 run 3 | PASS | 1003.0 / 1010.6 | 126.8 / 125.9 | 26.5 / 26.1 | 62.7/69°C | 104.3/178.5W | 60.4/66°C | 109.9/189.0W | Batch run 3 |
 | Stage 7 | `xxs-diag-1` | IQ3_XXS | S7-XXS-DIAG-1 run 1 | PROFILE_PASS_NOT_SCORED | 993.3 / 1003.6 | 128.1 / 126.8 | 25.8 / 25.7 | 57.7/65°C | 104.3/174.5W | 58.6/64°C | 106.2/182.4W | Non-scored diagnostic profiling run |
+| Stage 7 | `s7-xxs-14-median` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 | PASS | 997.6 / 1006.6 | 127.5 / 126.5 | 26.4 / 26.2 | 58.2/65°C | 99.0/172.9W | 57.8/64°C | 98.5/177.6W | 3/3 C2 PASS; closed; measured output-token medians; image sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246; cache/swap/output/MTP differences prevent causal throughput claims; no quality suite or promotion |
+| Stage 7 | `xxs-14-1` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 | PASS | 997.6 / 1006.6 | 127.5 / 126.6 | 26.4 / 26.2 | 55.6/62°C | 99.0/169.6W | 56.5/62°C | 99.3/175.6W | Closed scored batch; expert page cache A/B 100/100%; host major faults 1483; swap in/out pages 20011/0; image sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246; no causal speedup claim |
+| Stage 7 | `xxs-14-2` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 | PASS | 996.4 / 1006.0 | 127.7 / 126.5 | 25.9 / 26.7 | 59.0/64°C | 100.0/167.1W | 58.0/63°C | 99.5/177.3W | Closed scored batch; expert page cache A/B 100/100%; host major faults 54; swap in/out pages 1/1; image sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246; no causal speedup claim |
+| Stage 7 | `xxs-14-3` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 | PASS | 999.9 / 1008.1 | 127.2 / 126.2 | 26.5 / 25.8 | 60.1/65°C | 98.1/172.9W | 58.9/64°C | 96.6/177.6W | Closed scored batch; expert page cache A/B 100/100%; host major faults 7; swap in/out pages 0/0; image sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246; no causal speedup claim |
+| Stage 7 | `s7-xxs-15-median` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 | PASS | 961.2 / 969.6 | 132.3 / 131.2 | 26.3 / 26.1 | 59.7/66°C | 102.1/171.9W | 58.3/64°C | 97.8/183.3W | 3/3 C2 PASS; closed; measured output-token medians; image sha256:95b0e4a50a775cd1e5bbfefa711c6e038923867961d1a9e159b9fe1f92ea189e; cache/swap/output/MTP differences prevent causal throughput claims; no quality suite or promotion |
+| Stage 7 | `xxs-15-1` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 | PASS | 886.6 / 884.3 | 143.5 / 143.9 | 26.0 / 26.1 | 59.4/65°C | 103.6/169.8W | 58.0/64°C | 94.4/174.0W | Closed scored batch; expert page cache A/B 95/95%; host major faults 63314; swap in/out pages 164995/307145; image sha256:95b0e4a50a775cd1e5bbfefa711c6e038923867961d1a9e159b9fe1f92ea189e; no causal speedup claim |
+| Stage 7 | `xxs-15-2` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 | PASS | 961.2 / 969.6 | 132.3 / 131.2 | 26.3 / 26.1 | 59.3/65°C | 100.9/167.3W | 58.3/63°C | 97.2/183.3W | Closed scored batch; expert page cache A/B 99/99%; host major faults 4473; swap in/out pages 177/22; image sha256:95b0e4a50a775cd1e5bbfefa711c6e038923867961d1a9e159b9fe1f92ea189e; no causal speedup claim |
+| Stage 7 | `xxs-15-3` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 | PASS | 990.0 / 996.1 | 128.5 / 127.7 | 26.5 / 26.7 | 60.4/66°C | 101.9/171.9W | 58.6/64°C | 101.7/181.1W | Closed scored batch; expert page cache A/B 100/100%; host major faults 2655; swap in/out pages 136/1; image sha256:95b0e4a50a775cd1e5bbfefa711c6e038923867961d1a9e159b9fe1f92ea189e; no causal speedup claim |
+| Stage 7 | `s7-xxs-16-median` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 + PF_WMMA_LEAN=1 | PASS | 990.8 / 998.7 | 128.4 / 127.4 | 26.4 / 27.0 | 60.1/66°C | 100.9/171.6W | 58.1/64°C | 98.5/198.8W | 3/3 C2 PASS; closed; measured output-token medians; image sha256:57b951d4375dd397d6a0f09cd45cc340c80f1f4b7a5260378bd0c88710d66779; cache/swap/output/MTP differences prevent causal throughput claims; no quality suite or promotion |
+| Stage 7 | `xxs-16-1` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 + PF_WMMA_LEAN=1 | PASS | 904.1 / 893.6 | 140.7 / 142.4 | 26.1 / 25.9 | 59.7/65°C | 99.3/163.9W | 57.8/64°C | 96.6/184.7W | Closed scored batch; expert page cache A/B 95/95%; host major faults 38833; swap in/out pages 147984/250783; image sha256:57b951d4375dd397d6a0f09cd45cc340c80f1f4b7a5260378bd0c88710d66779; no causal speedup claim |
+| Stage 7 | `xxs-16-2` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 + PF_WMMA_LEAN=1 | PASS | 990.8 / 998.7 | 128.4 / 127.4 | 26.4 / 27.2 | 60.3/66°C | 102.6/170.1W | 58.3/64°C | 98.5/198.8W | Closed scored batch; expert page cache A/B 98/98%; host major faults 1492; swap in/out pages 165/2; image sha256:57b951d4375dd397d6a0f09cd45cc340c80f1f4b7a5260378bd0c88710d66779; no causal speedup claim |
+| Stage 7 | `xxs-16-3` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + PF_WMMA2=1 + PF_WMMA_LEAN=1 | PASS | 1012.9 / 1018.7 | 125.6 / 124.9 | 26.4 / 27.0 | 60.3/66°C | 100.8/171.6W | 58.3/64°C | 100.3/175.7W | Closed scored batch; expert page cache A/B 100/100%; host major faults 438; swap in/out pages 251/0; image sha256:57b951d4375dd397d6a0f09cd45cc340c80f1f4b7a5260378bd0c88710d66779; no causal speedup claim |
 
 ---
 
@@ -186,7 +206,7 @@ Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during fu
 3. **Stage 7 Engine 0.1.54 on IQ3_XXS:**
    - Vanilla 0.1.54 achieved **882.45 tok/s prefill median (880.9 / 884.0)** and **24.20 tok/s decode median (24.0 / 24.4)**.
    - Enabling `STRATA_SELECT_SIMT=1` (S7-XXS-2) boosted prefill to **996.55 tok/s median (992.6 / 1000.5, +12.9%)** and decode to **25.0 / 24.6 tok/s**.
-   - WMMA flags did not alter runtime execution for IQ3_XXS (S7-XXS-3: 885.5 / 890.0 tok/s; S7-XXS-4: 988.1 / 994.4 tok/s).
+   - Earlier WMMA arms showed no established throughput gain (S7-XXS-3: 885.5 / 890.0 tok/s; S7-XXS-4: 988.1 / 994.4 tok/s); those timings alone do not prove dispatch. Later arm-14 diagnostic launches verified generic WMMA execution on this model pack.
    - Disabling SSD stager (`STRATA_STAGER_SSD=0`, S7-XXS-5) yielded identical throughput (~885.4 / 892.0 tok/s) but increased GPU power consumption from 87W to 91W on GPU0 and 92W to 96W on GPU1.
 4. **Stage 7 Engine 0.1.54 IQ3_XXS Optimization Flag Screen (S7-XXS-8..12):**
    - `STRATA_SM70_TABLE=1` (S7-XXS-11) was the **only consistent signal**, achieving **−1.4 to −2.0% decode time** on identical-output pairs.
@@ -199,3 +219,7 @@ Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during fu
    - Sustained decode power is low (~45–75 W) with SM clocks steady at 1110 MHz.
    - Dense 128K prefill draws 120–140 W average with transient spikes up to 166–204 W, causing dynamic clock throttling down to 795–1050 MHz to stay within the 150W TDP envelope.
    - Operating temperatures never exceeded 70 °C, comfortably below V100's 85 °C thermal throttle point.
+6. **S7-XXS-14..16 selective ports (9/9 C2 PASS, closed):**
+   - Arm 14: prefill **997.6 / 1006.6**, decode **26.4 / 26.2** tok/s. Arm 15 (verified IQ3_XXS WMMA2 port): **961.2 / 969.6**, **26.3 / 26.1**. Arm 16 (+LEAN): **990.8 / 998.7**, **26.4 / 27.0**. All values are per-agent 3-batch medians.
+   - LEAN reduced loaned cache slots **2489→2173** with chunk 8192/ring 96 unchanged. This is an observed allocation effect, not a throughput guarantee.
+   - First port-image batches had 95% expert-page-cache residency and substantial host swap/major faults; later runs warmed to 100%. Every valid first batch is retained. No causal WMMA2/LEAN speedup, quality result or production promotion is established.

@@ -1,6 +1,7 @@
 # Stage 7 — Strata Qwen engine 0.1.54 validation across model quantizations
 
-**Status: IN PROGRESS — 0.1.54 built, IQ3_XXS S7-XXS-1..6 18/18 C2 PASS (2026-11-01); IQ3_XXS S7-XXS-8..13 EXECUTED (17 scored + 1 diagnostic C2 PASS; S7-XXS-12 stopped at 2 batches); additional quantizations pending. No production promotion.**  
+**Status: IN PROGRESS — 0.1.54 built, IQ3_XXS S7-XXS-1..6 18/18 C2 PASS (2026-11-01); IQ3_XXS S7-XXS-8..13 EXECUTED (17 scored + 1 diagnostic C2 PASS; S7-XXS-12 stopped at 2 batches); IQ3_XXS S7-XXS-14..16 COMPLETED 9/9 C2 PASS, three per arm, IDs closed; additional quantizations pending. No production promotion.**
+
 **Created:** 2026-11-01 (Asia/Seoul)  
 **Target engine:** upstream [Niko1221/Strata v0.2.8](https://github.com/Niko1221/Strata/releases/tag/v0.2.8), **Qwen engine 0.1.54** (the application version is 0.2.8, not 0.1.54). Pin an exact upstream source SHA at build time.
 
@@ -80,15 +81,15 @@ Notes:
 
 See [Stage 7 IQ3_XXS optimization extension](STAGE7_IQ3XXS_OPT_PLAN.md) and the [S7-XXS-8..13 result report](../artifacts/stage7-results-20261101/stage7-iq3xxs-opt-report.md): S7-XXS-8..13 (SIMT2, GDN recurrence, INT8 KV gather, SM70_TABLE, prefill 4096, and confirmed combination S7-XXS-13). **17 scored C2 batches + 1 non-scored diagnostic, all mechanical PASS**; S7-XXS-12 was stopped by the operator after 2 batches. Same-session results: SIMT2 prefill −0.3%; GDN_REC_WARP=2 within noise (numerics changed, quality unchecked); Q8_GATHER_WIDE=0 no measurable effect; SM70_TABLE=1 the only consistent signal (−1.4 to −2.0% decode time on identical-output pairs); prefill 4096 −36.7% prefill. S7-XXS-13 confirmed SIMT=1 + SM70_TABLE=1 across 3 batches with <0.06% prefill variance vs S7-XXS-11. Cross-date comparisons against archived S7-XXS-2 show a common-mode shift and are not causal. The existing 18/18 completed runs and `scripts/97-stage7-iq3xxs-c2.sh` are preserved. No promotion. Stage 7 remains an engine-level multi-quantization evaluation.
 
-### 3.1b IQ3_XXS selective V100 Fork source-port experiments (PLANNED / NOT RUN)
+### 3.1b IQ3_XXS selective V100 source ports (COMPLETED / CLOSED)
 
-[**S7-XXS-14 / 15 / 16 source-port plan**](STAGE7_IQ3XXS_FORK_PORT_PLAN.md) follows the completed S7-XXS-13 baseline, **without changing or rerunning it**:
+[S7-XXS-14 / 15 / 16 definition](STAGE7_IQ3XXS_FORK_PORT_PLAN.md) completed **9/9 valid C2 batches, three per arm**, on 2026-11-01; [execution report](../artifacts/stage7-results-20261101/stage7-iq3xxs-14-16-report.md), [source/build audit](../artifacts/stage7-results-20261101/stage7-iq3xxs-port-source-audit.md).
 
-- **14:** existing pinned upstream 0.1.54 image; SIMT=1 + SM70_TABLE=1 + **PF_WMMA=1**; 3 fresh C2 batches; **prepared for manual run** with isolated `scripts/100-stage7-iq3xxs-v100-port-c2.sh`.
-- **15:** 14 plus **verified IQ3_XXS WMMA2** in a separately pinned 0.1.54-derived image; compare upstream dispatch against `jmnargi/Strata-V100@2c9b1dd` before deciding which code actually needs porting. **BLOCKED** until code diff, compile, parity, kernel path and image receipt are reviewed.
-- **16:** 15 plus V100 Fork's **WMMA_LEAN** allocation/gather reduction in its own 0.1.54-derived image. **BLOCKED** until 15 works, lean port/VRAM checks and a separately pinned image are verified.
+- **14:** unchanged pinned upstream 0.1.54, SIMT+SM70+WMMA. Prefill medians 997.6 / 1006.6, decode 26.4 / 26.2 tok/s.
+- **15:** separately pinned 0.1.54-derived IQ3_XXS WMMA2 port. Prefill 961.2 / 969.6, decode 26.3 / 26.1.
+- **16:** separately pinned 15+LEAN allocation/index adaptation. Prefill 990.8 / 998.7, decode 26.4 / 27.0. Loan slots reduced 2489→2173.
 
-The new runner deliberately rejects 15/16 **before** creating containers or result directories. **No patched source, port Docker image or 14–16 C2 result exists as of this planning commit**; total conditional budget is nine new scored batches. This remains an IQ3_XXS subtrack of the broader Stage 7 multi-quantization engine evaluation. **Do not promote from planning alone.**
+Source, CUDA12/sm_70 compilation, parity and instrumented fresh 128K checks passed before enabling scored IDs in runner 100. Page-cache/swap differences and output/MTP variation prevent a causal throughput-win claim. No quality suite or promotion. **Do not rerun or reuse any 14–16 ID.** This closes only this IQ3_XXS subtrack, not multi-quantization Stage 7.
 
 ### 3.2 IQ2_XS: engine-upgrade assessment (model-specific)
 
@@ -105,7 +106,7 @@ Optional; use a separately documented memory/capacity gate and model-specific 0.
 ## 4. Build and execution gates
 
 1. **Preflight only** before any build: inspect running Docker containers, GPU occupancy, ports 8080/8081, host RAM/swap, actual GPU clocks/power caps and accessible model assets. Never assume a GitHub snapshot proves current P520 state.
-2. Build upstream Qwen **0.1.54** from a **pinned SHA** with the existing CUDA 12.9.1 Volta-compatible approach: `-DSTRATA_ENABLE_CUDA=ON -DSTRATA_EXPERIMENTAL_SM60=ON -DCMAKE_CUDA_ARCHITECTURES=70`. **Never CUDA 13 for V100**. Use a **new image tag**, e.g. `strata-v100-upstream:0.1.54`; the tag is **proposed, not yet created**. Verify the actual `strata` engine version, commit SHA, build flags, binary SHA and image ID.
+2. Build upstream Qwen **0.1.54** from a **pinned SHA** with the existing CUDA 12.9.1 Volta-compatible approach: `-DSTRATA_ENABLE_CUDA=ON -DSTRATA_EXPERIMENTAL_SM60=ON -DCMAKE_CUDA_ARCHITECTURES=70`. **Never CUDA 13 for V100**. Use a **new image tag**, e.g. `strata-v100-upstream:0.1.54`; the base tag is **built and pinned**, as recorded in the IQ3_XXS receipts; new candidate images still require unique tags. Verify the actual `strata` engine version, commit SHA, build flags, binary SHA and image ID.
 3. Run an isolated 128K compatibility/health smoke for each candidate quantization before timed C2; failures do not count as C2 success.
 4. Create **new Stage 7-only** configs/containers/logs and test ports; verify CPU affinity, physical GPU mapping, model hashes and effective flags. Do not repoint ThinkPad 18080/18081 or P520 serving 8080/8081.
 5. Execute each selected arm as **three valid fresh-process dual-agent C2 batches**. Capture A/B metrics independently, per-run counts, medians/ranges, batch wall, overlap, stop reasons, GPU/CPU telemetry, page cache, swap and I/O, and status.
@@ -129,8 +130,8 @@ Record one row per model + arm, with engine SHA, quantization, effective runtime
 | 0.1.54 source SHA, binary build and dedicated image | BUILT; image/source IDs recorded in IQ3_XXS final report |
 | IQ3_XXS S7-XXS-1 to S7-XXS-6 | COMPLETED (18/18 valid C2 PASS) |
 | IQ3_XXS S7-XXS-8 to S7-XXS-13 | EXECUTED (8–11 & 13: 3/3 PASS each; 12: 2/2 PASS, stopped early; diagnostic non-scored PASS) — [report](../artifacts/stage7-results-20261101/stage7-iq3xxs-opt-report.md) |
-| IQ3_XXS S7-XXS-14 | PREPARED, **NOT RUN** — upstream 0.1.54 existing pinned image + PF_WMMA; C2 3 planned |
-| IQ3_XXS S7-XXS-15 / S7-XXS-16 | **BLOCKED / NOT RUN** — need separate audited V100 source-port builds and image receipts |
+| IQ3_XXS S7-XXS-14 | **COMPLETED 3/3 C2 PASS** — [report](../artifacts/stage7-results-20261101/stage7-iq3xxs-14-report.md); IDs closed |
+| IQ3_XXS S7-XXS-15 / S7-XXS-16 | **COMPLETED 3/3 C2 PASS each** — pinned separate source-port images; [report](../artifacts/stage7-results-20261101/stage7-iq3xxs-14-16-report.md); IDs closed |
 | IQ2_XS model-specific 0.1.54 matrix | CANDIDATE, NOT RUN |
 | IQ3_S model-specific 0.1.54 matrix | CANDIDATE, REQUIRES ASSET CHECK |
 | UD-Q4_K_XL additional feasibility | OPTIONAL, NOT RUN |

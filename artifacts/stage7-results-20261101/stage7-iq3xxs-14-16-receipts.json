@@ -1,0 +1,1168 @@
+{
+  "scored_count": 9,
+  "medians": {
+    "14": {
+      "pass_count": 3,
+      "batch_wall_median_s": 211.54053843300062,
+      "a": {
+        "prefill_tok_s": {
+          "median": 997.6,
+          "min": 996.4,
+          "max": 999.9
+        },
+        "decode_tok_s": {
+          "median": 26.4,
+          "min": 25.9,
+          "max": 26.5
+        },
+        "ttft_s": {
+          "median": 127.53407021400199,
+          "min": 127.21443279900268,
+          "max": 127.67491633900136
+        },
+        "output_tokens": {
+          "median": 1737,
+          "min": 1674,
+          "max": 1762
+        }
+      },
+      "b": {
+        "prefill_tok_s": {
+          "median": 1006.6,
+          "min": 1006.0,
+          "max": 1008.1
+        },
+        "decode_tok_s": {
+          "median": 26.2,
+          "min": 25.8,
+          "max": 26.7
+        },
+        "ttft_s": {
+          "median": 126.47734167100134,
+          "min": 126.20450122999682,
+          "max": 126.64494674799789
+        },
+        "output_tokens": {
+          "median": 2224,
+          "min": 2101,
+          "max": 2577
+        }
+      }
+    },
+    "15": {
+      "pass_count": 3,
+      "batch_wall_median_s": 218.13360393600306,
+      "a": {
+        "prefill_tok_s": {
+          "median": 961.2,
+          "min": 886.6,
+          "max": 990.0
+        },
+        "decode_tok_s": {
+          "median": 26.3,
+          "min": 26.0,
+          "max": 26.5
+        },
+        "ttft_s": {
+          "median": 132.33713731900207,
+          "min": 128.47901604800063,
+          "max": 143.4570754430024
+        },
+        "output_tokens": {
+          "median": 1665,
+          "min": 1652,
+          "max": 1844
+        }
+      },
+      "b": {
+        "prefill_tok_s": {
+          "median": 969.6,
+          "min": 884.3,
+          "max": 996.1
+        },
+        "decode_tok_s": {
+          "median": 26.1,
+          "min": 26.1,
+          "max": 26.7
+        },
+        "ttft_s": {
+          "median": 131.2091466990023,
+          "min": 127.72054996799852,
+          "max": 143.885639584998
+        },
+        "output_tokens": {
+          "median": 2274,
+          "min": 2198,
+          "max": 2300
+        }
+      }
+    },
+    "16": {
+      "pass_count": 3,
+      "batch_wall_median_s": 219.50859741399836,
+      "a": {
+        "prefill_tok_s": {
+          "median": 990.8,
+          "min": 904.1,
+          "max": 1012.9
+        },
+        "decode_tok_s": {
+          "median": 26.4,
+          "min": 26.1,
+          "max": 26.4
+        },
+        "ttft_s": {
+          "median": 128.4085282169981,
+          "min": 125.5923149170012,
+          "max": 140.70552445499925
+        },
+        "output_tokens": {
+          "median": 1268,
+          "min": 1266,
+          "max": 1297
+        }
+      },
+      "b": {
+        "prefill_tok_s": {
+          "median": 998.7,
+          "min": 893.6,
+          "max": 1018.7
+        },
+        "decode_tok_s": {
+          "median": 27.0,
+          "min": 25.9,
+          "max": 27.2
+        },
+        "ttft_s": {
+          "median": 127.38547535999896,
+          "min": 124.88823380399845,
+          "max": 142.3658121410008
+        },
+        "output_tokens": {
+          "median": 2453,
+          "min": 2251,
+          "max": 2509
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "xxs-14-1",
+      "arm": 14,
+      "image_id": "sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246",
+      "c2": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.003727879997313721,
+        "batch_wall_s": 211.54053843300062,
+        "decode_overlap_s": 63.25632336700073,
+        "both_busy_samples": 311,
+        "both_answering_samples": 311,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1674,
+            "finish_reason": "stop",
+            "wall_s": 190.79039358100272,
+            "ttft_s": 127.53407021400199,
+            "prefill_tok_s": 997.6,
+            "decode_tok_s": 26.4,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.857,
+            "file_mb": 216802.1,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "8ebb9161d72b8b05f522feb92e9e3c394048e713b4b315bc4922042019b1358e"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 2224,
+            "finish_reason": "stop",
+            "wall_s": 211.53742342499754,
+            "ttft_s": 126.64494674799789,
+            "prefill_tok_s": 1006.6,
+            "decode_tok_s": 26.2,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.838,
+            "file_mb": 313948.2,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "15e1f39e7b88b3325e64b2dc7395eaf307c68e03397dc13ad118d8cb761dd5a0"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "details": {
+        "a": {
+          "mtp_accepted": 934,
+          "mtp_proposed": 1432,
+          "expert_page_cache_percent": 100,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2489,
+          "container_id": "90be39166ca03f1cf0d260998a80ec99d6c113b361b4f7ff5f435b1904c4cc7f",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 62.0,
+            "max_power_w": 169.59,
+            "mean_power_w_all_process_samples": 81.89323008849557,
+            "mean_power_w_util_over_20_percent": 90.39426315789474,
+            "max_vram_mib": 15585.0
+          }
+        },
+        "b": {
+          "mtp_accepted": 1318,
+          "mtp_proposed": 1973,
+          "expert_page_cache_percent": 100,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2489,
+          "container_id": "4c091c11183d2694783327669b5d18a4a347490710e90a48b42bf9647e5bfe6e",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 62.0,
+            "max_power_w": 175.57,
+            "mean_power_w_all_process_samples": 84.94557522123894,
+            "mean_power_w_util_over_20_percent": 88.04286384976525,
+            "max_vram_mib": 15585.0
+          }
+        }
+      },
+      "host_vmstat_delta": {
+        "pgpgin": 696880,
+        "pgpgout": 64064,
+        "pswpin": 20011,
+        "pswpout": 0,
+        "pgfault": 5088589,
+        "pgmajfault": 1483
+      },
+      "config_sha256": {
+        "a": "092caf523059fb06c3d5c3830ad6112117dba4262dec0d0611a7699648dead2f",
+        "b": "a9035d598a7a79abb03ed1a16e71b75b1478ba17ab0d5c2ec31ba48dc3d86a58"
+      }
+    },
+    {
+      "id": "xxs-14-2",
+      "arm": 14,
+      "image_id": "sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246",
+      "c2": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.004008929998235544,
+        "batch_wall_s": 222.94714186400233,
+        "decode_overlap_s": 67.00227571900177,
+        "both_busy_samples": 330,
+        "both_answering_samples": 330,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1737,
+            "finish_reason": "stop",
+            "wall_s": 194.67719205800313,
+            "ttft_s": 127.67491633900136,
+            "prefill_tok_s": 996.4,
+            "decode_tok_s": 25.9,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.854,
+            "file_mb": 233478.0,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "8128b24c8ec2f22c77b3716039bbf6b24db7711eeb164d4e46146f31015c7c03"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 2577,
+            "finish_reason": "stop",
+            "wall_s": 222.9439342170008,
+            "ttft_s": 126.47734167100134,
+            "prefill_tok_s": 1006.0,
+            "decode_tok_s": 26.7,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.845,
+            "file_mb": 347591.9,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "2697658bf4d34adfebbfe549934939e46ed73596978b271f71d032a667134185"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "details": {
+        "a": {
+          "mtp_accepted": 972,
+          "mtp_proposed": 1538,
+          "expert_page_cache_percent": 100,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2489,
+          "container_id": "8411ba9e091ce0fbe12ccdd7780deb1b0b87d87961a4a55fcdd8b7060f8e2186",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 64.0,
+            "max_power_w": 167.12,
+            "mean_power_w_all_process_samples": 81.21426160337553,
+            "mean_power_w_util_over_20_percent": 90.48897435897436,
+            "max_vram_mib": 15585.0
+          }
+        },
+        "b": {
+          "mtp_accepted": 1505,
+          "mtp_proposed": 2243,
+          "expert_page_cache_percent": 100,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2489,
+          "container_id": "4cc14847c14f4965c8a64c2db6010876b42fa42ba7043bfafe948a3598a03d7e",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 63.0,
+            "max_power_w": 177.32,
+            "mean_power_w_all_process_samples": 87.854388185654,
+            "mean_power_w_util_over_20_percent": 90.64404444444445,
+            "max_vram_mib": 15585.0
+          }
+        }
+      },
+      "host_vmstat_delta": {
+        "pgpgin": 673660,
+        "pgpgout": 56592,
+        "pswpin": 1,
+        "pswpout": 1,
+        "pgfault": 5388907,
+        "pgmajfault": 54
+      },
+      "config_sha256": {
+        "a": "05962583564d41c88a7402e1f60fc96567bc2a53da4f6272ab9047c6eba5f9b4",
+        "b": "c875fa5b1d5aab7b3bcfbba941d0a5230e90d1a91ec83e9dc5a6fdc129a72987"
+      }
+    },
+    {
+      "id": "xxs-14-3",
+      "arm": 14,
+      "image_id": "sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246",
+      "c2": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.0037588649975077715,
+        "batch_wall_s": 207.7047905799991,
+        "decode_overlap_s": 66.45300148899696,
+        "both_busy_samples": 327,
+        "both_answering_samples": 327,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1762,
+            "finish_reason": "stop",
+            "wall_s": 193.66743428799964,
+            "ttft_s": 127.21443279900268,
+            "prefill_tok_s": 999.9,
+            "decode_tok_s": 26.5,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.861,
+            "file_mb": 227997.5,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "dfc248bbc96783a156fc200d042d3b5d17b38fecae9c0fff74eea418bd08d6af"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 2101,
+            "finish_reason": "stop",
+            "wall_s": 207.7017057289995,
+            "ttft_s": 126.20450122999682,
+            "prefill_tok_s": 1008.1,
+            "decode_tok_s": 25.8,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.831,
+            "file_mb": 303995.1,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "74e9ffb1f631e93a6adb8b69e1bd07cd7d03ec7d598c3342ad8bd423680b39f2"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "details": {
+        "a": {
+          "mtp_accepted": 990,
+          "mtp_proposed": 1577,
+          "expert_page_cache_percent": 100,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2489,
+          "container_id": "f841b60e8dbf6d18cd12ada40ab3731d0595c5b816e027827e86f8143f874779",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 65.0,
+            "max_power_w": 172.87,
+            "mean_power_w_all_process_samples": 82.40054298642534,
+            "mean_power_w_util_over_20_percent": 88.8438341968912,
+            "max_vram_mib": 15585.0
+          }
+        },
+        "b": {
+          "mtp_accepted": 1254,
+          "mtp_proposed": 1848,
+          "expert_page_cache_percent": 100,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2489,
+          "container_id": "1c22270acff08d42fa9060782a440255bcd271b9eda4ee31fcd6c5180030598e",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 64.0,
+            "max_power_w": 177.57,
+            "mean_power_w_all_process_samples": 83.3479185520362,
+            "mean_power_w_util_over_20_percent": 86.05607655502392,
+            "max_vram_mib": 15585.0
+          }
+        }
+      },
+      "host_vmstat_delta": {
+        "pgpgin": 628728,
+        "pgpgout": 59680,
+        "pswpin": 0,
+        "pswpout": 0,
+        "pgfault": 4905400,
+        "pgmajfault": 7
+      },
+      "config_sha256": {
+        "a": "a5117f0c866c54d82c055def68f538ae8c8f4a865fc2c5e0e5c17e930dce5d9a",
+        "b": "c40bc30ecba5f133cd222ad5251cb23898f3a0b7afd3a337d0c54864dca9d1d5"
+      }
+    },
+    {
+      "id": "xxs-15-1",
+      "arm": 15,
+      "image_id": "sha256:95b0e4a50a775cd1e5bbfefa711c6e038923867961d1a9e159b9fe1f92ea189e",
+      "c2": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.0037661809983546846,
+        "batch_wall_s": 231.80398074899858,
+        "decode_overlap_s": 63.42623194400221,
+        "both_busy_samples": 312,
+        "both_answering_samples": 312,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1665,
+            "finish_reason": "stop",
+            "wall_s": 207.30810534800185,
+            "ttft_s": 143.4570754430024,
+            "prefill_tok_s": 886.6,
+            "decode_tok_s": 26.0,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.859,
+            "file_mb": 217106.6,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "23cbc7962d4e621fbcccbe370080b139e807b2a67df7cd4f79f327448dd917de"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 2300,
+            "finish_reason": "stop",
+            "wall_s": 231.79966386899832,
+            "ttft_s": 143.885639584998,
+            "prefill_tok_s": 884.3,
+            "decode_tok_s": 26.1,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.85,
+            "file_mb": 310509.0,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "a347c7df7d42deab9adb2493396ae67a65219c86460893f3c2622718de818289"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "details": {
+        "a": {
+          "mtp_accepted": 932,
+          "mtp_proposed": 1479,
+          "expert_page_cache_percent": 95,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2489,
+          "container_id": "1c341e8de4e3dffb6bdbe27595f80e854ad6d801dd54ab0838c5ffbefdd94dce",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 65.0,
+            "max_power_w": 169.82,
+            "mean_power_w_all_process_samples": 81.94860557768925,
+            "mean_power_w_util_over_20_percent": 93.30292929292929,
+            "max_vram_mib": 15581.0
+          }
+        },
+        "b": {
+          "mtp_accepted": 1324,
+          "mtp_proposed": 2070,
+          "expert_page_cache_percent": 95,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2489,
+          "container_id": "3fefb6f731e09779270cfdd666dcbe3e0300b2813446e74e80dac95f8436bcea",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 64.0,
+            "max_power_w": 174.04,
+            "mean_power_w_all_process_samples": 81.49386454183266,
+            "mean_power_w_util_over_20_percent": 87.19343891402715,
+            "max_vram_mib": 15581.0
+          }
+        }
+      },
+      "host_vmstat_delta": {
+        "pgpgin": 20446840,
+        "pgpgout": 1285992,
+        "pswpin": 164995,
+        "pswpout": 307145,
+        "pgfault": 5245568,
+        "pgmajfault": 63314
+      },
+      "config_sha256": {
+        "a": "f16a7986053ccfdc2a8f5844cc615e6d2d4a067a98cad828dc166355354d2fa9",
+        "b": "402364043d08b495d9fb86eaf64a418e6cf3731376f5c38d928366ac038e4c89"
+      }
+    },
+    {
+      "id": "xxs-15-2",
+      "arm": 15,
+      "image_id": "sha256:95b0e4a50a775cd1e5bbfefa711c6e038923867961d1a9e159b9fe1f92ea189e",
+      "c2": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.0041491939991828986,
+        "batch_wall_s": 218.13360393600306,
+        "decode_overlap_s": 70.13942925299853,
+        "both_busy_samples": 345,
+        "both_answering_samples": 345,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1844,
+            "finish_reason": "stop",
+            "wall_s": 202.4765665720006,
+            "ttft_s": 132.33713731900207,
+            "prefill_tok_s": 961.2,
+            "decode_tok_s": 26.3,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.86,
+            "file_mb": 240800.4,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "5c8592aeabd71b057e04a8fb71377101def38c61fa1495019bf680cedff2bf15"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 2274,
+            "finish_reason": "stop",
+            "wall_s": 218.12319510300222,
+            "ttft_s": 131.2091466990023,
+            "prefill_tok_s": 969.6,
+            "decode_tok_s": 26.1,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.853,
+            "file_mb": 303962.6,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "215547b055d99ace9d44298081a90db27af1f3c29a13280d4e2ca9f4ffbb3553"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "details": {
+        "a": {
+          "mtp_accepted": 1036,
+          "mtp_proposed": 1651,
+          "expert_page_cache_percent": 99,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2489,
+          "container_id": "5f0d46eb34da54f410dc12faa0655a135815515844d665ddf02e88c3948e6be5",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 65.0,
+            "max_power_w": 167.35,
+            "mean_power_w_all_process_samples": 83.40588235294118,
+            "mean_power_w_util_over_20_percent": 90.97343137254902,
+            "max_vram_mib": 15581.0
+          }
+        },
+        "b": {
+          "mtp_accepted": 1292,
+          "mtp_proposed": 2064,
+          "expert_page_cache_percent": 99,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2489,
+          "container_id": "c88577412598371f31dec7bf7144d09f69a5890036c7144e1d93f7c2beef6551",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 63.0,
+            "max_power_w": 183.29,
+            "mean_power_w_all_process_samples": 83.22928571428571,
+            "mean_power_w_util_over_20_percent": 87.49724770642202,
+            "max_vram_mib": 15581.0
+          }
+        }
+      },
+      "host_vmstat_delta": {
+        "pgpgin": 11604052,
+        "pgpgout": 59712,
+        "pswpin": 177,
+        "pswpout": 22,
+        "pgfault": 5491012,
+        "pgmajfault": 4473
+      },
+      "config_sha256": {
+        "a": "850d059ab16af8cf0bcaf8c438de5d6cd53bb569066981d25ac152099bca573e",
+        "b": "8fb47c72704b9e1153ea65d56fdc1f8e06971ed5db636f73a76c57377cffde98"
+      }
+    },
+    {
+      "id": "xxs-15-3",
+      "arm": 15,
+      "image_id": "sha256:95b0e4a50a775cd1e5bbfefa711c6e038923867961d1a9e159b9fe1f92ea189e",
+      "c2": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.004093056999408873,
+        "batch_wall_s": 210.0457649710006,
+        "decode_overlap_s": 62.34814034599913,
+        "both_busy_samples": 306,
+        "both_answering_samples": 306,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1652,
+            "finish_reason": "stop",
+            "wall_s": 190.82715639399976,
+            "ttft_s": 128.47901604800063,
+            "prefill_tok_s": 990.0,
+            "decode_tok_s": 26.5,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.855,
+            "file_mb": 216179.7,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "74b5db1262558db35361a3da36306e157a3d84c510d534bdcd262ecb094381d8"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 2198,
+            "finish_reason": "stop",
+            "wall_s": 210.03539360399736,
+            "ttft_s": 127.72054996799852,
+            "prefill_tok_s": 996.1,
+            "decode_tok_s": 26.7,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.848,
+            "file_mb": 295278.4,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "74a753beb6efa02a0a7dbe7b0c0eb2958440195985ddb4e58c043886fe3ccc37"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "details": {
+        "a": {
+          "mtp_accepted": 933,
+          "mtp_proposed": 1427,
+          "expert_page_cache_percent": 100,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2489,
+          "container_id": "3884b049120d92e035c2c432e85bdf83a290b6ad1043cc5553b3e287c09e804a",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 66.0,
+            "max_power_w": 171.93,
+            "mean_power_w_all_process_samples": 83.3716814159292,
+            "mean_power_w_util_over_20_percent": 91.929,
+            "max_vram_mib": 15581.0
+          }
+        },
+        "b": {
+          "mtp_accepted": 1284,
+          "mtp_proposed": 1980,
+          "expert_page_cache_percent": 100,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2489,
+          "container_id": "e5ac180d17bd8f344c3fb35eb09a99ecf7c6b75ad5b95e18aeb854a215de8acf",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 64.0,
+            "max_power_w": 181.1,
+            "mean_power_w_all_process_samples": 88.91088495575221,
+            "mean_power_w_util_over_20_percent": 92.8825238095238,
+            "max_vram_mib": 15581.0
+          }
+        }
+      },
+      "host_vmstat_delta": {
+        "pgpgin": 3792812,
+        "pgpgout": 56220,
+        "pswpin": 136,
+        "pswpout": 1,
+        "pgfault": 4993342,
+        "pgmajfault": 2655
+      },
+      "config_sha256": {
+        "a": "5c4962a400fc99205e5f5c70fc716a7b9b8aadc26eef6f02f77e809405de891b",
+        "b": "8abe04952e19e6e70e731d8201cdc126eef7d71034b7f13afa625362f2486533"
+      }
+    },
+    {
+      "id": "xxs-16-1",
+      "arm": 16,
+      "image_id": "sha256:57b951d4375dd397d6a0f09cd45cc340c80f1f4b7a5260378bd0c88710d66779",
+      "c2": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.004025515001558233,
+        "batch_wall_s": 237.1082974689998,
+        "decode_overlap_s": 46.763538883002184,
+        "both_busy_samples": 230,
+        "both_answering_samples": 230,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1266,
+            "finish_reason": "stop",
+            "wall_s": 189.1253255090014,
+            "ttft_s": 140.70552445499925,
+            "prefill_tok_s": 904.1,
+            "decode_tok_s": 26.1,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.854,
+            "file_mb": 166195.3,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "4de2a75b13c445d276285ea4fe0a55e52bbaa9105f6fc173bdea6aab2279c1c3"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 2453,
+            "finish_reason": "stop",
+            "wall_s": 237.10526113200103,
+            "ttft_s": 142.3658121410008,
+            "prefill_tok_s": 893.6,
+            "decode_tok_s": 25.9,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.846,
+            "file_mb": 338406.5,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "94aac570169e8727bb84545b7164c7391a6481fac2576eb8d89604483d77991b"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "details": {
+        "a": {
+          "mtp_accepted": 734,
+          "mtp_proposed": 1152,
+          "expert_page_cache_percent": 95,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2173,
+          "container_id": "f0392f8bcbc753d7d2af252e3fcbe8539fd05c3a3c1efbf9a0eeec02533f2f7a",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 65.0,
+            "max_power_w": 163.95,
+            "mean_power_w_all_process_samples": 73.86459143968871,
+            "mean_power_w_util_over_20_percent": 86.94436170212767,
+            "max_vram_mib": 15565.0
+          }
+        },
+        "b": {
+          "mtp_accepted": 1402,
+          "mtp_proposed": 2174,
+          "expert_page_cache_percent": 95,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2173,
+          "container_id": "11710b857a2d32ff59acce0ecdb9ce5851dad84fa1f9674d7f885b0683c82dec",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 64.0,
+            "max_power_w": 184.7,
+            "mean_power_w_all_process_samples": 80.01081712062256,
+            "mean_power_w_util_over_20_percent": 84.5839224137931,
+            "max_vram_mib": 15581.0
+          }
+        }
+      },
+      "host_vmstat_delta": {
+        "pgpgin": 21626980,
+        "pgpgout": 1062368,
+        "pswpin": 147984,
+        "pswpout": 250783,
+        "pgfault": 5697285,
+        "pgmajfault": 38833
+      },
+      "config_sha256": {
+        "a": "2dd91bb9506428da32211b265ba64b6636bd726e3fe293bad4215fefa19de208",
+        "b": "8a4ed1f0593a327c697752d429ed5b6224a1d5b25930373c7b5955e20b3a0198"
+      }
+    },
+    {
+      "id": "xxs-16-2",
+      "arm": 16,
+      "image_id": "sha256:57b951d4375dd397d6a0f09cd45cc340c80f1f4b7a5260378bd0c88710d66779",
+      "c2": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.003942729999835137,
+        "batch_wall_s": 219.50859741399836,
+        "decode_overlap_s": 48.99885851200088,
+        "both_busy_samples": 241,
+        "both_answering_samples": 241,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1297,
+            "finish_reason": "stop",
+            "wall_s": 177.40738672899897,
+            "ttft_s": 128.4085282169981,
+            "prefill_tok_s": 990.8,
+            "decode_tok_s": 26.4,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.855,
+            "file_mb": 169336.6,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "d5b2d5742e826beec15e5c5fbea9abd826393b24e7eb11e2764dd9c3f643cba0"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 2509,
+            "finish_reason": "stop",
+            "wall_s": 219.5055400559977,
+            "ttft_s": 127.38547535999896,
+            "prefill_tok_s": 998.7,
+            "decode_tok_s": 27.2,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.853,
+            "file_mb": 329130.7,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "ce4d4ef05d3b54ac4144cd48fa7a05ac2afc9b1970eb29465852b50c3009653a"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "details": {
+        "a": {
+          "mtp_accepted": 748,
+          "mtp_proposed": 1176,
+          "expert_page_cache_percent": 98,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2173,
+          "container_id": "c5abe09ba22df42aee3879517cec7db0189366a0c3e3ebc0648dcf8b335376e0",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 66.0,
+            "max_power_w": 170.05,
+            "mean_power_w_all_process_samples": 78.22866666666667,
+            "mean_power_w_util_over_20_percent": 91.85541899441341,
+            "max_vram_mib": 15581.0
+          }
+        },
+        "b": {
+          "mtp_accepted": 1452,
+          "mtp_proposed": 2211,
+          "expert_page_cache_percent": 98,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2173,
+          "container_id": "0f0e2ec8880d0633fbdf8f2fbb223f57f534701e859ffa04524ec8e5ea5518e6",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 64.0,
+            "max_power_w": 198.81,
+            "mean_power_w_all_process_samples": 84.9805,
+            "mean_power_w_util_over_20_percent": 89.32495454545455,
+            "max_vram_mib": 15581.0
+          }
+        }
+      },
+      "host_vmstat_delta": {
+        "pgpgin": 11615732,
+        "pgpgout": 50996,
+        "pswpin": 165,
+        "pswpout": 2,
+        "pgfault": 5048286,
+        "pgmajfault": 1492
+      },
+      "config_sha256": {
+        "a": "ae9897c7b4964f80959e6a54e47572c58739ca03261db62c7c9d023244b933e9",
+        "b": "903688cc975914e604409ea6e5fdf749eafc4dfcb848030570e0a724280c1ce6"
+      }
+    },
+    {
+      "id": "xxs-16-3",
+      "arm": 16,
+      "image_id": "sha256:57b951d4375dd397d6a0f09cd45cc340c80f1f4b7a5260378bd0c88710d66779",
+      "c2": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.0042342649976490065,
+        "batch_wall_s": 208.07325587299783,
+        "decode_overlap_s": 47.990709926998534,
+        "both_busy_samples": 236,
+        "both_answering_samples": 236,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1268,
+            "finish_reason": "stop",
+            "wall_s": 173.58302484399974,
+            "ttft_s": 125.5923149170012,
+            "prefill_tok_s": 1012.9,
+            "decode_tok_s": 26.4,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.853,
+            "file_mb": 165949.2,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "9a203338e56ef907efb2b5ead6b5b683a05d0c8e56727ffa6fa3df30cedbd385"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 2251,
+            "finish_reason": "stop",
+            "wall_s": 208.06977709199782,
+            "ttft_s": 124.88823380399845,
+            "prefill_tok_s": 1018.7,
+            "decode_tok_s": 27.0,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.868,
+            "file_mb": 286780.4,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "4f209d9910b6eb0e02f187768c54eb6e76fa8ebc7cd7a0bad034a392e71a7037"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "details": {
+        "a": {
+          "mtp_accepted": 739,
+          "mtp_proposed": 1146,
+          "expert_page_cache_percent": 100,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2173,
+          "container_id": "0ae21034c32f3ff1d0f7b42d72460b99045c8ceb2f60afd92eef0d9a02de8aa7",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 66.0,
+            "max_power_w": 171.58,
+            "mean_power_w_all_process_samples": 81.76071748878924,
+            "mean_power_w_util_over_20_percent": 94.01908045977011,
+            "max_vram_mib": 15581.0
+          }
+        },
+        "b": {
+          "mtp_accepted": 1236,
+          "mtp_proposed": 2054,
+          "expert_page_cache_percent": 100,
+          "chunk": 8192,
+          "ring": 96,
+          "loan_slots": 2173,
+          "container_id": "b57f5eb24181c569e4a4f0cf1e2ef7e529373d9ed882573d43b32f6a59ab8c85",
+          "gpu": {
+            "active_sm_median_mhz": 1110.0,
+            "max_sm_mhz": 1110.0,
+            "max_temperature_c": 64.0,
+            "max_power_w": 175.69,
+            "mean_power_w_all_process_samples": 89.71381165919283,
+            "mean_power_w_util_over_20_percent": 93.03885714285714,
+            "max_vram_mib": 15581.0
+          }
+        }
+      },
+      "host_vmstat_delta": {
+        "pgpgin": 741456,
+        "pgpgout": 52060,
+        "pswpin": 251,
+        "pswpout": 0,
+        "pgfault": 4908305,
+        "pgmajfault": 438
+      },
+      "config_sha256": {
+        "a": "6035dd65995d74d53c66d308d85086310a1226ae0989ef8ab468c21a158e3607",
+        "b": "9c8398562de3216a04e994bd135d8e59446fba9a3751ee0e089b2d65b80f87f3"
+      }
+    }
+  ]
+}

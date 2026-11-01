@@ -1,0 +1,3 @@
+660eedd3eae245d51e67b6d5f5d28b3f690253afd5542eadae117b8f0f556d72  /tmp/stage7-v100-port-build-c7f50d6/Dockerfile.stage7-v100-wmma2-lean
+da6b80ce0d27ff68ba8d49f147183ce83649bf1499eda1d5e8101417afc5a8fd  /tmp/stage7-v100-port-build-c7f50d6/docker/patches/stage7-wmma-lean.patch
+75b3dd04b305c269b0081ba2b87ff05a222e9aea356f5fe618a48c623052e5b3  /tmp/stage7-v100-port-build-c7f50d6/docker/patches/stage7-wmma2.patch

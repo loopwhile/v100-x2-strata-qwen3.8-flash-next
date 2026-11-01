@@ -1,0 +1,158 @@
+{
+  "sample_filter": "power.draw > 60 W; all process phases; aggregate temperature/power averages are unweighted means of the three batch averages",
+  "runs": {
+    "xxs-14-1": {
+      "raw_sha256": "87d640483448c5868698e84513c9072b9cc65d13e018d5c558171143bf346012",
+      "0": {
+        "samples": 157,
+        "temp_mean_c": 55.6,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 99.0,
+        "power_peak_w": 169.59
+      },
+      "1": {
+        "samples": 162,
+        "temp_mean_c": 56.5,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 99.3,
+        "power_peak_w": 175.57
+      }
+    },
+    "xxs-14-2": {
+      "raw_sha256": "c29a7e8d839c389f4f6bbc5548d6e208d2806894859eb6b8771982d48b0aad33",
+      "0": {
+        "samples": 157,
+        "temp_mean_c": 59.0,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 100.0,
+        "power_peak_w": 167.12
+      },
+      "1": {
+        "samples": 183,
+        "temp_mean_c": 58.0,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 99.5,
+        "power_peak_w": 177.32
+      }
+    },
+    "xxs-14-3": {
+      "raw_sha256": "460e3cd9c3090a5a7909642903c3490182062fd188b3ff897bb76adac692d112",
+      "0": {
+        "samples": 155,
+        "temp_mean_c": 60.1,
+        "temp_peak_c": 65.0,
+        "power_mean_w": 98.1,
+        "power_peak_w": 172.87
+      },
+      "1": {
+        "samples": 159,
+        "temp_mean_c": 58.9,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 96.6,
+        "power_peak_w": 177.57
+      }
+    },
+    "xxs-15-1": {
+      "raw_sha256": "369cabcc8b4caa8747777d60055bd1f7aaf2abc8fead51db7fffcf37b9f044b5",
+      "0": {
+        "samples": 159,
+        "temp_mean_c": 59.4,
+        "temp_peak_c": 65.0,
+        "power_mean_w": 103.6,
+        "power_peak_w": 169.82
+      },
+      "1": {
+        "samples": 183,
+        "temp_mean_c": 58.0,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 94.4,
+        "power_peak_w": 174.04
+      }
+    },
+    "xxs-15-2": {
+      "raw_sha256": "c370917632a52c951ff04a5369e15f8c085c9a961353c0bd61e4573b509603a7",
+      "0": {
+        "samples": 165,
+        "temp_mean_c": 59.3,
+        "temp_peak_c": 65.0,
+        "power_mean_w": 100.9,
+        "power_peak_w": 167.35
+      },
+      "1": {
+        "samples": 171,
+        "temp_mean_c": 58.3,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 97.2,
+        "power_peak_w": 183.29
+      }
+    },
+    "xxs-15-3": {
+      "raw_sha256": "74805067f40c37de77171fcd6380c8ebc87baac7233a80135380ac29859438d9",
+      "0": {
+        "samples": 153,
+        "temp_mean_c": 60.4,
+        "temp_peak_c": 66.0,
+        "power_mean_w": 101.9,
+        "power_peak_w": 171.93
+      },
+      "1": {
+        "samples": 173,
+        "temp_mean_c": 58.6,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 101.7,
+        "power_peak_w": 181.1
+      }
+    },
+    "xxs-16-1": {
+      "raw_sha256": "81de0be79556bc44ac03d1311559e3e6098eea1db20ee1ec38d6b382dd6f57a5",
+      "0": {
+        "samples": 140,
+        "temp_mean_c": 59.7,
+        "temp_peak_c": 65.0,
+        "power_mean_w": 99.3,
+        "power_peak_w": 163.95
+      },
+      "1": {
+        "samples": 171,
+        "temp_mean_c": 57.8,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 96.6,
+        "power_peak_w": 184.7
+      }
+    },
+    "xxs-16-2": {
+      "raw_sha256": "465768fd4cadda7dbd0985e4b015765b76816344d3b6a6e609a99607ee98d6b3",
+      "0": {
+        "samples": 142,
+        "temp_mean_c": 60.3,
+        "temp_peak_c": 66.0,
+        "power_mean_w": 102.6,
+        "power_peak_w": 170.05
+      },
+      "1": {
+        "samples": 177,
+        "temp_mean_c": 58.3,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 98.5,
+        "power_peak_w": 198.81
+      }
+    },
+    "xxs-16-3": {
+      "raw_sha256": "382f69bf0472f149babb1b52269fea54e69a3a53c0514a0a56c85dd1a3e5e004",
+      "0": {
+        "samples": 151,
+        "temp_mean_c": 60.3,
+        "temp_peak_c": 66.0,
+        "power_mean_w": 100.8,
+        "power_peak_w": 171.58
+      },
+      "1": {
+        "samples": 180,
+        "temp_mean_c": 58.3,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 100.3,
+        "power_peak_w": 175.69
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# Arm 16: only the audited lean allocation/gather adaptation over pinned arm 15.
+FROM sha256:95b0e4a50a775cd1e5bbfefa711c6e038923867961d1a9e159b9fe1f92ea189e
+COPY docker/patches/stage7-wmma-lean.patch /tmp/stage7-wmma-lean.patch
+RUN sha256sum build/pf_wmma_parity build/libstrata_kernels.a > /tmp/stage7-kernel-parent.sha256 \
+    && git apply --check /tmp/stage7-wmma-lean.patch \
+    && git apply /tmp/stage7-wmma-lean.patch \
+    && CUDA_ARCHITECTURES=70 BUILD_VISION=0 .venv/bin/python /opt/strata/build_stage7.py \
+    && .venv/bin/cmake -S . -B build -DSTRATA_BUILD_TESTS=ON \
+    && .venv/bin/cmake --build build --target pf_wmma_parity -j 4 \
+    && sha256sum -c /tmp/stage7-kernel-parent.sha256 \
+    && sha256sum engine/strata /tmp/stage7-wmma2.patch /tmp/stage7-wmma-lean.patch > /opt/strata/STAGE7_PORT.sha256 \
+    && git diff --stat > /opt/strata/STAGE7_PORT.stat
+LABEL stage7.arm="16-wmma2-128x64-lean"

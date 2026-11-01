@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 # Stage 7 IQ3_XXS V100 fork-port track. 14 runs on the immutable upstream 0.1.54 image.
-# 15/16 are RESERVED and HARD-BLOCKED until separately audited source ports and
-# pinned, uniquely tagged Docker images exist. Do NOT equate env-only WMMA2 with a port.
+# 15/16 use audited pinned images after parity/128K/dispatch/allocation gates.
 # The original scripts/97 and scripts/99 and their results are not modified.
 # One ID = one bounded fresh-process C2 batch; never retry/reuse IDs.
 ROOT="$HOME/v100-x2-strata-qwen3.8-flash-next"
 ID="${1:?batch id required}"
 case "$ID" in
-  xxs-14-[123]) ;;
-  xxs-15-[123]|xxs-16-[123])
-    echo "BLOCKED: $ID requires a verified 0.1.54+V100 source-port build and pinned image receipt; see docs/STAGE7_IQ3XXS_FORK_PORT_PLAN.md" >&2
-    exit 2
-    ;;
-  *) echo 'invalid Stage 7 fork-port ID (14-1..3; 15/16 reserved)' >&2; exit 2 ;;
+  xxs-14-[123]|xxs-15-[123]|xxs-16-[123]) ;;
+  *) echo 'invalid Stage 7 fork-port ID (14/15/16, batches 1..3)' >&2; exit 2 ;;
 esac
-IMAGE=strata-v100-upstream:0.1.54
-IMAGE_ID=sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246
+case "$ID" in
+  xxs-14-*)
+    IMAGE=strata-v100-upstream:0.1.54
+    IMAGE_ID=sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246 ;;
+  xxs-15-*)
+    IMAGE=strata-v100-upstream:0.1.54-v100-wmma2-s7-20261101
+    IMAGE_ID=sha256:95b0e4a50a775cd1e5bbfefa711c6e038923867961d1a9e159b9fe1f92ea189e ;;
+  xxs-16-*)
+    IMAGE=strata-v100-upstream:0.1.54-v100-wmma2-lean-s7-20261101
+    IMAGE_ID=sha256:57b951d4375dd397d6a0f09cd45cc340c80f1f4b7a5260378bd0c88710d66779 ;;
+esac
 DIR="$ROOT/results/stage7-iq3xxs-v100-port/$ID"
 MANIFEST="$ROOT/bench/workloads/v100-performance-v1.json"
 exec 9>"$ROOT/results/.stage7-experiment.lock"
@@ -32,9 +36,13 @@ mkdir -p "$DIR/logs"
 printf 'id=%s\nhost=%s\nboot_id=%s\npid=%s\npid_start_ticks=%s\nstart=%s\ntimeout_s=1800\nimage_id=%s\n' "$ID" "$(hostname)" "$(cat /proc/sys/kernel/random/boot_id)" "$$" "$(awk '{print $22}' /proc/$$/stat)" "$(date -Is)" "$IMAGE_ID" > "$DIR/receipt"
 printf 'phase=prepared\n' > "$DIR/progress"
 sha256sum "$MANIFEST" > "$DIR/manifest-sha256.txt"
+sha256sum "$0" > "$DIR/runner-sha256.txt"
+docker image inspect "$IMAGE" --format '{{json .Config.Labels}}' > "$DIR/image-labels.json"
 # Exactly one changed switch relative to S7-XXS-13: PF_WMMA=1.
 # The already-verified upstream image is mandatory for arm 14.
 flags=(-e STRATA_SELECT_SIMT=1 -e STRATA_SM70_TABLE=1 -e STRATA_PF_WMMA=1)
+if [[ "$ID" == xxs-15-* || "$ID" == xxs-16-* ]]; then flags+=(-e STRATA_PF_WMMA2=1); fi
+if [[ "$ID" == xxs-16-* ]]; then flags+=(-e STRATA_PF_WMMA_LEAN=1); fi
 printf '%s\n' "${flags[@]}" > "$DIR/overrides.txt"
 python3 - "$ROOT" "$DIR" "$ID" <<'PY'
 import json, pathlib, sys
@@ -130,4 +138,13 @@ for x in r:
  assert x['cache_n']==0 and x['cached_tokens']==0 and x['finish_reason']=='stop', x
  assert x['output_tokens']>=1024 and x['prefill_tok_s'] and x['decode_tok_s'], x
 PY
+if [[ "$ID" == xxs-15-* || "$ID" == xxs-16-* ]]; then
+ for s in a b; do grep -q 'S7_WMMA2 launched ty=18 ' "$DIR/logs/agent-$s.log"; done
+fi
+if [[ "$ID" == xxs-16-* ]]; then
+ for s in a b; do
+  grep -q 'S7_WMMA_LEAN eligible:' "$DIR/logs/agent-$s.log"
+  grep -q 'S7_WMMA2 launched ty=18 .*ids=1 tile=128x64' "$DIR/logs/agent-$s.log"
+ done
+fi
 printf 'PASS\n' > "$DIR/verdict"

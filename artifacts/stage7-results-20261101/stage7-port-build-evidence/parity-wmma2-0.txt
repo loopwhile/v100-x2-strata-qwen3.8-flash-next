@@ -1,0 +1,25 @@
+device 0
+IQ2_XXS   1280 x 2560, 693 rows in 7 experts: max |err| 0.000521 of max |ref| 110  ok
+IQ3_XXS   1280 x 2560, 693 rows in 7 experts: max |err| 0.00141 of max |ref| 309  ok
+IQ2_S     1280 x 2560, 693 rows in 7 experts: max |err| 0.000526 of max |ref| 128  ok
+IQ1_M     1280 x 2560, 693 rows in 7 experts: max |err| 0.00042 of max |ref| 111  ok
+Q2_0      2560 x  640, 693 rows in 7 experts: max |err| 2.22e-06 of max |ref| 1.1  ok
+IQ4_NL    1280 x 2560, 693 rows in 7 experts: max |err| 0.00037 of max |ref| 97.7  ok
+IQ3_S     1280 x 2560, 693 rows in 7 experts: max |err| 0.00143 of max |ref| 286  ok
+IQ4_XS    1280 x 2560, 693 rows in 7 experts: max |err| 0.012 of max |ref| 2.45e+03  ok
+IQ4_NL    2560 x  640, 693 rows in 7 experts: max |err| 0.000143 of max |ref| 66.5  ok
+IQ3_XXS   1280 x 2560, 693 rows in 7 experts: max |err| 0.0011 of max |ref| 262  ok
+IQ4_XS    1280 x 2560, 693 rows in 7 experts: max |err| 0.00992 of max |ref| 2.41e+03  ok
+device 1
+IQ2_XXS   1280 x 2560, 693 rows in 7 experts: max |err| 0.000521 of max |ref| 110  ok
+IQ3_XXS   1280 x 2560, 693 rows in 7 experts: max |err| 0.00141 of max |ref| 309  ok
+IQ2_S     1280 x 2560, 693 rows in 7 experts: max |err| 0.000526 of max |ref| 128  ok
+IQ1_M     1280 x 2560, 693 rows in 7 experts: max |err| 0.00042 of max |ref| 111  ok
+Q2_0      2560 x  640, 693 rows in 7 experts: max |err| 2.22e-06 of max |ref| 1.1  ok
+IQ4_NL    1280 x 2560, 693 rows in 7 experts: max |err| 0.00037 of max |ref| 97.7  ok
+IQ3_S     1280 x 2560, 693 rows in 7 experts: max |err| 0.00143 of max |ref| 286  ok
+IQ4_XS    1280 x 2560, 693 rows in 7 experts: max |err| 0.012 of max |ref| 2.45e+03  ok
+IQ4_NL    2560 x  640, 693 rows in 7 experts: max |err| 0.000143 of max |ref| 66.5  ok
+IQ3_XXS   1280 x 2560, 693 rows in 7 experts: max |err| 0.0011 of max |ref| 262  ok
+IQ4_XS    1280 x 2560, 693 rows in 7 experts: max |err| 0.00992 of max |ref| 2.41e+03  ok
+pf_wmma_parity: 0 failures on 2 devices

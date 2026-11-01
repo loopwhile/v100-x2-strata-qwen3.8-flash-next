@@ -1,0 +1,464 @@
+--- a/src/kernels/cuda/iq_kernels.cu
++++ b/src/kernels/cuda/iq_kernels.cu
+@@ -6667,7 +6667,7 @@
+ __global__ void __launch_bounds__(WG_THREADS) gemm_iq_f16_grouped_kernel(int ty, const uint8_t* __restrict__ W,
+                                                                          size_t expert_bytes, size_t row_bytes, int K,
+                                                                          const __half* __restrict__ X, int ldx,
+-                                                                         const int32_t* __restrict__ bounds, int ch_per_e,
++                                                                         const int32_t* __restrict__ bounds, const int32_t* __restrict__ ids, int ch_per_e,
+                                                                          float* __restrict__ Y, int ldy) {
+ #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 700   // the sm_60 pass of a multi-arch build has no nvcuda::wmma (the host never launches these there)
+     using namespace nvcuda;
+@@ -6702,7 +6702,7 @@
+ #pragma unroll
+         for (int q = 0; q < XQ; ++q) {
+             const int i = tid + q * WG_THREADS, r = i / (WG_XK / 8), c = (i % (WG_XK / 8)) * 8;
+-            xr[q] = r < rows ? *reinterpret_cast<const uint4*>(X + (size_t) (c0 + t * WG_BM + r) * ldx + kb * WK + xh * WG_XK + c)
++            xr[q] = r < rows ? *reinterpret_cast<const uint4*>(X + (size_t) (ids ? ids[c0 + t * WG_BM + r] : c0 + t * WG_BM + r) * ldx + kb * WK + xh * WG_XK + c)
+                              : make_uint4(0, 0, 0, 0);
+         }
+     };
+@@ -6795,17 +6795,44 @@
+ #endif
+ }
+ 
+-// ---- STRATA_PF_WMMA2=1 (opt-in): IQ2_S gate/up and IQ4_NL down, tiled like a Volta MoE kernel in the
+-// PR author's own unpublished llama.cpp patches.
+-// A block: W2_RB = 128 weight rows of one expert x W2_CB = 64 of its sorted rows, K stages of W2_KT = 64. Thread t dequantizes
+-// row t % 128, 32-value sub-block t / 128 of each K stage from the raw stage in shared memory (one IQ2_S super-block or four IQ4_NL
+-// blocks per row, read by the whole block as 4-byte words, the next one already in registers). 8 warps = 4 (32 weight rows) x 2
+-// (32 sorted rows), 2 x 2 wmma 16x16x16 fragments each, FP32 sums.
+ constexpr int W2_RB = 128, W2_CB = 64, W2_KT = 64, W2_NT = 256, W2_LD = W2_KT + 8;
++constexpr int W2_RB_N64 = 64, W2_CB_N64 = 128;
++// ---- STRATA_PF_WMMA2=1 (opt-in): IQ3_XXS, IQ3_S and IQ2_S gate/up and IQ4_NL down, tiled like a Volta MoE kernel
++// in the PR author's own unpublished llama.cpp patches.  STRATA_PF_WMMA2_N64=1 (only read once that opt-in already
++// selected this tile) picks the alternate (RB, CB) = (64, 128) orientation; without it the reviewed 128 x 64 tile
++// is used, bit for bit as before.
++// A block: RB weight rows of one expert x CB of its sorted rows, K stages of W2_KT = 64. Thread t < 2 * RB dequantizes
++// row t % RB, 32-value sub-block t / RB of each K stage from the raw stage in shared memory (one IQ super-block, or four
++// IQ4_NL blocks, per row, read by the whole block as 4-byte words, the next one already in registers); the other threads
++// join every barrier, the raw staging and the codebook copy. 8 warps = RB / 32 (32 weight rows) x CB / 32 (32 sorted
++// rows), 2 x 2 wmma 16x16x16 fragments each, FP32 sums.
++static_assert(WG_BN % W2_RB == 0 && WG_BN % W2_RB_N64 == 0,
++              "the entry check's n_out % WG_BN == 0 must make n_out / RB exact for both W2 orientations");
++static_assert(W2_RB * 2 <= W2_NT && W2_RB_N64 * 2 <= W2_NT, "two dequantizing threads per W2 weight row");
++// raw_k: the values one raw stage holds (one IQ super-block, or the two IQ4_NL blocks a 64-value chunk spans);
++// raw_b: its bytes; segw: the 4-byte words the whole block must read per row to cover raw_b from the 4-byte
++// aligned start below it; segw_s: the row stride in shared memory (an extra word on IQ3_S keeps a row's stage
++// start off the previous row's bank); ntab: the uint2 entries the staged codebook and sign masks need (the IQ2_S
++// 64-bit grid is 1024 uint2; the IQ3 32-bit grids are 128 and 256; 4-byte masks always take 16).
+ template <int TY> struct w2_traits;
+ template <> struct w2_traits<22> { static constexpr int raw_k = 256, raw_b = 82, segw = 21, segw_s = 21, ntab = 1024 + 16; };
+ template <> struct w2_traits<20> { static constexpr int raw_k = 128, raw_b = 72, segw = 18, segw_s = 19, ntab = 128; };
+-template <int TY> __host__ __device__ constexpr int w2_nl() { return (W2_RB * w2_traits<TY>::segw + W2_NT - 1) / W2_NT; }
++template <> struct w2_traits<18> { static constexpr int raw_k = 256, raw_b = 98, segw = 25, segw_s = 25, ntab = 128 + 16; };
++template <> struct w2_traits<21> { static constexpr int raw_k = 256, raw_b = 110, segw = 28, segw_s = 29, ntab = 256 + 16; };
++template <int TY, int RB> __host__ __device__ constexpr int w2_nl() { return (RB * w2_traits<TY>::segw + W2_NT - 1) / W2_NT; }
++// The static shared memory one instantiation needs: both half tiles, the staged codebook/sign masks and the RB
++// raw rows, plus slack for the 128-byte alignment of the tile arrays.  It must stay under the 48 KiB static
++// per-block limit that cap bit 256 is tested against (see gemm_iq_f16_grouped_caps).  Both orientations keep
++// (RB + CB) * W2_LD halves and the same codebook, and the N64 one stages half the raw rows.
++template <int TY, int RB, int CB> __host__ __device__ constexpr size_t w2_smem() {
++    return (size_t) RB * W2_LD * 2 + (size_t) CB * W2_LD * 2 + (size_t) w2_traits<TY>::ntab * 8 +
++           (size_t) RB * w2_traits<TY>::segw_s * 4;
++}
++static_assert(w2_smem<18, W2_RB, W2_CB>() + 512 <= 48 * 1024 && w2_smem<20, W2_RB, W2_CB>() + 512 <= 48 * 1024 &&
++              w2_smem<21, W2_RB, W2_CB>() + 512 <= 48 * 1024 && w2_smem<22, W2_RB, W2_CB>() + 512 <= 48 * 1024 &&
++              w2_smem<18, W2_RB_N64, W2_CB_N64>() + 512 <= 48 * 1024 && w2_smem<20, W2_RB_N64, W2_CB_N64>() + 512 <= 48 * 1024 &&
++              w2_smem<21, W2_RB_N64, W2_CB_N64>() + 512 <= 48 * 1024 && w2_smem<22, W2_RB_N64, W2_CB_N64>() + 512 <= 48 * 1024,
++              "a W2 tile's static shared memory must fit one block's 48 KiB static limit");
+ 
+ __device__ __forceinline__ uint32_t w2_ld_b2(const uint8_t* p) {   // 4 bytes at a 2-byte aligned address
+     const uint16_t* q = reinterpret_cast<const uint16_t*>(p);
+@@ -6814,25 +6841,44 @@
+ __device__ __forceinline__ half2 w2_h2(uint32_t v) { half2 h; memcpy(&h, &v, 4); return h; }
+ __device__ __forceinline__ uint32_t w2_u32(half2 h) { uint32_t v; memcpy(&v, &h, 4); return v; }
+ 
+-// the raw stage rs of the block's 128 rows: segw words per row from the 4-byte aligned start at or below rs * raw_b
+-template <int TY>
+-__device__ __forceinline__ void w2_raw_ld(uint32_t (&R)[w2_nl<TY>()], const uint8_t* __restrict__ xb, size_t row_bytes, int rs, int tid) {
++// the raw stage rs of the block's RB weight rows: segw words per row from the 4-byte aligned start at or below rs * raw_b
++// A row is 4-byte aligned only when it holds an even number of super-blocks whose size is 2 mod 4 (82 for IQ2_S,
++// 98 for IQ3_XXS, 110 for IQ3_S); an odd count (K = 3840, 1280, 3328, ...) leaves it 2-byte aligned and its last
++// raw stage ends two bytes into the last word.  Such rows read every word as two halves and the bytes past
++// row_bytes as zero, so no load leaves the row; the bytes the decoders consume are unchanged either way.  IQ4_NL
++// blocks are 72 bytes per 128 values: always full.
++template <int TY, int RB>
++__device__ __forceinline__ void w2_raw_ld(uint32_t (&R)[w2_nl<TY, RB>()], const uint8_t* __restrict__ xb, size_t row_bytes, int rs, int tid) {
+     using tr = w2_traits<TY>;
+     const int off = (rs * tr::raw_b) & ~3;
+-#pragma unroll
+-    for (int i = 0; i < w2_nl<TY>(); ++i) {
++    if ((row_bytes & 3u) == 0) {
++#pragma unroll
++        for (int i = 0; i < w2_nl<TY, RB>(); ++i) {
++            const int w = tid + i * W2_NT;
++            if ((RB * tr::segw) % W2_NT == 0 || w < RB * tr::segw)
++                R[i] = *reinterpret_cast<const uint32_t*>(xb + (size_t) (w / tr::segw) * row_bytes + off + 4 * (w % tr::segw));
++        }
++    } else {
++#pragma unroll
++        for (int i = 0; i < w2_nl<TY, RB>(); ++i) {
++            const int w = tid + i * W2_NT;
++            if ((RB * tr::segw) % W2_NT == 0 || w < RB * tr::segw) {
++                const int b = off + 4 * (w % tr::segw);          // the word's first byte within the row
++                const uint8_t* p = xb + (size_t) (w / tr::segw) * row_bytes + b;
++                // row_bytes is 2 mod 4, so b + 4 > row_bytes only for the last word, where b + 2 == row_bytes
++                R[i] = (size_t) b + 4 <= row_bytes ? w2_ld_b2(p)
++                                                   : (uint32_t) *reinterpret_cast<const uint16_t*>(p);
++            }
++        }
++    }
++}
++template <int TY, int RB>
++__device__ __forceinline__ void w2_raw_st(const uint32_t (&R)[w2_nl<TY, RB>()], uint32_t* __restrict__ raw, int tid) {
++    using tr = w2_traits<TY>;
++#pragma unroll
++    for (int i = 0; i < w2_nl<TY, RB>(); ++i) {
+         const int w = tid + i * W2_NT;
+-        if ((W2_RB * tr::segw) % W2_NT == 0 || w < W2_RB * tr::segw)
+-            R[i] = *reinterpret_cast<const uint32_t*>(xb + (size_t) (w / tr::segw) * row_bytes + off + 4 * (w % tr::segw));
+-    }
+-}
+-template <int TY>
+-__device__ __forceinline__ void w2_raw_st(const uint32_t (&R)[w2_nl<TY>()], uint32_t* __restrict__ raw, int tid) {
+-    using tr = w2_traits<TY>;
+-#pragma unroll
+-    for (int i = 0; i < w2_nl<TY>(); ++i) {
+-        const int w = tid + i * W2_NT;
+-        if ((W2_RB * tr::segw) % W2_NT == 0 || w < W2_RB * tr::segw) raw[(w / tr::segw) * tr::segw_s + w % tr::segw] = R[i];
++        if ((RB * tr::segw) % W2_NT == 0 || w < RB * tr::segw) raw[(w / tr::segw) * tr::segw_s + w % tr::segw] = R[i];
+     }
+ }
+ 
+@@ -6861,6 +6907,59 @@
+         *reinterpret_cast<uint4*>(o + 8 * il) = out;
+     }
+ }
++// IQ3_XXS sub-block sb (0..7) -> the 32 halves at o, natural order, bit for bit dq_iq3_xxs<__half>'s values:
++// cvt<__half>(d * gridbyte * +-1) with d = (float) block d * (0.5 + gas) * 0.5 in FP32.  The eight grid bytes of
++// the sub-block split into the two uint32s (bytes 2*il and 2*il + 1 give the two four-byte codebook entries of
++// value group il), the 4-bit gas scale is aux32's top nibble and the 7-bit sign group aux32 bits 7*il .. 7*il+6
++// expands with the parity bit ksigns_iq2xs adds.  The sign flips the rounded half (same as negating the float).
++__device__ __forceinline__ void w2_dq_iq3_xxs(const uint8_t* rr, int sb, __half* o, const uint32_t* __restrict__ grid,
++                                              const uint2* __restrict__ sgn) {
++    const uint32_t q0 = w2_ld_b2(rr + 2 + 8 * sb), q1 = w2_ld_b2(rr + 2 + 8 * sb + 4);
++    const uint32_t aux = w2_ld_b2(rr + 2 + 64 + 4 * sb);
++    const float d = __half2float(__ushort_as_half(*reinterpret_cast<const uint16_t*>(rr)));
++    const float dl = d * (0.5f + (float) (aux >> 28)) * 0.5f;
++#pragma unroll
++    for (int il = 0; il < 4; ++il) {
++        const uint32_t qw = il < 2 ? q0 : q1;
++        const int sh = 8 * (2 * (il & 1));
++        const uint32_t g0 = grid[(qw >> sh) & 0xff], g1 = grid[(qw >> (sh + 8)) & 0xff];
++        const uint32_t v = (aux >> (7 * il)) & 0x7f;
++        const uint32_t signs = v ^ ((uint32_t) (__popc(v) & 1) << 7);
++        const uint2 s0 = sgn[signs & 15], s1 = sgn[signs >> 4];
++        uint4 out;
++        out.x = w2_u32(__floats2half2_rn(dl * w2_b2f(g0, 0), dl * w2_b2f(g0, 1))) ^ s0.x;
++        out.y = w2_u32(__floats2half2_rn(dl * w2_b2f(g0, 2), dl * w2_b2f(g0, 3))) ^ s0.y;
++        out.z = w2_u32(__floats2half2_rn(dl * w2_b2f(g1, 0), dl * w2_b2f(g1, 1))) ^ s1.x;
++        out.w = w2_u32(__floats2half2_rn(dl * w2_b2f(g1, 2), dl * w2_b2f(g1, 3))) ^ s1.y;
++        *reinterpret_cast<uint4*>(o + 8 * il) = out;
++    }
++}
++// IQ3_S sub-block sb (0..7) -> the 32 halves at o, natural order, bit for bit dq_iq3_s<__half>'s values.  The 8-bit
++// grid bytes take their ninth index bit from qh (bit 2*il for the first entry of group il, 2*il + 1 for the
++// second), signs[4*sb + il] is the group's sign byte and scales[sb / 2] holds the scale doubled and offset
++// (d * (1 + 2 * nibble)), one nibble per 32 values.
++__device__ __forceinline__ void w2_dq_iq3_s(const uint8_t* rr, int sb, __half* o, const uint32_t* __restrict__ grid,
++                                            const uint2* __restrict__ sgn) {
++    const uint32_t q0 = w2_ld_b2(rr + 2 + 8 * sb), q1 = w2_ld_b2(rr + 2 + 8 * sb + 4);
++    const uint32_t qh = rr[2 + 64 + sb], sc = rr[2 + 64 + 8 + 32 + (sb >> 1)];
++    const float d = __half2float(__ushort_as_half(*reinterpret_cast<const uint16_t*>(rr)));
++    const float dl = d * (float) (1 + 2 * ((sc >> (4 * (sb & 1))) & 0x0f));
++#pragma unroll
++    for (int il = 0; il < 4; ++il) {
++        const uint32_t qw = il < 2 ? q0 : q1;
++        const int sh = 8 * (2 * (il & 1));
++        const uint32_t g0 = grid[((qw >> sh) & 0xff) | ((qh << (8 - 2 * il)) & 0x100)];
++        const uint32_t g1 = grid[((qw >> (sh + 8)) & 0xff) | ((qh << (7 - 2 * il)) & 0x100)];
++        const uint32_t signs = rr[2 + 64 + 8 + 4 * sb + il];
++        const uint2 s0 = sgn[signs & 15], s1 = sgn[signs >> 4];
++        uint4 out;
++        out.x = w2_u32(__floats2half2_rn(dl * w2_b2f(g0, 0), dl * w2_b2f(g0, 1))) ^ s0.x;
++        out.y = w2_u32(__floats2half2_rn(dl * w2_b2f(g0, 2), dl * w2_b2f(g0, 3))) ^ s0.y;
++        out.z = w2_u32(__floats2half2_rn(dl * w2_b2f(g1, 0), dl * w2_b2f(g1, 1))) ^ s1.x;
++        out.w = w2_u32(__floats2half2_rn(dl * w2_b2f(g1, 2), dl * w2_b2f(g1, 3))) ^ s1.y;
++        *reinterpret_cast<uint4*>(o + 8 * il) = out;
++    }
++}
+ // IQ4_NL block at b -> 32 halves at o, natural order (value j: the low nibble of byte j, value j + 16: its high nibble); the product
+ // of two exact halves rounded once, as cvt<__half>(d * kvalues_iq4nl[q])
+ __device__ __forceinline__ void w2_dq_iq4_nl(const uint8_t* b, __half* o, const half2* __restrict__ kv) {
+@@ -6879,51 +6978,63 @@
+     }
+ }
+ 
+-template <int TY>
++template <int TY, int RB, int CB>
+ __global__ void __launch_bounds__(W2_NT, 2) gemm_iq_f16_w2_kernel(const uint8_t* __restrict__ W, size_t expert_bytes, size_t row_bytes,
+                                                                   int K, const __half* __restrict__ X, int ldx,
+-                                                                  const int32_t* __restrict__ bounds, int ch_per_e,
+-                                                                  float* __restrict__ Y, int ldy) {
++                                                                  const int32_t* __restrict__ bounds, const int32_t* __restrict__ ids,
++                                                                  int ch_per_e, float* __restrict__ Y, int ldy, int /*reserved*/) {
+ #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 700   // the sm_60 pass of a multi-arch build has no nvcuda::wmma (the host never launches these there)
+     using namespace nvcuda;
+     using tr = w2_traits<TY>;
+-    constexpr int NL = w2_nl<TY>(), NSUB = tr::raw_k / W2_KT;
+-    __shared__ __align__(128) __half xs[W2_RB * W2_LD];
+-    __shared__ __align__(128) __half ys[W2_CB * W2_LD];
++    constexpr int NL = w2_nl<TY, RB>(), NSUB = tr::raw_k / W2_KT;
++    constexpr int NWR = RB / 32, NWC = CB / 32;                  // the 8 warps: NWR down the weight rows, NWC down the sorted rows
++    static_assert(((NWR == 4 && NWC == 2) || (NWR == 2 && NWC == 4)) && NWR * 32 == RB && NWC * 32 == CB,
++                  "the W2 warp grid must be 4 x 2 warps over 128 x 64 or 2 x 4 over 64 x 128");
++    __shared__ __align__(128) __half xs[RB * W2_LD];
++    __shared__ __align__(128) __half ys[CB * W2_LD];
+     __shared__ uint2 tab[tr::ntab];
+-    __shared__ uint32_t raw[W2_RB * tr::segw_s];
++    __shared__ uint32_t raw[RB * tr::segw_s];
+ 
+     const int e = blockIdx.y / ch_per_e, ch = blockIdx.y % ch_per_e;
+-    const int c0 = bounds[e] + ch * W2_CB, r1 = bounds[e + 1];
++    const int c0 = bounds[e] + ch * CB, r1 = bounds[e + 1];
+     if (c0 >= r1) return;
+-    const int ncol = min(W2_CB, r1 - c0);
+-    const int n0 = blockIdx.x * W2_RB;
++    const int ncol = min(CB, r1 - c0);
++    const int n0 = blockIdx.x * RB;
+     const int tid = threadIdx.x, warp = tid >> 5, lane = tid & 31;
+-    const int wr = warp & 3, wc = warp >> 2;                     // weight rows wr*32, sorted rows wc*32
+-    const uint8_t* xb = W + (size_t) e * expert_bytes + (size_t) n0 * row_bytes;
++    const int wr = warp & (NWR - 1), wc = warp >> (NWR == 4 ? 2 : 1);   // weight rows wr*32, sorted rows wc*32
++    const uint8_t* xb = (W + (size_t) e * expert_bytes) + (size_t) n0 * row_bytes;
+     const int nrs = K / tr::raw_k;
+ 
+     uint32_t R[NL];
+-    w2_raw_ld<TY>(R, xb, row_bytes, 0, tid);
+-    const int yq = tid & 7, yc = tid >> 3;                       // 16-byte part yq of sorted rows yc and yc + 32
+-    uint4 Yr[2];
++    w2_raw_ld<TY, RB>(R, xb, row_bytes, 0, tid);
++    const int yq = tid & 7, yc = tid >> 3;                       // 16-byte part yq of sorted rows yc + 32 u
++    uint4 Yr[NWC];                                               // NWC sorted-row groups of 32, one uint4 each
+     auto load_y = [&](int k0) {
+ #pragma unroll
+-        for (int u = 0; u < 2; ++u) {
+-            const int c = yc + 32 * u;
+-            Yr[u] = c < ncol ? *reinterpret_cast<const uint4*>(X + (size_t) (c0 + c) * ldx + k0 + 8 * yq) : make_uint4(0, 0, 0, 0);
++        for (int u = 0; u < NWC; ++u) {
++            const int c = yc + 32 * u, row = c0 + c;             // the output row; ids gathers its input row
++            Yr[u] = c < ncol ? *reinterpret_cast<const uint4*>(X + (size_t) (ids ? ids[row] : row) * ldx + k0 + 8 * yq)
++                             : make_uint4(0, 0, 0, 0);
+         }
+     };
+     load_y(0);
+     if constexpr (TY == 20) {
+         reinterpret_cast<half2*>(tab)[tid] = __halves2half2(__int2half_rn(kvalues_iq4nl[tid & 15]), __int2half_rn(kvalues_iq4nl[tid >> 4]));
++    } else if constexpr (TY == 22) {
++        for (int i = tid; i < 1024; i += W2_NT) tab[i] = reinterpret_cast<const uint2*>(iq2s_grid)[i];
++    } else if constexpr (TY == 18) {
++        uint32_t* grid = reinterpret_cast<uint32_t*>(tab);
++        for (int i = tid; i < 256; i += W2_NT) grid[i] = iq3xxs_grid[i];
+     } else {
+-        for (int i = tid; i < 1024; i += W2_NT) tab[i] = reinterpret_cast<const uint2*>(iq2s_grid)[i];
+-        if (tid < 16)   // a sign nibble -> masks of its bits 0-1 and 2-3 (bit 2p -> bit 15, bit 2p + 1 -> bit 31)
+-            tab[1024 + tid] = make_uint2(((tid >> 0) & 1u) << 15 | ((tid >> 1) & 1u) << 31, ((tid >> 2) & 1u) << 15 | ((tid >> 3) & 1u) << 31);
+-    }
+-    w2_raw_st<TY>(R, raw, tid);
+-    if (nrs > 1) w2_raw_ld<TY>(R, xb, row_bytes, 1, tid);
++        uint32_t* grid = reinterpret_cast<uint32_t*>(tab);
++        for (int i = tid; i < 512; i += W2_NT) grid[i] = iq3s_grid[i];
++    }
++    if constexpr (TY != 20) {   // a sign nibble -> masks of its bits 0-1 and 2-3 (bit 2p -> bit 15, bit 2p + 1 -> bit 31)
++        if (tid < 16)
++            tab[tr::ntab - 16 + tid] = make_uint2(((tid >> 0) & 1u) << 15 | ((tid >> 1) & 1u) << 31, ((tid >> 2) & 1u) << 15 | ((tid >> 3) & 1u) << 31);
++    }
++    w2_raw_st<TY, RB>(R, raw, tid);
++    if (nrs > 1) w2_raw_ld<TY, RB>(R, xb, row_bytes, 1, tid);
+     __syncthreads();
+ 
+     wmma::fragment<wmma::accumulator, 16, 16, 16, float> acc[2][2];
+@@ -6931,7 +7042,10 @@
+     for (int a = 0; a < 2; ++a)
+ #pragma unroll
+         for (int b = 0; b < 2; ++b) wmma::fill_fragment(acc[a][b], 0.0f);
+-    const int xr = tid % W2_RB, sub = tid / W2_RB;
++    // the first 2 * RB threads dequantize: row tid % RB, 32-value sub-block tid / RB; every thread meets the barriers
++    constexpr bool ALL_DQ = 2 * RB >= W2_NT;                     // the 128 x 64 tile has exactly 2 * RB threads
++    const bool dq = ALL_DQ || tid < 2 * RB;
++    const int xr = dq ? tid % RB : 0, sub = dq ? tid / RB : 0;   // idle threads keep a row-0 pointer, never dereferenced
+     __half* xrow = xs + xr * W2_LD + 32 * sub;
+     const uint8_t* rawrow = reinterpret_cast<const uint8_t*>(raw + xr * tr::segw_s);
+ 
+@@ -6940,10 +7054,15 @@
+ #pragma unroll
+         for (int h = 0; h < NSUB; ++h) {
+             const int k0 = (rs * NSUB + h) * W2_KT;
+-            if constexpr (TY == 20) w2_dq_iq4_nl(rr + 18 * (2 * h + sub), xrow, reinterpret_cast<const half2*>(tab));
+-            else w2_dq_iq2_s(rr, 2 * h + sub, xrow, tab);
+-#pragma unroll
+-            for (int u = 0; u < 2; ++u) *reinterpret_cast<uint4*>(ys + (yc + 32 * u) * W2_LD + 8 * yq) = Yr[u];
++            if (ALL_DQ || dq) {                                   // constant-true for the 128 x 64 tile
++                if constexpr (TY == 20) w2_dq_iq4_nl(rr + 18 * (2 * h + sub), xrow, reinterpret_cast<const half2*>(tab));
++                else if constexpr (TY == 22) w2_dq_iq2_s(rr, 2 * h + sub, xrow, tab);
++                else if constexpr (TY == 18) w2_dq_iq3_xxs(rr, 2 * h + sub, xrow, reinterpret_cast<const uint32_t*>(tab),
++                                                           tab + (tr::ntab - 16));
++                else w2_dq_iq3_s(rr, 2 * h + sub, xrow, reinterpret_cast<const uint32_t*>(tab), tab + (tr::ntab - 16));
++            }
++#pragma unroll
++            for (int u = 0; u < NWC; ++u) *reinterpret_cast<uint4*>(ys + (yc + 32 * u) * W2_LD + 8 * yq) = Yr[u];
+             __syncthreads();
+             if (k0 + W2_KT < K) load_y(k0 + W2_KT);
+             if (wc * 32 < ncol) {                                // warp-uniform: sorted rows past the expert's skip their mma
+@@ -6965,8 +7084,8 @@
+                 }
+             }
+             if (h == NSUB - 1 && rs + 1 < nrs) {                 // nobody reads raw between the barrier above and the one below
+-                w2_raw_st<TY>(R, raw, tid);
+-                if (rs + 2 < nrs) w2_raw_ld<TY>(R, xb, row_bytes, rs + 2, tid);
++                w2_raw_st<TY, RB>(R, raw, tid);
++                if (rs + 2 < nrs) w2_raw_ld<TY, RB>(R, xb, row_bytes, rs + 2, tid);
+             }
+             __syncthreads();
+         }
+@@ -7001,7 +7120,7 @@
+ }  // namespace
+ 
+ bool gemm_iq_f16_grouped(int ty, const void* W, size_t expert_bytes, int n_out, int K, const void* X, int ldx,
+-                         const int32_t* bounds, int n_experts, int max_rows, float* Y, int ldy, void* stream) {
++                         const int32_t* bounds, int n_experts, int max_rows, float* Y, int ldy, void* stream, const int32_t* ids) {
+     if (n_out % WG_BN != 0 || n_experts <= 0 || max_rows <= 0 || ldy % 4 != 0) return false;
+     {   // the tiles are tensor-core kernels: a pre-Volta card has no body for them (the sm_60 pass compiles them empty)
+         int cur = 0, major = 0;
+@@ -7009,19 +7128,27 @@
+             major < 7)
+             return false;
+     }
+-    // STRATA_PF_WMMA2=1 (opt-in): IQ2_S gate/up and IQ4_NL down through gemm_iq_f16_w2_kernel (above)
++    // S7 selective port: IQ3_XXS added; no new defaults or tile orientation.
+     if (w2_on() && n_out % W2_RB == 0 && ldx % 8 == 0 && ldy % 8 == 0 && (uintptr_t) X % 16 == 0 && (uintptr_t) Y % 32 == 0 &&
+-        (uintptr_t) W % 4 == 0 && expert_bytes % 4 == 0 && ((ty == 22 && K % 512 == 0) || (ty == 20 && K % 128 == 0))) {
++        (uintptr_t) W % 4 == 0 && expert_bytes % 4 == 0 &&
++        (((ty == 18 || ty == 22) && K % 256 == 0) || (ty == 20 && K % 128 == 0))) {
+         const size_t rb = iq_row_bytes(ty, K);
+         const int ch = (max_rows + W2_CB - 1) / W2_CB;
+-        if (rb % 4 == 0 && (long long) n_experts * ch <= 65535) {
++        if ((long long) n_experts * ch <= 65535) {
+             const dim3 grid2((unsigned) (n_out / W2_RB), (unsigned) (n_experts * ch));
+             cudaStream_t s2 = (cudaStream_t) stream;
+-            if (ty == 22)
+-                gemm_iq_f16_w2_kernel<22><<<grid2, W2_NT, 0, s2>>>((const uint8_t*) W, expert_bytes, rb, K, (const __half*) X, ldx, bounds, ch, Y, ldy);
+-            else
+-                gemm_iq_f16_w2_kernel<20><<<grid2, W2_NT, 0, s2>>>((const uint8_t*) W, expert_bytes, rb, K, (const __half*) X, ldx, bounds, ch, Y, ldy);
+-            return cudaGetLastError() == cudaSuccess;
++#define S7_W2(T) gemm_iq_f16_w2_kernel<T, W2_RB, W2_CB><<<grid2, W2_NT, 0, s2>>>((const uint8_t*) W, expert_bytes, rb, K, (const __half*) X, ldx, bounds, ids, ch, Y, ldy, 0)
++            if (ty == 18) { S7_W2(18); }
++            else if (ty == 22) { S7_W2(22); }
++            else { S7_W2(20); }
++#undef S7_W2
++            const bool ok = cudaGetLastError() == cudaSuccess;
++            static thread_local bool seen[64] = {};
++            if (ok && !seen[ty]) {
++                seen[ty] = true;
++                std::fprintf(stderr, "S7_WMMA2 launched ty=%d K=%d out=%d ids=%d tile=128x64\n", ty, K, n_out, ids != nullptr);
++            }
++            return ok;
+         }
+     }
+     const bool q20 = ty == 42;
+@@ -7045,19 +7172,19 @@
+     }
+     if (q20)
+         gemm_iq_f16_grouped_kernel<128, true><<<grid, WG_THREADS, smem(128), s>>>(ty, (const uint8_t*) W, expert_bytes, row_bytes, K,
+-                                                                                 (const __half*) X, ldx, bounds, mt, Y, ldy);
++                                                                                 (const __half*) X, ldx, bounds, ids, mt, Y, ldy);
+     else if (nl)
+         gemm_iq_f16_grouped_kernel<128, false, true><<<grid, WG_THREADS, smem(128), s>>>(ty, (const uint8_t*) W, expert_bytes, row_bytes, K,
+-                                                                                         (const __half*) X, ldx, bounds, mt, Y, ldy);
++                                                                                         (const __half*) X, ldx, bounds, ids, mt, Y, ldy);
+     else
+         gemm_iq_f16_grouped_kernel<256, false><<<grid, WG_THREADS, smem(256), s>>>(ty, (const uint8_t*) W, expert_bytes, row_bytes, K,
+-                                                                                  (const __half*) X, ldx, bounds, mt, Y, ldy);
++                                                                                  (const __half*) X, ldx, bounds, ids, mt, Y, ldy);
+     return cudaGetLastError() == cudaSuccess;
+ }
+ }  // namespace strata::kernels
+ #else
+ namespace strata::kernels {
+-bool gemm_iq_f16_grouped(int, const void*, size_t, int, int, const void*, int, const int32_t*, int, int, float*, int, void*) {
++bool gemm_iq_f16_grouped(int, const void*, size_t, int, int, const void*, int, const int32_t*, int, int, float*, int, void*, const int32_t*) {
+     return false;
+ }
+ }  // namespace strata::kernels
+--- a/include/strata/kernels/iq_kernels.hpp
++++ b/include/strata/kernels/iq_kernels.hpp
+@@ -138,7 +138,7 @@
+ /// W + e * expert_bytes (n_out rows of K values of type ty, GGUF blocks), X FP16 (ldx), rows bounds[e]..bounds[e+1],
+ /// Y FP32 (ldy).  FP16 tensor cores, FP32 sums.  false: not launched (shape or type not covered).  CUDA only.
+ bool gemm_iq_f16_grouped(int ty, const void* W, size_t expert_bytes, int n_out, int K, const void* X, int ldx,
+-                         const int32_t* bounds, int n_experts, int max_rows, float* Y, int ldy, void* stream);
++                         const int32_t* bounds, int n_experts, int max_rows, float* Y, int ldy, void* stream, const int32_t* ids = nullptr);
+ void iq_set_old_kernels(bool old);
+ bool iq_old_kernels();
+ 
+--- a/src/kernels/pf_wmma_parity.cpp
++++ b/src/kernels/pf_wmma_parity.cpp
+@@ -81,7 +81,7 @@
+ }
+ 
+ 
+-int run(int ty, int n_out, int K, std::mt19937& rng) {
++int run(int ty, int n_out, int K, std::mt19937& rng, bool indexed = false) {
+     const std::vector<int> rows = {0, 1, 63, 64, 65, 200, 300};
+     const int E = (int) rows.size(), base = 5;
+     std::vector<int32_t> bounds(E + 1);
+@@ -104,8 +104,15 @@
+     ck(cudaMalloc(&dy, (size_t) total * n_out * 4), "y");
+     ck(cudaMemset(dy, 0xff, (size_t) total * n_out * 4), "y");
+     ck(cudaMalloc(&dq, (size_t) E * n_out * K * 2), "dq");
++    std::vector<int32_t> ids(total);
++    for (int i = 0; i < total; ++i) ids[i] = total - 1 - i;
++    int32_t* di = nullptr;
++    if (indexed) {
++        ck(cudaMalloc(&di, total * sizeof(int32_t)), "ids");
++        ck(cudaMemcpy(di, ids.data(), total * sizeof(int32_t), cudaMemcpyHostToDevice), "ids copy");
++    }
+     const int maxr = *std::max_element(rows.begin(), rows.end());
+-    if (!k::gemm_iq_f16_grouped(ty, dw, eb, n_out, K, dx, K, db, E, maxr, dy, n_out, nullptr)) {
++    if (!k::gemm_iq_f16_grouped(ty, dw, eb, n_out, K, dx, K, db, E, maxr, dy, n_out, nullptr, di)) {
+         std::printf("%-8s %5d x %4d: not launched\n", name_of(ty), n_out, K);
+         return 1;
+     }
+@@ -123,7 +130,7 @@
+                 const uint16_t* wr = &q[((size_t) e * n_out + n) * K];
+                 for (int kk = 0; kk < K; ++kk) {
+                     __half h; std::memcpy(&h, &wr[kk], 2);
+-                    s += (double) __half2float(h) * (double) __half2float(x[(size_t) r * K + kk]);
++                    s += (double) __half2float(h) * (double) __half2float(x[(size_t) (indexed ? ids[r] : r) * K + kk]);
+                 }
+                 scale = std::max(scale, std::fabs(s));
+                 worst = std::max(worst, std::fabs(s - (double) y[(size_t) r * n_out + n]));
+@@ -131,7 +138,7 @@
+     const bool ok = worst <= 2e-3 * scale + 1e-6;
+     std::printf("%-8s %5d x %4d, %d rows in %d experts: max |err| %.3g of max |ref| %.3g  %s\n", name_of(ty), n_out, K,
+                 total - base, E, worst, scale, ok ? "ok" : "FAIL");
+-    cudaFree(dw); cudaFree(dx); cudaFree(db); cudaFree(dy); cudaFree(dq);
++    cudaFree(di); cudaFree(dw); cudaFree(dx); cudaFree(db); cudaFree(dy); cudaFree(dq);
+     return ok ? 0 : 1;
+ }
+ 
+@@ -149,10 +156,11 @@
+         std::printf("device %d\n", dev);
+         ++ran;
+         std::mt19937 rng(70);
+-        for (int ty : {16, 22, 29}) fails += run(ty, 1280, 2560, rng);
++        for (int ty : {16, 18, 22, 29}) fails += run(ty, 1280, 2560, rng);
+         fails += run(42, 2560, 640, rng);
+         for (int ty : {20, 21, 23}) fails += run(ty, 1280, 2560, rng);   // this pack's gate/up formats, generic WK=256 path
+-        fails += run(20, 2560, 640, rng);                                // the IQ4_NL down, the new WK=128 lane
++        fails += run(20, 2560, 640, rng);
++        for (int ty : {18, 23}) fails += run(ty, 1280, 2560, rng, true);                                // the IQ4_NL down, the new WK=128 lane
+     }
+     if (!ran) { std::printf("pf_wmma_parity: needs sm_70+, skipped\n"); return 77; }
+     std::printf("pf_wmma_parity: %d failures on %d devices\n", fails, ran);
