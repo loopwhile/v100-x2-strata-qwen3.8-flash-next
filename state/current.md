@@ -1,4 +1,15 @@
-# Current operation — S7-XXS-14/15/16 completed, 2026-11-01 23:17 KST
+# Current operation — cooling C2 completed; serving stopped, 2026-11-04 KST
+
+User-authorized cooling measurement `cooling-20261104T003222` completed **3/3 fresh-process dual-agent 128K C2 PASS**, 00:34:21–00:46:27 KST. No benchmark remains running. Original S7-XXS-14 recipe, workload, power/clocks and historical evidence are preserved; closed S7-XXS IDs were not reused.
+
+- Raw P520: `results/stage7-cooling/cooling-20261104T003222/`.
+- Raw ThinkPad backup: `results/raw/cooling-20261104T003222/`; all **99 files SHA-256 matched**. Local checksum manifest: `results/raw/cooling-20261104T003222-sha256.json`.
+- User requested **raw data only**, no separate report/database update, then commit/push Git changes and stop serving.
+- S7-XXS-14 serving A/B (`strata-s7-xxs14-serve-a/b`) stopped at the user's request. Containers/images/configs/models remain preserved. ThinkPad tunnel unchanged. Host power settings unchanged.
+- Runner `scripts/103-stage7-cooling-c2.py` is retained for audit; it is not a new execution order. This ID is completed; do not rerun or retry it. No further experiment is authorized.
+- Next action: no additional GPU work; inspect local/remote Git HEAD before repeating any commit/push operation.
+
+## Previous operation — S7-XXS-14/15/16 completed, 2026-11-01 23:17 KST
 
 User requested three fresh dual-agent 128K C2 batches per arm. **14, 15 and 16 each completed 3/3 PASS, 9/9 total. All IDs are CLOSED; do not rerun.**
 
