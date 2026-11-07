@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-07T17:32:30.140691+09:00",
+  "checked_at": "2026-11-07T19:36:29.644739+09:00",
   "host": "p520-llm",
   "running_containers": "",
   "gpu": "index, memory.used [MiB], power.limit [W], clocks.current.sm [MHz]\n0, 0 MiB, 150.00 W, 135 MHz\n1, 0 MiB, 150.00 W, 135 MHz",
@@ -9,6 +9,7 @@
   "stage8_arm_directories": {
     "U1": true,
     "D1": true,
+    "C0": true,
     "C1": true,
     "C2": true,
     "C3": true,
@@ -17,7 +18,7 @@
     "M3": false
   },
   "unexecuted_m3_directory_exists": false,
-  "remote_git_head": "a944720f6a19c6bdb6515152a1ef461ee5946fdf",
+  "remote_git_head": "b44942285f8445403a3de662ea5a3c158845cd4a",
   "remote_git_status": "",
   "protected_and_test_ports_listening": {
     "8080": false,

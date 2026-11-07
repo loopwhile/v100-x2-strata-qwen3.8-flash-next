@@ -752,13 +752,14 @@ def collect_stage7_port_records():
 
 
 def collect_stage8_records():
-    """Closed Stage 8 scored arms (U1, C1..C3, M1..M2) from committed receipts; no local raw-log dependency."""
+    """Closed Stage 8 scored arms (U1, C0..C3, M1..M2) from committed receipts; no local raw-log dependency."""
     s8_u1_dir = REPO_ROOT / "artifacts" / "stage8-results-20261107"
     s8_fu_dir = REPO_ROOT / "artifacts" / "stage8-followup-results-20261107"
     telemetry = json.loads((s8_fu_dir / "stage8-telemetry-gt60w.json").read_text())["runs"]
 
     arm_specs = [
         ("S8-U1", "u1-20261107T124518", "SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 (U1 baseline)", s8_u1_dir / "stage8-u1-receipts.json"),
+        ("S8-C0", "c0-20261107T192030", "SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 (C1 minus --pool-workers 3)", s8_fu_dir / "c0-20261107T192030" / "receipts.json"),
         ("S8-C1", "c1-20261107T141343", "U1 + --pool-workers 3", s8_fu_dir / "c1-20261107T141343" / "receipts.json"),
         ("S8-C2", "c2-20261107T142619", "U1 + --resident-budget-gib 2", s8_fu_dir / "c2-20261107T142619" / "receipts.json"),
         ("S8-C3", "c3-20261107T144114", "U1 + --resident-budget-gib 2 + --adapt-async 1", s8_fu_dir / "c3-20261107T144114" / "receipts.json"),
@@ -901,8 +902,8 @@ def export_markdown(records, path):
     lines.append("- **Frozen C2 Workload Manifest:** `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`")
     lines.append("- **Hardware Baseline:** Dual independent agents (GPU 0 / cpuset `0-2,6-8` vs GPU 1 / cpuset `3-5,9-11`), INT8 KV, frozen prompts (~126,967 tokens each), minimum output 1024 tokens.")
     lines.append("- **S7-XXS-14..16:** 9/9 scored C2 PASS, three batches each; all IDs closed. [Report](../artifacts/stage7-results-20261101/stage7-iq3xxs-14-16-report.md), [source/build audit](../artifacts/stage7-results-20261101/stage7-iq3xxs-port-source-audit.md). Arms 15/16 use separate 0.1.54-derived port images. Diagnostics are excluded from their scored rows; cache/swap variation prevents causal speedup claims.")
-    lines.append("- **Stage 8 (`S8-U1`, `S8-C1..C3`, `S8-M1..M2`):** 18/18 scored C2 PASS across 6 arms (three batches each, Strata 0.1.57, source `c3b3f5035506f3e966f1b4b7b188aeaabae92f1d`); all IDs closed. [Continuation review](STAGE8_CONTINUATION_REVIEW.md), [follow-up summary](../artifacts/stage8-followup-results-20261107/summary.md), [U1 report](../artifacts/stage8-results-20261107/stage8-u1-report.md). Unscored instrumented diagnostic `S8-D1` is excluded from scored rows; `S8-M3` (`--kv-resident 40960`) was evaluated analytically without execution; dual-agent 30 tok/s goal not met; page-cache/I-O/swap/output variation prevents causal speedup claims.")
-    lines.append("- **Telemetry convention:** S7-XXS-8..16 and Stage 8 (`S8-U1`, `S8-C1..C3`, `S8-M1..M2`) temperature/power rows use 1-second samples with power >60 W across the process lifetime, including loading (Stage 8 standalone reports also record unfiltered full-process-lifetime means). Arm averages are unweighted means of batch averages; peaks are maxima. These are not isolated decode/prefill power measurements. S7-XXS-14..16 and Stage 8 aggregate output counts are measured medians; older 1024 summary entries may denote only the contract minimum. A/B mean columns are descriptive averages, not summed throughput.")
+    lines.append("- **Stage 8 (`S8-U1`, `S8-C0..C3`, `S8-M1..M2`):** 21/21 scored C2 PASS across 7 arms (three batches each, Strata 0.1.57, source `c3b3f5035506f3e966f1b4b7b188aeaabae92f1d`); all IDs closed. [Continuation review](STAGE8_CONTINUATION_REVIEW.md), [follow-up summary](../artifacts/stage8-followup-results-20261107/summary.md), [U1 report](../artifacts/stage8-results-20261107/stage8-u1-report.md). Unscored instrumented diagnostic `S8-D1` is excluded from scored rows; `S8-M3` (`--kv-resident 40960`) was evaluated analytically without execution; dual-agent 30 tok/s goal not met; page-cache/I-O/swap/output variation prevents causal speedup claims.")
+    lines.append("- **Telemetry convention:** S7-XXS-8..16 and Stage 8 (`S8-U1`, `S8-C0..C3`, `S8-M1..M2`) temperature/power rows use 1-second samples with power >60 W across the process lifetime, including loading (Stage 8 standalone reports also record unfiltered full-process-lifetime means). Arm averages are unweighted means of batch averages; peaks are maxima. These are not isolated decode/prefill power measurements. S7-XXS-14..16 and Stage 8 aggregate output counts are measured medians; older 1024 summary entries may denote only the contract minimum. A/B mean columns are descriptive averages, not summed throughput.")
     lines.append("")
     lines.append("---")
     lines.append("")
@@ -923,7 +924,7 @@ def export_markdown(records, path):
         "S7-XXS-1", "S7-XXS-2", "S7-XXS-4",
         "S7-XXS-8", "S7-XXS-9", "S7-XXS-10", "S7-XXS-11", "S7-XXS-12", "S7-XXS-13",
         "S7-XXS-14", "S7-XXS-15", "S7-XXS-16",
-        "S8-U1", "S8-C1", "S8-C2", "S8-C3", "S8-M1", "S8-M2"
+        "S8-U1", "S8-C0", "S8-C1", "S8-C2", "S8-C3", "S8-M1", "S8-M2"
     ]
     
     rec_by_arm = {r["arm_id"]: r for r in records if r["run_type"] in ("baseline", "median (3 batches)", "3-run mean", "mixed_quant", "tuning", "feasibility", "mean (2 batches, stopped early)")}
@@ -1004,9 +1005,10 @@ def export_markdown(records, path):
     lines.append("   - Arm 14: prefill **997.6 / 1006.6**, decode **26.4 / 26.2** tok/s. Arm 15 (verified IQ3_XXS WMMA2 port): **961.2 / 969.6**, **26.3 / 26.1**. Arm 16 (+LEAN): **990.8 / 998.7**, **26.4 / 27.0**. All values are per-agent 3-batch medians.")
     lines.append("   - LEAN reduced loaned cache slots **2489→2173** with chunk 8192/ring 96 unchanged. This is an observed allocation effect, not a throughput guarantee.")
     lines.append("   - First port-image batches had 95% expert-page-cache residency and substantial host swap/major faults; later runs warmed to 100%. Every valid first batch is retained. No causal WMMA2/LEAN speedup, quality result or production promotion is established.")
-    lines.append("7. **Stage 8 Engine 0.1.57 Upgrade & Runtime Candidates (18/18 scored C2 PASS, closed):**")
+    lines.append("7. **Stage 8 Engine 0.1.57 Upgrade & Runtime Candidates (21/21 scored C2 PASS, closed):**")
     lines.append("   - `S8-U1` (`0.1.57` baseline): prefill **871.0 / 877.2**, decode **25.2 / 27.7** tok/s (unwarmed/partially warmed OS page cache with 3.5–19.8 GB NVMe expert reads per agent). Unscored diagnostic `S8-D1` proved plain `--mmap-experts` has zero GPU-pinned PCIe expert transfers (`actual_pcie_share = 0.0`) despite startup `pcie_frac` logs.")
-    lines.append("   - `S8-C1` (`--pool-workers 3`): prefill **998.1 / 1007.2**, decode **26.2 / 28.3** tok/s under warm page cache. `S8-C2` (`--resident-budget-gib 2` bounded 2 GiB mapped/pinned resident budget per agent): enabled non-zero PCIe expert offload (API offload-share medians **0.015 / 0.012**), decode **26.6 / 27.9** tok/s, prefill **823.4 / 827.2** tok/s (~24.2 / 23.1 GB engine-reported physical reads per agent as lent prompt slots fell outside the 2 GiB ranked complement). `S8-C3` (`C2 + --adapt-async 1`): highest IQ3_XXS decode medians at **29.0 / 28.7** tok/s, prefill **820.5 / 825.0** tok/s (TTFT **155.00 / 154.14 s**); dual-agent **30.0 tok/s** goal was **not met**.")
+    lines.append("   - `S8-C0` (`S8-C1` minus `--pool-workers 3`, default 2 pool workers under warm 43.81 GiB page cache): prefill **997.2 / 1006.3** tok/s (TTFT **127.57 / 126.42 s**), decode **25.6 / 27.9** tok/s, whole-host CPU user **27.1%** (~290.5 / 337.9 MB physical OS reads, 5 major faults) — confirming warm-cache 0.1.57 prefill matches `S8-C1` (**998.1 / 1007.2** tok/s) and archived `S7-XXS-14` (**997.6 / 1006.6** tok/s) without `--pool-workers 3`.")
+    lines.append("   - `S8-C1` (`--pool-workers 3`): prefill **998.1 / 1007.2**, decode **26.2 / 28.3** tok/s under warm page cache (whole-host CPU user **32.1%**). `S8-C2` (`--resident-budget-gib 2` bounded 2 GiB mapped/pinned resident budget per agent): enabled non-zero PCIe expert offload (API offload-share medians **0.015 / 0.012**), decode **26.6 / 27.9** tok/s, prefill **823.4 / 827.2** tok/s (~24.2 / 23.1 GB engine-reported physical reads per agent as lent prompt slots fell outside the 2 GiB ranked complement). `S8-C3` (`C2 + --adapt-async 1`): highest IQ3_XXS decode medians at **29.0 / 28.7** tok/s, prefill **820.5 / 825.0** tok/s (TTFT **155.00 / 154.14 s**); dual-agent **30.0 tok/s** goal was **not met**.")
     lines.append("   - `S8-M1` (`--spec 6` on U1): MTP draft acceptance dropped to **49.4% / 52.6%**, decode **25.3 / 26.1** tok/s, prefill **996.7 / 1003.7** tok/s. `S8-M2` (`--expert-cache-per-layer` on U1, `4107→5472` per-layer slots in 8.90 GiB VRAM): expert hit **0.840 / 0.864**, decode **25.8 / 26.2** tok/s, prefill **994.6 / 1000.9** tok/s.")
     lines.append("   - `S8-M3` (`--kv-resident 40960`) was evaluated analytically without execution (+~113 MiB VRAM trading ~65–70 expert slots while QSA KV VRAM hit rate is already **97.7–98.9%** and `kv-resolve` is ~0.41–0.45 ms/window). Varying OS page-cache/I-O/swap states and output-token lengths prevent causal cross-arm speedup claims; no quality suite or production promotion is established.")
 
