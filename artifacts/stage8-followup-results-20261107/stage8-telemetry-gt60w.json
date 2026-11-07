@@ -1,0 +1,311 @@
+{
+  "sample_filter": "power.draw > 60 W; all process phases; aggregate temperature/power averages are unweighted means of the three batch averages",
+  "runs": {
+    "u1-20261107T124518-batch-1": {
+      "raw_sha256": "d6daacae30b22127817d74b673e665eefba0628cd154f56c0cb3f7cb3fdf2d21",
+      "0": {
+        "samples": 143,
+        "temp_mean_c": 53.6,
+        "temp_peak_c": 59.0,
+        "power_mean_w": 95.3,
+        "power_peak_w": 169.46
+      },
+      "1": {
+        "samples": 162,
+        "temp_mean_c": 55.7,
+        "temp_peak_c": 61.0,
+        "power_mean_w": 95.0,
+        "power_peak_w": 172.52
+      }
+    },
+    "u1-20261107T124518-batch-2": {
+      "raw_sha256": "cdbeac19bb4e5ccaf733d4bf150a72e900b0bd07b49c0cfa7d1274a44fe83d9e",
+      "0": {
+        "samples": 145,
+        "temp_mean_c": 55.8,
+        "temp_peak_c": 61.0,
+        "power_mean_w": 96.3,
+        "power_peak_w": 169.24
+      },
+      "1": {
+        "samples": 163,
+        "temp_mean_c": 57.2,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 94.5,
+        "power_peak_w": 177.79
+      }
+    },
+    "u1-20261107T124518-batch-3": {
+      "raw_sha256": "138d63584da80dd2050a326941105424593c407b2da2967a3ace6cde8d4b61c4",
+      "0": {
+        "samples": 149,
+        "temp_mean_c": 56.8,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 97.4,
+        "power_peak_w": 169.12
+      },
+      "1": {
+        "samples": 171,
+        "temp_mean_c": 57.4,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 94.5,
+        "power_peak_w": 178.51
+      }
+    },
+    "c1-20261107T141343-batch-1": {
+      "raw_sha256": "12631361d401683427da92e8fc0ab48b7d33bf2296edcb8bef3ee5e9220cc646",
+      "0": {
+        "samples": 149,
+        "temp_mean_c": 54.4,
+        "temp_peak_c": 59.0,
+        "power_mean_w": 99.2,
+        "power_peak_w": 164.31
+      },
+      "1": {
+        "samples": 166,
+        "temp_mean_c": 56.5,
+        "temp_peak_c": 61.0,
+        "power_mean_w": 99.6,
+        "power_peak_w": 172.4
+      }
+    },
+    "c1-20261107T141343-batch-2": {
+      "raw_sha256": "a3df24c22fecfd670171242e9278e8ef087a7483b4bb687fa9915868db88d032",
+      "0": {
+        "samples": 164,
+        "temp_mean_c": 56.5,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 91.0,
+        "power_peak_w": 172.4
+      },
+      "1": {
+        "samples": 175,
+        "temp_mean_c": 57.7,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 98.0,
+        "power_peak_w": 176.98
+      }
+    },
+    "c1-20261107T141343-batch-3": {
+      "raw_sha256": "7bd5bf9146d709e39896f868353f385488102b445fd78534fd6bd5e4cd2dd695",
+      "0": {
+        "samples": 155,
+        "temp_mean_c": 57.2,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 99.0,
+        "power_peak_w": 167.59
+      },
+      "1": {
+        "samples": 174,
+        "temp_mean_c": 57.8,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 97.8,
+        "power_peak_w": 187.85
+      }
+    },
+    "c2-20261107T142619-batch-1": {
+      "raw_sha256": "147b610e26651134fc3ff94fb302b1bf895379d9dcab5d770ecc0bbe3662ae1a",
+      "0": {
+        "samples": 140,
+        "temp_mean_c": 56.4,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 106.3,
+        "power_peak_w": 164.53
+      },
+      "1": {
+        "samples": 156,
+        "temp_mean_c": 57.4,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 100.4,
+        "power_peak_w": 175.57
+      }
+    },
+    "c2-20261107T142619-batch-2": {
+      "raw_sha256": "52e6db0c38165b8895e3a6167be2354914d9145a5cc9dc6e448a562d5ad1034b",
+      "0": {
+        "samples": 137,
+        "temp_mean_c": 57.4,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 102.2,
+        "power_peak_w": 170.64
+      },
+      "1": {
+        "samples": 164,
+        "temp_mean_c": 57.6,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 98.6,
+        "power_peak_w": 181.54
+      }
+    },
+    "c2-20261107T142619-batch-3": {
+      "raw_sha256": "b7c2e768512a95235f1e54534fd5a58bfe62970154799c28eab92af603347690",
+      "0": {
+        "samples": 145,
+        "temp_mean_c": 57.0,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 97.3,
+        "power_peak_w": 170.99
+      },
+      "1": {
+        "samples": 166,
+        "temp_mean_c": 57.8,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 101.1,
+        "power_peak_w": 182.23
+      }
+    },
+    "c3-20261107T144114-batch-1": {
+      "raw_sha256": "60856d5acfe09d0c0556f13ef7a7bfb6a64c932c140d5e47ae1ac4c1b0a6c7d6",
+      "0": {
+        "samples": 159,
+        "temp_mean_c": 56.2,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 96.1,
+        "power_peak_w": 162.07
+      },
+      "1": {
+        "samples": 165,
+        "temp_mean_c": 57.2,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 97.9,
+        "power_peak_w": 178.85
+      }
+    },
+    "c3-20261107T144114-batch-2": {
+      "raw_sha256": "481c5da971525df22a1ce66a7c266144e679d28d21b7cb8629b4717fc3d6a35e",
+      "0": {
+        "samples": 162,
+        "temp_mean_c": 56.8,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 95.4,
+        "power_peak_w": 169.59
+      },
+      "1": {
+        "samples": 156,
+        "temp_mean_c": 58.1,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 94.6,
+        "power_peak_w": 174.04
+      }
+    },
+    "c3-20261107T144114-batch-3": {
+      "raw_sha256": "68a43b2d44cae1afc94561a5d27be5e0bdf301f8b7808102cabbb94edccbe1fd",
+      "0": {
+        "samples": 149,
+        "temp_mean_c": 57.8,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 98.5,
+        "power_peak_w": 169.59
+      },
+      "1": {
+        "samples": 167,
+        "temp_mean_c": 58.0,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 98.1,
+        "power_peak_w": 180.36
+      }
+    },
+    "m1-20261107T170315-batch-1": {
+      "raw_sha256": "2d7697aee9e593c9bd96845f3d16db846c9f0c1731f384abc8b2833d0c32bfa9",
+      "0": {
+        "samples": 147,
+        "temp_mean_c": 54.3,
+        "temp_peak_c": 60.0,
+        "power_mean_w": 96.5,
+        "power_peak_w": 167.59
+      },
+      "1": {
+        "samples": 168,
+        "temp_mean_c": 56.4,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 99.9,
+        "power_peak_w": 179.22
+      }
+    },
+    "m1-20261107T170315-batch-2": {
+      "raw_sha256": "362c7a6cc2d367134d0d4fd0b4cc847beccbd3cb604aa78fb43cf411fb7a250e",
+      "0": {
+        "samples": 159,
+        "temp_mean_c": 57.3,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 94.1,
+        "power_peak_w": 168.06
+      },
+      "1": {
+        "samples": 170,
+        "temp_mean_c": 58.2,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 98.5,
+        "power_peak_w": 186.91
+      }
+    },
+    "m1-20261107T170315-batch-3": {
+      "raw_sha256": "02ea7e0daed1d5d2c4c5363513248b2450bebe2e8a6ebee49f171dbafbcdfa32",
+      "0": {
+        "samples": 151,
+        "temp_mean_c": 57.9,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 106.2,
+        "power_peak_w": 166.41
+      },
+      "1": {
+        "samples": 173,
+        "temp_mean_c": 58.3,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 98.5,
+        "power_peak_w": 177.1
+      }
+    },
+    "m2-20261107T171915-batch-1": {
+      "raw_sha256": "55a2a86cd03bfa590f142e6122fc53c78f5ad64163f2f2be0fc5f4411245e206",
+      "0": {
+        "samples": 140,
+        "temp_mean_c": 55.1,
+        "temp_peak_c": 61.0,
+        "power_mean_w": 105.4,
+        "power_peak_w": 163.95
+      },
+      "1": {
+        "samples": 170,
+        "temp_mean_c": 56.5,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 99.6,
+        "power_peak_w": 177.57
+      }
+    },
+    "m2-20261107T171915-batch-2": {
+      "raw_sha256": "478bc53fb4107d4be5692ff5680f0db4f8398a98f6ad32672dab4282da39f99a",
+      "0": {
+        "samples": 142,
+        "temp_mean_c": 57.4,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 100.5,
+        "power_peak_w": 162.18
+      },
+      "1": {
+        "samples": 170,
+        "temp_mean_c": 57.7,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 97.2,
+        "power_peak_w": 173.22
+      }
+    },
+    "m2-20261107T171915-batch-3": {
+      "raw_sha256": "862da71552b6c930a8dbf9806db1e8e07f8985f3646d0fc36b7d0a6a8f615f82",
+      "0": {
+        "samples": 144,
+        "temp_mean_c": 57.8,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 102.0,
+        "power_peak_w": 174.04
+      },
+      "1": {
+        "samples": 157,
+        "temp_mean_c": 58.5,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 101.0,
+        "power_peak_w": 188.32
+      }
+    }
+  }
+}
