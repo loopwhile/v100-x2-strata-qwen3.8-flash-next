@@ -1,9 +1,9 @@
 # Stage 8 continuation — user requested remaining candidates, 2026-11-07
 
-**Status: completed through C3, 9/9 scored follow-up C2 PASS plus D1 diagnostic.
-Latest scope: user instructed “C3까지만 진행해줘.” C3 and reporting/backup are complete. Do NOT launch M1/M2/M3,
-new diagnostics, retries or further candidates. Their proposed settings below
-are retained as unexecuted reference, not execution orders.**
+**Status: completed through M2, 15/15 scored follow-up C2 PASS (C1/C2/C3/M1/M2) plus D1 diagnostic.
+Latest scope: user authorized M1 → M2 single-change execution and M3 evaluation only (M3 NOT executed; no combinations). Do NOT launch M3,
+new diagnostics, retries, combinations or further candidates. M3 below is
+retained as unexecuted reference, not an execution order.**
 
 The user challenged the earlier decision to stop after U1: “추가 후보 미실행
 사유가 뭐야? 나머지도 진행해야 하는거 아니야?” This reopens candidate

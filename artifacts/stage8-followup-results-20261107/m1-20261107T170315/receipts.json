@@ -1,0 +1,1888 @@
+{
+  "progress": {
+    "id": "m1-20261107T170315",
+    "arm": "S8-M1",
+    "phase": "results_saved",
+    "verdict": "PASS",
+    "host": "p520-llm",
+    "boot_id": "4a42a9bd-3748-43c4-9495-936df6377e27",
+    "pid": 124404,
+    "pid_start_ticks": "1689822",
+    "started": "2026-11-07T17:03:48.114651+09:00",
+    "timeout_s": 3600,
+    "image_id": "sha256:590b604d9bcf5268ea03f6ab5b786e4051e69884eee8a328b6de54a4c55033d2",
+    "source_sha": "c3b3f5035506f3e966f1b4b7b188aeaabae92f1d",
+    "engine_sha256": "77519ceb88fc6413666a0c5f9f7dc8447023a0c61d09cd22e7151711076c89d1",
+    "runner_sha256": "ba69cf7a92f3d10c3ba539b8191d3ae93627b32d7e61ab3fba2f9e13da009b36",
+    "harness_sha256": "a8e42cc5a71421a7287618fd5be0332ae40f312426e4d243ce1c7619fdfc5246",
+    "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+    "scope": "S8-M1 startup then exactly THREE fresh-process concurrent 128K C2; no retry; one primary change relative to U1",
+    "overrides": {
+      "--spec": "6"
+    },
+    "extra_flags": [],
+    "runtime_env": {
+      "STRATA_SELECT_SIMT": "1",
+      "STRATA_SM70_TABLE": "1",
+      "STRATA_PF_WMMA": "1"
+    },
+    "reference_id": "u1-20261107T124518",
+    "batches": [
+      {
+        "id": "m1-20261107T170315-startup",
+        "phase": "results_saved",
+        "started": "2026-11-07T17:03:48.348378+09:00",
+        "scored": false,
+        "benchmark_started": "2026-11-07T17:04:05.989687+09:00",
+        "verdict": "STARTUP_PASS_NOT_C2",
+        "finished": "2026-11-07T17:04:08.881314+09:00"
+      },
+      {
+        "id": "m1-20261107T170315-batch-1",
+        "phase": "results_saved",
+        "started": "2026-11-07T17:04:14.397329+09:00",
+        "scored": true,
+        "benchmark_started": "2026-11-07T17:04:27.820246+09:00",
+        "bench_container_id": "dc24f6d320f75a3db344160dbb6b6207aef687a8532bd50e83126b5b0b29f38f",
+        "metrics": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "output_tokens": 1189,
+            "prefill_tok_s": 998.2,
+            "decode_tok_s": 25.2,
+            "ttft_s": 127.4453185530001
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "output_tokens": 1638,
+            "prefill_tok_s": 1008.2,
+            "decode_tok_s": 26.2,
+            "ttft_s": 126.17101517400079
+          }
+        ],
+        "verdict": "PASS",
+        "finished": "2026-11-07T17:07:41.408536+09:00"
+      },
+      {
+        "id": "m1-20261107T170315-batch-2",
+        "phase": "results_saved",
+        "started": "2026-11-07T17:07:47.644908+09:00",
+        "scored": true,
+        "benchmark_started": "2026-11-07T17:08:01.107229+09:00",
+        "bench_container_id": "0fe3538fe6ac11851a8e6c4e0edca1ec166372a3894221442a1fab0309a0813c",
+        "metrics": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "output_tokens": 1189,
+            "prefill_tok_s": 996.1,
+            "decode_tok_s": 25.4,
+            "ttft_s": 127.71010082700013
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "output_tokens": 1683,
+            "prefill_tok_s": 1003.7,
+            "decode_tok_s": 26.1,
+            "ttft_s": 126.76812218900159
+          }
+        ],
+        "verdict": "PASS",
+        "finished": "2026-11-07T17:11:17.071031+09:00"
+      },
+      {
+        "id": "m1-20261107T170315-batch-3",
+        "phase": "results_saved",
+        "started": "2026-11-07T17:11:23.787040+09:00",
+        "scored": true,
+        "benchmark_started": "2026-11-07T17:11:37.363085+09:00",
+        "bench_container_id": "0e768905ec2d210bcf372938b17b42dfdeb482585a76ce71a2b2b043d178903c",
+        "metrics": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "output_tokens": 1189,
+            "prefill_tok_s": 996.7,
+            "decode_tok_s": 25.3,
+            "ttft_s": 127.63711634100036
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "output_tokens": 1809,
+            "prefill_tok_s": 1002.0,
+            "decode_tok_s": 26.0,
+            "ttft_s": 126.97482621499876
+          }
+        ],
+        "verdict": "PASS",
+        "finished": "2026-11-07T17:14:58.610304+09:00"
+      }
+    ],
+    "current_phase": "batch-3",
+    "finished": "2026-11-07T17:15:05.047238+09:00",
+    "owned_containers_stopped": true
+  },
+  "status": "3/3 C2 PASS",
+  "medians": {
+    "prefill_tok_s": {
+      "a": 996.7,
+      "b": 1003.7
+    },
+    "decode_tok_s": {
+      "a": 25.3,
+      "b": 26.1
+    },
+    "ttft_s": {
+      "a": 127.63711634100036,
+      "b": 126.76812218900159
+    }
+  },
+  "phases": [
+    {
+      "phase": {
+        "id": "m1-20261107T170315-startup",
+        "phase": "results_saved",
+        "started": "2026-11-07T17:03:48.348378+09:00",
+        "scored": false,
+        "benchmark_started": "2026-11-07T17:04:05.989687+09:00",
+        "verdict": "STARTUP_PASS_NOT_C2",
+        "finished": "2026-11-07T17:04:08.881314+09:00"
+      },
+      "config_sha256": {
+        "a": "419407c8debe851887a36f48cc56f62bd8b7f1f591b8e49f4b219f657ab192bd",
+        "b": "02a506a5259d9b06a1d588729e1c4b86232cbd7f0b4da4a8b2bf1382ebb86c0e"
+      },
+      "processes": {
+        "a": {
+          "pid": 18,
+          "args": [
+            "/opt/strata/engine/strata",
+            "--serve",
+            "--pack",
+            "/iq3xxs/pack/iq3_xxs-native",
+            "--native",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+            "--ple-gguf",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+            "--expert-profile",
+            "/opt/strata/data/expert-profile.bin",
+            "--mtp",
+            "/shared-mtp/rt",
+            "--mmap-experts",
+            "--max-context",
+            "131072",
+            "--kv",
+            "int8",
+            "--kv-resident",
+            "32768",
+            "--spec",
+            "6",
+            "--spec-min-p",
+            "0.5",
+            "--prefill",
+            "auto",
+            "--expert-cache",
+            "auto"
+          ],
+          "strata_env": {
+            "STRATA_SELECT_SIMT": "1",
+            "STRATA_SM70_TABLE": "1",
+            "STRATA_PF_WMMA": "1",
+            "STRATA_EXECV": "1",
+            "STRATA_GDN_TC": "1",
+            "STRATA_GDN_CONVL2": "2"
+          }
+        },
+        "b": {
+          "pid": 18,
+          "args": [
+            "/opt/strata/engine/strata",
+            "--serve",
+            "--pack",
+            "/iq3xxs/pack/iq3_xxs-native",
+            "--native",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+            "--ple-gguf",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+            "--expert-profile",
+            "/opt/strata/data/expert-profile.bin",
+            "--mtp",
+            "/shared-mtp/rt",
+            "--mmap-experts",
+            "--max-context",
+            "131072",
+            "--kv",
+            "int8",
+            "--kv-resident",
+            "32768",
+            "--spec",
+            "6",
+            "--spec-min-p",
+            "0.5",
+            "--prefill",
+            "auto",
+            "--expert-cache",
+            "auto"
+          ],
+          "strata_env": {
+            "STRATA_SELECT_SIMT": "1",
+            "STRATA_SM70_TABLE": "1",
+            "STRATA_PF_WMMA": "1",
+            "STRATA_EXECV": "1",
+            "STRATA_GDN_TC": "1",
+            "STRATA_GDN_CONVL2": "2"
+          }
+        }
+      },
+      "engine_notes": {
+        "a": [
+          "strata generate: memory guard: limit 61.1 GiB (source: meminfo), current 2.3 GiB, reclaimable cache credited 0.0 GiB; available 58.8 GiB (MemAvailable 58.8 GiB), floor 2560 MiB",
+          "strata generate: PCIe probe: 12.3 GB/s host->device (best of 12.3 12.3 12.3 12.3) -> pcie_frac 0.34 (default 0.55)",
+          "strata generate: profile /opt/strata/data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots",
+          "strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 1.55 GiB of pinned RAM",
+          "strata generate: file tier (Linux defaults, the GGUF read in place): page-cached experts computed from the mapping (STRATA_COLD_OVERLAP=4), io prefetch with whole-blob preads on 8 I/O threads, the decode's read-ahead only while the page cache has room for it and it pays (STRATA_IO_PF_GATE=1); off: STRATA_COLD_OVERLAP=0, STRATA_IO_PREFETCH=0, STRATA_IO_PF_GATE=0",
+          "strata generate: CPU pool tasks/phase: 9 (automatic), participating threads: 3",
+          "strata generate: CPU pool: 2 workers by default (3 physical cores, 6 logical processors; bounded by every physical core but the host's)",
+          "strata generate: 2 pool workers on logical processors 1,2, the host thread on 0 (draining too) (--host-core first)",
+          "strata generate: CPU workers on logical processors 1,2 (2 workers, one per physical core; host on 0)",
+          "strata aux cpus: threads that are neither pool workers nor the host go to CPUs 6 (off at start; a request's aux_cpus=1 turns it on)",
+          "strata generate: expert cache auto: 10.03 GiB free, 700 MiB reserved (+186 MiB for the draft head, +256 MiB for what is allocated after the cache) -> 4107 slots",
+          "strata generate: expert cache 5499 slots, 8.91 GiB of VRAM; policy is",
+          "strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,",
+          "strata generate: the profile fill asks for 256 pairs ahead (STRATA_FILL_AHEAD)",
+          "strata generate: pre-filled 5499 of 5499 slots from the profile in 4.0 s (2397 MB/s); slot 0 verified",
+          "strata generate: R4 hit path ON - resident experts are computed on the GPU",
+          "strata generate: 2 expert-pool workers + the host thread",
+          "strata generate: token graph hit path: 5499 resident experts, decided on the device",
+          "strata: prefill plan: chunk 8192, ring 96 kept: file set 35.4 GiB fits the page cache 51.0 GiB -> about 0.0 GB read from the drive per 32768-token prompt (4 chunks)",
+          "strata: prefill plan inputs: 40.0 GiB experts, 8.9 GiB in the GPU caches, 0.0 GiB RAM copy (0 lend slots kept), file tier 31.1 GiB; 51.0 GiB available for the page cache; PCIe 12.3 GB/s; drive 2.50 GB/s (nvme1n1 is NVMe); a 32768-token prompt",
+          "strata serve: the prompt path borrows 2488 CUDA0 cache slots (3.99 GiB)",
+          "strata verify: window up to 12 tokens, 104.4 MiB of device buffers",
+          "strata serve: conversation cache sized from the free RAM: 8192 MiB for up to 4 parked conversations, so an agent's next turn reuses its prompt (--conversation-cache-mib N sets it, 0 turns it off)",
+          "strata serve: PCIe share: start 0.65 from 2 pool workers (assumed 8 GB/s of expert bytes) and the 12.3 GB/s link (was 0.34)",
+          "strata serve: STRATA_ROUTE_TAIL_SKIP=7 is ON (default): a missed expert that every token of a verify window routes at rank 7 or lower is skipped (+10..20% decode on 12-16 GB cards that miss experts, answers differ slightly from 0.1.41); STRATA_ROUTE_TAIL_SKIP=0 turns it off",
+          "strata serve: adaptive overlap: off (STRATA_ADAPT_OVERLAP=1 turns it on)",
+          "strata serve: 721 MiB of VRAM free with everything loaded",
+          "strata serve: --lookup-max-t 12: MTP windows up to 6 tokens, window sizes 1,2,3,4,5,6,7,8,12",
+          "strata verify: capturing the 8-token window (721 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 37.9 ms",
+          "strata verify: capturing the 1-token window (703 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 16.7 ms",
+          "strata verify: capturing the 6-token window (687 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 15.8 ms",
+          "strata serve: prompt 16 tokens = 0 reused + 16 read in 999 ms (16.0 tok/s), 2 generated in 405 ms (4.9 tok/s), drafts accepted 5 of 5, 1 checkpoints",
+          "strata serve: decode expert cache hit rate: 35.7% (1007 hits / 2818 lookups)",
+          "strata serve: file tier I/O this request: the OS read 4428.1 MB from storage (11 major faults) for 14771.9 MB of expert reads; page cache held 14771.9 MB at the read, not 0.0 MB; io prefetch: 0 read ahead (0.0 MB by pread), 0 used, 0 unused, 8351 skipped (cached), 0 dropped; decode waited 2515.7 ms in 5500 fetches; decode gate: cache room 1.26 of the experts, read-ahead used 100%, page cache held 100% of the decode's reads (EWMA), open, closed in 0 windows so far, 0 flips; read ahead 0.0 MB, 0.0 MB of it used; 0 late, 0 not admitted (confidence), 0 (budget 0 MB/window)",
+          "strata serve: KV streaming: 91.67% of 864 block reads hit VRAM, 0.3 MiB read from RAM"
+        ],
+        "b": [
+          "strata generate: memory guard: limit 61.1 GiB (source: meminfo), current 3.0 GiB, reclaimable cache credited 0.0 GiB; available 58.1 GiB (MemAvailable 58.1 GiB), floor 2560 MiB",
+          "strata generate: PCIe probe: 12.3 GB/s host->device (best of 12.3 12.3 12.3 12.3) -> pcie_frac 0.34 (default 0.55)",
+          "strata generate: profile /opt/strata/data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots",
+          "strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 1.55 GiB of pinned RAM",
+          "strata generate: file tier (Linux defaults, the GGUF read in place): page-cached experts computed from the mapping (STRATA_COLD_OVERLAP=4), io prefetch with whole-blob preads on 8 I/O threads, the decode's read-ahead only while the page cache has room for it and it pays (STRATA_IO_PF_GATE=1); off: STRATA_COLD_OVERLAP=0, STRATA_IO_PREFETCH=0, STRATA_IO_PF_GATE=0",
+          "strata generate: CPU pool tasks/phase: 9 (automatic), participating threads: 3",
+          "strata generate: CPU pool: 2 workers by default (3 physical cores, 6 logical processors; bounded by every physical core but the host's)",
+          "strata generate: 2 pool workers on logical processors 4,5, the host thread on 3 (draining too) (--host-core first)",
+          "strata generate: CPU workers on logical processors 4,5 (2 workers, one per physical core; host on 3)",
+          "strata aux cpus: threads that are neither pool workers nor the host go to CPUs 9 (off at start; a request's aux_cpus=1 turns it on)",
+          "strata generate: expert cache auto: 10.03 GiB free, 700 MiB reserved (+186 MiB for the draft head, +256 MiB for what is allocated after the cache) -> 4107 slots",
+          "strata generate: expert cache 5499 slots, 8.91 GiB of VRAM; policy is",
+          "strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,",
+          "strata generate: the profile fill asks for 256 pairs ahead (STRATA_FILL_AHEAD)",
+          "strata generate: pre-filled 5499 of 5499 slots from the profile in 4.0 s (2397 MB/s); slot 0 verified",
+          "strata generate: R4 hit path ON - resident experts are computed on the GPU",
+          "strata generate: 2 expert-pool workers + the host thread",
+          "strata generate: token graph hit path: 5499 resident experts, decided on the device",
+          "strata: prefill plan: chunk 8192, ring 96 kept: file set 35.4 GiB fits the page cache 51.0 GiB -> about 0.0 GB read from the drive per 32768-token prompt (4 chunks)",
+          "strata: prefill plan inputs: 40.0 GiB experts, 8.9 GiB in the GPU caches, 0.0 GiB RAM copy (0 lend slots kept), file tier 31.1 GiB; 51.0 GiB available for the page cache; PCIe 12.3 GB/s; drive 2.50 GB/s (nvme1n1 is NVMe); a 32768-token prompt",
+          "strata serve: the prompt path borrows 2488 CUDA0 cache slots (3.99 GiB)",
+          "strata verify: window up to 12 tokens, 104.4 MiB of device buffers",
+          "strata serve: conversation cache sized from the free RAM: 8192 MiB for up to 4 parked conversations, so an agent's next turn reuses its prompt (--conversation-cache-mib N sets it, 0 turns it off)",
+          "strata serve: PCIe share: start 0.65 from 2 pool workers (assumed 8 GB/s of expert bytes) and the 12.3 GB/s link (was 0.34)",
+          "strata serve: STRATA_ROUTE_TAIL_SKIP=7 is ON (default): a missed expert that every token of a verify window routes at rank 7 or lower is skipped (+10..20% decode on 12-16 GB cards that miss experts, answers differ slightly from 0.1.41); STRATA_ROUTE_TAIL_SKIP=0 turns it off",
+          "strata serve: adaptive overlap: off (STRATA_ADAPT_OVERLAP=1 turns it on)",
+          "strata serve: 721 MiB of VRAM free with everything loaded",
+          "strata serve: --lookup-max-t 12: MTP windows up to 6 tokens, window sizes 1,2,3,4,5,6,7,8,12",
+          "strata verify: capturing the 8-token window (721 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 37.1 ms",
+          "strata verify: capturing the 1-token window (703 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 16.4 ms",
+          "strata verify: capturing the 6-token window (687 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 15.6 ms",
+          "strata serve: prompt 16 tokens = 0 reused + 16 read in 979 ms (16.3 tok/s), 2 generated in 409 ms (4.9 tok/s), drafts accepted 5 of 5, 1 checkpoints",
+          "strata serve: decode expert cache hit rate: 35.7% (1007 hits / 2818 lookups)",
+          "strata serve: file tier I/O this request: the OS read 1747.9 MB from storage (5 major faults) for 14771.9 MB of expert reads; page cache held 14771.9 MB at the read, not 0.0 MB; io prefetch: 0 read ahead (0.0 MB by pread), 0 used, 0 unused, 8340 skipped (cached), 0 dropped; decode waited 2539.2 ms in 5500 fetches; decode gate: cache room 1.26 of the experts, read-ahead used 100%, page cache held 100% of the decode's reads (EWMA), open, closed in 0 windows so far, 0 flips; read ahead 0.0 MB, 0.0 MB of it used; 0 late, 0 not admitted (confidence), 0 (budget 0 MB/window)",
+          "strata serve: KV streaming: 91.67% of 864 block reads hit VRAM, 0.3 MiB read from RAM"
+        ]
+      },
+      "gpu_full_lifetime": {
+        "a": {
+          "temperature_c": {
+            "mean": 39.4,
+            "peak": 40.0
+          },
+          "power_w": {
+            "mean": 35.480399999999996,
+            "peak": 39.85
+          },
+          "util_pct": {
+            "mean": 14.56,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 9098.2,
+            "peak": 15475.0
+          },
+          "sm_mhz": {
+            "mean": 993.0,
+            "peak": 1110.0
+          }
+        },
+        "b": {
+          "temperature_c": {
+            "mean": 41.36,
+            "peak": 42.0
+          },
+          "power_w": {
+            "mean": 36.019999999999996,
+            "peak": 46.49
+          },
+          "util_pct": {
+            "mean": 17.04,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 7805.8,
+            "peak": 15475.0
+          },
+          "sm_mhz": {
+            "mean": 954.0,
+            "peak": 1110.0
+          }
+        }
+      },
+      "request_metrics": {
+        "a": {
+          "prompt_tokens": 16,
+          "output_tokens": 2,
+          "finish": "stop",
+          "hit_rate": 0.357,
+          "pcie_share": 0.0,
+          "file_mb": 1850.1,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "drafts_offered": 5,
+          "drafts_accepted": 5
+        },
+        "b": {
+          "prompt_tokens": 16,
+          "output_tokens": 2,
+          "finish": "stop",
+          "hit_rate": 0.357,
+          "pcie_share": 0.0,
+          "file_mb": 1850.1,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "drafts_offered": 5,
+          "drafts_accepted": 5
+        }
+      },
+      "host_post_health": {
+        "ram_used": 11652378624,
+        "ram_total": 65597706240,
+        "cpu": 28.1,
+        "disk_read_mb": 0.7823489321529825,
+        "disk_write_mb": 0.0
+      },
+      "host_trailing_ram_samples": [
+        11318996992,
+        11310145536,
+        11336896512,
+        11489226752,
+        11506704384,
+        11652378624
+      ],
+      "page_cache_before": {
+        "fincore": [
+          {
+            "res": 41726181376,
+            "pages": 10187056,
+            "size": 47039860096,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf"
+          },
+          {
+            "res": 65536,
+            "pages": 16,
+            "size": 28800138432,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf"
+          },
+          {
+            "res": 40960,
+            "pages": 10,
+            "size": 1538035200,
+            "file": "/srv/models/strata-iq3xxs/pack/iq3_xxs-native/dense.bin"
+          }
+        ]
+      },
+      "memory_before": "total        used        free      shared  buff/cache   available\nMem:     65597706240  1532178432 18247639040    21532672 46582181888 64065527808\nSwap:     4294963200   173453312  4121509888\n",
+      "page_cache_after": {
+        "fincore": [
+          {
+            "res": 45502201856,
+            "pages": 11108936,
+            "size": 47039860096,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf"
+          },
+          {
+            "res": 65536,
+            "pages": 16,
+            "size": 28800138432,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf"
+          },
+          {
+            "res": 1538035712,
+            "pages": 375497,
+            "size": 1538035200,
+            "file": "/srv/models/strata-iq3xxs/pack/iq3_xxs-native/dense.bin"
+          }
+        ]
+      },
+      "memory_after": "total        used        free      shared  buff/cache   available\nMem:     65597706240  2545430528 11089592320    21532672 52726964224 63052275712\nSwap:     4294963200   173453312  4121509888\n",
+      "host_vmstat_delta": {
+        "pgmajfault": 3,
+        "pswpin": 1,
+        "pswpout": 0,
+        "pgpgin": 6031600,
+        "pgpgout": 20660
+      }
+    },
+    {
+      "phase": {
+        "id": "m1-20261107T170315-batch-1",
+        "phase": "results_saved",
+        "started": "2026-11-07T17:04:14.397329+09:00",
+        "scored": true,
+        "benchmark_started": "2026-11-07T17:04:27.820246+09:00",
+        "bench_container_id": "dc24f6d320f75a3db344160dbb6b6207aef687a8532bd50e83126b5b0b29f38f",
+        "metrics": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "output_tokens": 1189,
+            "prefill_tok_s": 998.2,
+            "decode_tok_s": 25.2,
+            "ttft_s": 127.4453185530001
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "output_tokens": 1638,
+            "prefill_tok_s": 1008.2,
+            "decode_tok_s": 26.2,
+            "ttft_s": 126.17101517400079
+          }
+        ],
+        "verdict": "PASS",
+        "finished": "2026-11-07T17:07:41.408536+09:00"
+      },
+      "config_sha256": {
+        "a": "5a814edce45cf5fd97649b82f276aa8eb22667e1b1580dda2d9311eabfc1cd18",
+        "b": "79ce7e874512fef3393bbe931e8504bce962f961aecbaec5a00e7b84a0bd8926"
+      },
+      "summary": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.003524986997945234,
+        "batch_wall_s": 188.71440422399974,
+        "decode_overlap_s": 47.08004255900232,
+        "both_busy_samples": 232,
+        "both_answering_samples": 232,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1189,
+            "finish_reason": "stop",
+            "wall_s": 174.52536111200243,
+            "ttft_s": 127.4453185530001,
+            "prefill_tok_s": 998.2,
+            "decode_tok_s": 25.2,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.881,
+            "file_mb": 149618.2,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "e9f384f7aaca39533ca4b4db111dc6a0c0a958f25d7a8ee39a6e293d7e79fe49"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 1638,
+            "finish_reason": "stop",
+            "wall_s": 188.70959902300092,
+            "ttft_s": 126.17101517400079,
+            "prefill_tok_s": 1008.2,
+            "decode_tok_s": 26.2,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.874,
+            "file_mb": 209010.2,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "c7ea4e7d2bd2eb3f0e591ae36ed5af75febf256d0644b54b1aed5eb33f06840f"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "summary_sha256": "49008d75d7a657308e399e66e47cd1e800f814ecbf1e6b91fb56f088818fa199",
+      "processes": {
+        "a": {
+          "pid": 18,
+          "args": [
+            "/opt/strata/engine/strata",
+            "--serve",
+            "--pack",
+            "/iq3xxs/pack/iq3_xxs-native",
+            "--native",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+            "--ple-gguf",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+            "--expert-profile",
+            "/opt/strata/data/expert-profile.bin",
+            "--mtp",
+            "/shared-mtp/rt",
+            "--mmap-experts",
+            "--max-context",
+            "131072",
+            "--kv",
+            "int8",
+            "--kv-resident",
+            "32768",
+            "--spec",
+            "6",
+            "--spec-min-p",
+            "0.5",
+            "--prefill",
+            "auto",
+            "--expert-cache",
+            "auto"
+          ],
+          "strata_env": {
+            "STRATA_SM70_TABLE": "1",
+            "STRATA_PF_WMMA": "1",
+            "STRATA_SELECT_SIMT": "1",
+            "STRATA_EXECV": "1",
+            "STRATA_GDN_TC": "1",
+            "STRATA_GDN_CONVL2": "2"
+          }
+        },
+        "b": {
+          "pid": 18,
+          "args": [
+            "/opt/strata/engine/strata",
+            "--serve",
+            "--pack",
+            "/iq3xxs/pack/iq3_xxs-native",
+            "--native",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+            "--ple-gguf",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+            "--expert-profile",
+            "/opt/strata/data/expert-profile.bin",
+            "--mtp",
+            "/shared-mtp/rt",
+            "--mmap-experts",
+            "--max-context",
+            "131072",
+            "--kv",
+            "int8",
+            "--kv-resident",
+            "32768",
+            "--spec",
+            "6",
+            "--spec-min-p",
+            "0.5",
+            "--prefill",
+            "auto",
+            "--expert-cache",
+            "auto"
+          ],
+          "strata_env": {
+            "STRATA_SELECT_SIMT": "1",
+            "STRATA_SM70_TABLE": "1",
+            "STRATA_PF_WMMA": "1",
+            "STRATA_EXECV": "1",
+            "STRATA_GDN_TC": "1",
+            "STRATA_GDN_CONVL2": "2"
+          }
+        }
+      },
+      "engine_notes": {
+        "a": [
+          "strata generate: memory guard: limit 61.1 GiB (source: meminfo), current 2.9 GiB, reclaimable cache credited 0.0 GiB; available 58.2 GiB (MemAvailable 58.2 GiB), floor 2560 MiB",
+          "strata generate: PCIe probe: 12.3 GB/s host->device (best of 12.3 12.3 12.3 12.3) -> pcie_frac 0.34 (default 0.55)",
+          "strata generate: profile /opt/strata/data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots",
+          "strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 1.55 GiB of pinned RAM",
+          "strata generate: file tier (Linux defaults, the GGUF read in place): page-cached experts computed from the mapping (STRATA_COLD_OVERLAP=4), io prefetch with whole-blob preads on 8 I/O threads, the decode's read-ahead only while the page cache has room for it and it pays (STRATA_IO_PF_GATE=1); off: STRATA_COLD_OVERLAP=0, STRATA_IO_PREFETCH=0, STRATA_IO_PF_GATE=0",
+          "strata generate: CPU pool tasks/phase: 9 (automatic), participating threads: 3",
+          "strata generate: CPU pool: 2 workers by default (3 physical cores, 6 logical processors; bounded by every physical core but the host's)",
+          "strata generate: 2 pool workers on logical processors 1,2, the host thread on 0 (draining too) (--host-core first)",
+          "strata generate: CPU workers on logical processors 1,2 (2 workers, one per physical core; host on 0)",
+          "strata aux cpus: threads that are neither pool workers nor the host go to CPUs 6 (off at start; a request's aux_cpus=1 turns it on)",
+          "strata generate: expert cache auto: 10.03 GiB free, 700 MiB reserved (+186 MiB for the draft head, +256 MiB for what is allocated after the cache) -> 4107 slots",
+          "strata generate: expert cache 5499 slots, 8.91 GiB of VRAM; policy is",
+          "strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,",
+          "strata generate: the profile fill asks for 256 pairs ahead (STRATA_FILL_AHEAD)",
+          "strata generate: pre-filled 5499 of 5499 slots from the profile in 3.5 s (2757 MB/s); slot 0 verified",
+          "strata generate: R4 hit path ON - resident experts are computed on the GPU",
+          "strata generate: 2 expert-pool workers + the host thread",
+          "strata generate: token graph hit path: 5499 resident experts, decided on the device",
+          "strata: prefill plan: chunk 8192, ring 96 kept: file set 35.4 GiB fits the page cache 51.3 GiB -> about 0.0 GB read from the drive per 32768-token prompt (4 chunks)",
+          "strata: prefill plan inputs: 40.0 GiB experts, 8.9 GiB in the GPU caches, 0.0 GiB RAM copy (0 lend slots kept), file tier 31.1 GiB; 51.3 GiB available for the page cache; PCIe 12.3 GB/s; drive 2.50 GB/s (nvme1n1 is NVMe); a 32768-token prompt",
+          "strata serve: the prompt path borrows 2488 CUDA0 cache slots (3.99 GiB)",
+          "strata verify: window up to 12 tokens, 104.4 MiB of device buffers",
+          "strata serve: conversation cache sized from the free RAM: 8192 MiB for up to 4 parked conversations, so an agent's next turn reuses its prompt (--conversation-cache-mib N sets it, 0 turns it off)",
+          "strata serve: PCIe share: start 0.65 from 2 pool workers (assumed 8 GB/s of expert bytes) and the 12.3 GB/s link (was 0.34)",
+          "strata serve: STRATA_ROUTE_TAIL_SKIP=7 is ON (default): a missed expert that every token of a verify window routes at rank 7 or lower is skipped (+10..20% decode on 12-16 GB cards that miss experts, answers differ slightly from 0.1.41); STRATA_ROUTE_TAIL_SKIP=0 turns it off",
+          "strata serve: adaptive overlap: off (STRATA_ADAPT_OVERLAP=1 turns it on)",
+          "strata serve: 721 MiB of VRAM free with everything loaded",
+          "strata serve: --lookup-max-t 12: MTP windows up to 6 tokens, window sizes 1,2,3,4,5,6,7,8,12",
+          "strata verify: capturing the 6-token window (627 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 17.6 ms",
+          "strata verify: capturing the 1-token window (609 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 18.1 ms",
+          "strata verify: capturing the 4-token window (593 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 19.3 ms",
+          "strata verify: capturing the 5-token window (575 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 21.5 ms",
+          "strata verify: capturing the 3-token window (557 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 20.2 ms",
+          "strata verify: capturing the 2-token window (541 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 20.3 ms",
+          "strata serve: PCIe share: the CPU pool takes 326 us per missed expert (5.4 GB/s of expert bytes), the link 12.3 GB/s -> pcie_frac 0.75 (was 0.65; --pcie-frac N fixes it, STRATA_PCIE_FRAC_DEFAULT=old keeps the start-up rule)",
+          "strata serve: prompt 126967 tokens = 0 reused + 126967 read in 127194 ms (998.2 tok/s), 1189 generated in 47153 ms (25.2 tok/s), drafts accepted 675 of 1367, 6 checkpoints",
+          "strata serve: decode expert cache hit rate: 88.1% (750793 hits / 852063 lookups)",
+          "strata serve: file tier I/O this request: the OS read 291.3 MB from storage (0 major faults) for 766279.1 MB of expert reads; page cache held 766279.1 MB at the read, not 0.0 MB; io prefetch: 0 read ahead (0.0 MB by pread), 0 used, 0 unused, 17737 skipped (cached), 0 dropped; decode waited 6080.7 ms in 20308 fetches; decode gate: cache room 1.23 of the experts, read-ahead used 100%, page cache held 100% of the decode's reads (EWMA), closed, closed in 484 windows so far, 3 flips; read ahead 0.0 MB, 0.0 MB of it used; 0 late, 0 not admitted (confidence), 0 (budget 0 MB/window)",
+          "strata serve: KV streaming: 98.23% of 11640000 block reads hit VRAM, 830.3 MiB read from RAM",
+          "strata serve: suffix drafts: 14 windows, 24 of 44 drafts accepted"
+        ],
+        "b": [
+          "strata generate: memory guard: limit 61.1 GiB (source: meminfo), current 3.5 GiB, reclaimable cache credited 0.0 GiB; available 57.6 GiB (MemAvailable 57.6 GiB), floor 2560 MiB",
+          "strata generate: PCIe probe: 12.3 GB/s host->device (best of 12.3 12.3 12.3 12.3) -> pcie_frac 0.34 (default 0.55)",
+          "strata generate: profile /opt/strata/data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots",
+          "strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 1.55 GiB of pinned RAM",
+          "strata generate: file tier (Linux defaults, the GGUF read in place): page-cached experts computed from the mapping (STRATA_COLD_OVERLAP=4), io prefetch with whole-blob preads on 8 I/O threads, the decode's read-ahead only while the page cache has room for it and it pays (STRATA_IO_PF_GATE=1); off: STRATA_COLD_OVERLAP=0, STRATA_IO_PREFETCH=0, STRATA_IO_PF_GATE=0",
+          "strata generate: CPU pool tasks/phase: 9 (automatic), participating threads: 3",
+          "strata generate: CPU pool: 2 workers by default (3 physical cores, 6 logical processors; bounded by every physical core but the host's)",
+          "strata generate: 2 pool workers on logical processors 4,5, the host thread on 3 (draining too) (--host-core first)",
+          "strata generate: CPU workers on logical processors 4,5 (2 workers, one per physical core; host on 3)",
+          "strata aux cpus: threads that are neither pool workers nor the host go to CPUs 9 (off at start; a request's aux_cpus=1 turns it on)",
+          "strata generate: expert cache auto: 10.03 GiB free, 700 MiB reserved (+186 MiB for the draft head, +256 MiB for what is allocated after the cache) -> 4107 slots",
+          "strata generate: expert cache 5499 slots, 8.91 GiB of VRAM; policy is",
+          "strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,",
+          "strata generate: the profile fill asks for 256 pairs ahead (STRATA_FILL_AHEAD)",
+          "strata generate: pre-filled 5499 of 5499 slots from the profile in 3.3 s (2901 MB/s); slot 0 verified",
+          "strata generate: R4 hit path ON - resident experts are computed on the GPU",
+          "strata generate: 2 expert-pool workers + the host thread",
+          "strata generate: token graph hit path: 5499 resident experts, decided on the device",
+          "strata: prefill plan: chunk 8192, ring 96 kept: file set 35.4 GiB fits the page cache 50.7 GiB -> about 0.0 GB read from the drive per 32768-token prompt (4 chunks)",
+          "strata: prefill plan inputs: 40.0 GiB experts, 8.9 GiB in the GPU caches, 0.0 GiB RAM copy (0 lend slots kept), file tier 31.1 GiB; 50.7 GiB available for the page cache; PCIe 12.3 GB/s; drive 2.50 GB/s (nvme1n1 is NVMe); a 32768-token prompt",
+          "strata serve: the prompt path borrows 2488 CUDA0 cache slots (3.99 GiB)",
+          "strata verify: window up to 12 tokens, 104.4 MiB of device buffers",
+          "strata serve: conversation cache sized from the free RAM: 8192 MiB for up to 4 parked conversations, so an agent's next turn reuses its prompt (--conversation-cache-mib N sets it, 0 turns it off)",
+          "strata serve: PCIe share: start 0.65 from 2 pool workers (assumed 8 GB/s of expert bytes) and the 12.3 GB/s link (was 0.34)",
+          "strata serve: STRATA_ROUTE_TAIL_SKIP=7 is ON (default): a missed expert that every token of a verify window routes at rank 7 or lower is skipped (+10..20% decode on 12-16 GB cards that miss experts, answers differ slightly from 0.1.41); STRATA_ROUTE_TAIL_SKIP=0 turns it off",
+          "strata serve: adaptive overlap: off (STRATA_ADAPT_OVERLAP=1 turns it on)",
+          "strata serve: 721 MiB of VRAM free with everything loaded",
+          "strata serve: --lookup-max-t 12: MTP windows up to 6 tokens, window sizes 1,2,3,4,5,6,7,8,12",
+          "strata verify: capturing the 6-token window (627 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 18.6 ms",
+          "strata verify: capturing the 1-token window (609 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 17.4 ms",
+          "strata verify: capturing the 3-token window (593 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 20.5 ms",
+          "strata verify: capturing the 4-token window (575 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 22.6 ms",
+          "strata verify: capturing the 5-token window (557 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 18.9 ms",
+          "strata verify: capturing the 2-token window (541 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 23.9 ms",
+          "strata serve: PCIe share: the CPU pool takes 326 us per missed expert (5.4 GB/s of expert bytes), the link 12.3 GB/s -> pcie_frac 0.75 (was 0.65; --pcie-frac N fixes it, STRATA_PCIE_FRAC_DEFAULT=old keeps the start-up rule)",
+          "strata verify: capturing the 8-token window (521 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 19.8 ms",
+          "strata serve: prompt 126968 tokens = 0 reused + 126968 read in 125930 ms (1008.2 tok/s), 1638 generated in 62609 ms (26.2 tok/s), drafts accepted 983 of 1866, 6 checkpoints",
+          "strata serve: decode expert cache hit rate: 87.4% (995683 hits / 1139729 lookups)",
+          "strata serve: file tier I/O this request: the OS read 320.3 MB from storage (0 major faults) for 825689.7 MB of expert reads; page cache held 825689.7 MB at the read, not 0.0 MB; io prefetch: 0 read ahead (0.0 MB by pread), 0 used, 0 unused, 30761 skipped (cached), 0 dropped; decode waited 6764.5 ms in 23561 fetches; decode gate: cache room 1.23 of the experts, read-ahead used 100%, page cache held 100% of the decode's reads (EWMA), closed, closed in 611 windows so far, 5 flips; read ahead 0.0 MB, 0.0 MB of it used; 0 late, 0 not admitted (confidence), 0 (budget 0 MB/window)",
+          "strata serve: KV streaming: 98.57% of 15596232 block reads hit VRAM, 901.5 MiB read from RAM",
+          "strata serve: suffix drafts: 16 windows, 28 of 49 drafts accepted"
+        ]
+      },
+      "gpu_full_lifetime": {
+        "a": {
+          "temperature_c": {
+            "mean": 52.24285714285714,
+            "peak": 60.0
+          },
+          "power_w": {
+            "mean": 80.67057142857144,
+            "peak": 167.59
+          },
+          "util_pct": {
+            "mean": 72.51428571428572,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 15025.92857142857,
+            "peak": 15623.0
+          },
+          "sm_mhz": {
+            "mean": 1101.7952380952381,
+            "peak": 1110.0
+          }
+        },
+        "b": {
+          "temperature_c": {
+            "mean": 54.833333333333336,
+            "peak": 62.0
+          },
+          "power_w": {
+            "mean": 88.47366666666666,
+            "peak": 179.22
+          },
+          "util_pct": {
+            "mean": 78.45238095238095,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 14751.342857142858,
+            "peak": 15641.0
+          },
+          "sm_mhz": {
+            "mean": 1082.6666666666667,
+            "peak": 1110.0
+          }
+        }
+      },
+      "request_metrics": {
+        "a": {
+          "prompt_tokens": 126967,
+          "output_tokens": 1189,
+          "finish": "stop",
+          "hit_rate": 0.881,
+          "pcie_share": 0.0,
+          "file_mb": 149618.2,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "drafts_offered": 1367,
+          "drafts_accepted": 675
+        },
+        "b": {
+          "prompt_tokens": 126968,
+          "output_tokens": 1638,
+          "finish": "stop",
+          "hit_rate": 0.874,
+          "pcie_share": 0.0,
+          "file_mb": 209010.2,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "drafts_offered": 1866,
+          "drafts_accepted": 983
+        }
+      },
+      "host_post_health": {
+        "ram_used": 12925186048,
+        "ram_total": 65597706240,
+        "cpu": 29.5,
+        "disk_read_mb": 1.8115439249125393,
+        "disk_write_mb": 0.0
+      },
+      "host_trailing_ram_samples": [
+        12818268160,
+        12882657280,
+        12900081664,
+        12901015552,
+        12901023744,
+        12903256064,
+        12903141376,
+        12911874048,
+        12904890368,
+        12904263680,
+        12920393728,
+        12923248640,
+        12927885312,
+        12929691648,
+        12928167936,
+        12925280256,
+        12927365120,
+        12927852544,
+        12926844928,
+        12926550016,
+        12925751296,
+        12921974784,
+        12920729600,
+        12920107008,
+        12918128640,
+        12917293056,
+        12920836096,
+        12920139776,
+        12920856576,
+        12920459264,
+        12919525376,
+        12922302464,
+        12922204160,
+        12921503744,
+        12919881728,
+        12919644160,
+        12926287872,
+        12926291968,
+        12924936192,
+        12923904000,
+        12923629568,
+        12925218816,
+        12923998208,
+        12927447040,
+        12927102976,
+        12927668224,
+        12928012288,
+        12925927424,
+        12925440000,
+        12922441728,
+        12924481536,
+        12923887616,
+        12923490304,
+        12922888192,
+        12922253312,
+        12927832064,
+        12927209472,
+        12925501440,
+        12926595072,
+        12925186048
+      ],
+      "page_cache_before": {
+        "fincore": [
+          {
+            "res": 45502201856,
+            "pages": 11108936,
+            "size": 47039860096,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf"
+          },
+          {
+            "res": 65536,
+            "pages": 16,
+            "size": 28800138432,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf"
+          },
+          {
+            "res": 1538035712,
+            "pages": 375497,
+            "size": 1538035200,
+            "file": "/srv/models/strata-iq3xxs/pack/iq3_xxs-native/dense.bin"
+          }
+        ]
+      },
+      "memory_before": "total        used        free      shared  buff/cache   available\nMem:     65597706240  2533195776 11101827072    21532672 52726964224 63064510464\nSwap:     4294963200   173453312  4121509888\n",
+      "page_cache_after": {
+        "fincore": [
+          {
+            "res": 45502201856,
+            "pages": 11108936,
+            "size": 47039860096,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf"
+          },
+          {
+            "res": 65536,
+            "pages": 16,
+            "size": 28800138432,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf"
+          },
+          {
+            "res": 1538035712,
+            "pages": 375497,
+            "size": 1538035200,
+            "file": "/srv/models/strata-iq3xxs/pack/iq3_xxs-native/dense.bin"
+          }
+        ]
+      },
+      "memory_after": "total        used        free      shared  buff/cache   available\nMem:     65597706240  1608040448 12019118080    21532672 52734840832 63989665792\nSwap:     4294963200   173453312  4121509888\n",
+      "host_vmstat_delta": {
+        "pgmajfault": 8,
+        "pswpin": 3,
+        "pswpout": 0,
+        "pgpgin": 598300,
+        "pgpgout": 42948
+      }
+    },
+    {
+      "phase": {
+        "id": "m1-20261107T170315-batch-2",
+        "phase": "results_saved",
+        "started": "2026-11-07T17:07:47.644908+09:00",
+        "scored": true,
+        "benchmark_started": "2026-11-07T17:08:01.107229+09:00",
+        "bench_container_id": "0fe3538fe6ac11851a8e6c4e0edca1ec166372a3894221442a1fab0309a0813c",
+        "metrics": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "output_tokens": 1189,
+            "prefill_tok_s": 996.1,
+            "decode_tok_s": 25.4,
+            "ttft_s": 127.71010082700013
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "output_tokens": 1683,
+            "prefill_tok_s": 1003.7,
+            "decode_tok_s": 26.1,
+            "ttft_s": 126.76812218900159
+          }
+        ],
+        "verdict": "PASS",
+        "finished": "2026-11-07T17:11:17.071031+09:00"
+      },
+      "config_sha256": {
+        "a": "a03696e48bc80b3c572c38522e5aeb73bbf24bfb2726b0d3d2844f2341bb33b1",
+        "b": "d87d9b8c406ee50d0a4d286f7a185d73718f0b0e1b0732e4603a6dad49062b29"
+      },
+      "summary": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.0038920090009924024,
+        "batch_wall_s": 191.06601068599775,
+        "decode_overlap_s": 46.779065786999126,
+        "both_busy_samples": 230,
+        "both_answering_samples": 230,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1189,
+            "finish_reason": "stop",
+            "wall_s": 174.48916661399926,
+            "ttft_s": 127.71010082700013,
+            "prefill_tok_s": 996.1,
+            "decode_tok_s": 25.4,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.881,
+            "file_mb": 149618.2,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "e9f384f7aaca39533ca4b4db111dc6a0c0a958f25d7a8ee39a6e293d7e79fe49"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 1683,
+            "finish_reason": "stop",
+            "wall_s": 191.06235253900013,
+            "ttft_s": 126.76812218900159,
+            "prefill_tok_s": 1003.7,
+            "decode_tok_s": 26.1,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.875,
+            "file_mb": 212724.9,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "a7623b7d817a76ef55c3e2e26f06311a0fc3b0148bc5119e381b6e26ffe2256d"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "summary_sha256": "d85ed7a7bbacd0a63beaebcb9a96c63949a2b201552d4e4fb466274622e91a2a",
+      "processes": {
+        "a": {
+          "pid": 18,
+          "args": [
+            "/opt/strata/engine/strata",
+            "--serve",
+            "--pack",
+            "/iq3xxs/pack/iq3_xxs-native",
+            "--native",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+            "--ple-gguf",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+            "--expert-profile",
+            "/opt/strata/data/expert-profile.bin",
+            "--mtp",
+            "/shared-mtp/rt",
+            "--mmap-experts",
+            "--max-context",
+            "131072",
+            "--kv",
+            "int8",
+            "--kv-resident",
+            "32768",
+            "--spec",
+            "6",
+            "--spec-min-p",
+            "0.5",
+            "--prefill",
+            "auto",
+            "--expert-cache",
+            "auto"
+          ],
+          "strata_env": {
+            "STRATA_SM70_TABLE": "1",
+            "STRATA_PF_WMMA": "1",
+            "STRATA_SELECT_SIMT": "1",
+            "STRATA_EXECV": "1",
+            "STRATA_GDN_TC": "1",
+            "STRATA_GDN_CONVL2": "2"
+          }
+        },
+        "b": {
+          "pid": 18,
+          "args": [
+            "/opt/strata/engine/strata",
+            "--serve",
+            "--pack",
+            "/iq3xxs/pack/iq3_xxs-native",
+            "--native",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+            "--ple-gguf",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+            "--expert-profile",
+            "/opt/strata/data/expert-profile.bin",
+            "--mtp",
+            "/shared-mtp/rt",
+            "--mmap-experts",
+            "--max-context",
+            "131072",
+            "--kv",
+            "int8",
+            "--kv-resident",
+            "32768",
+            "--spec",
+            "6",
+            "--spec-min-p",
+            "0.5",
+            "--prefill",
+            "auto",
+            "--expert-cache",
+            "auto"
+          ],
+          "strata_env": {
+            "STRATA_PF_WMMA": "1",
+            "STRATA_SELECT_SIMT": "1",
+            "STRATA_SM70_TABLE": "1",
+            "STRATA_EXECV": "1",
+            "STRATA_GDN_TC": "1",
+            "STRATA_GDN_CONVL2": "2"
+          }
+        }
+      },
+      "engine_notes": {
+        "a": [
+          "strata generate: memory guard: limit 61.1 GiB (source: meminfo), current 2.3 GiB, reclaimable cache credited 0.0 GiB; available 58.8 GiB (MemAvailable 58.8 GiB), floor 2560 MiB",
+          "strata generate: PCIe probe: 12.3 GB/s host->device (best of 12.3 12.3 12.3 12.3) -> pcie_frac 0.34 (default 0.55)",
+          "strata generate: profile /opt/strata/data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots",
+          "strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 1.55 GiB of pinned RAM",
+          "strata generate: file tier (Linux defaults, the GGUF read in place): page-cached experts computed from the mapping (STRATA_COLD_OVERLAP=4), io prefetch with whole-blob preads on 8 I/O threads, the decode's read-ahead only while the page cache has room for it and it pays (STRATA_IO_PF_GATE=1); off: STRATA_COLD_OVERLAP=0, STRATA_IO_PREFETCH=0, STRATA_IO_PF_GATE=0",
+          "strata generate: CPU pool tasks/phase: 9 (automatic), participating threads: 3",
+          "strata generate: CPU pool: 2 workers by default (3 physical cores, 6 logical processors; bounded by every physical core but the host's)",
+          "strata generate: 2 pool workers on logical processors 1,2, the host thread on 0 (draining too) (--host-core first)",
+          "strata generate: CPU workers on logical processors 1,2 (2 workers, one per physical core; host on 0)",
+          "strata aux cpus: threads that are neither pool workers nor the host go to CPUs 6 (off at start; a request's aux_cpus=1 turns it on)",
+          "strata generate: expert cache auto: 10.03 GiB free, 700 MiB reserved (+186 MiB for the draft head, +256 MiB for what is allocated after the cache) -> 4107 slots",
+          "strata generate: expert cache 5499 slots, 8.91 GiB of VRAM; policy is",
+          "strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,",
+          "strata generate: the profile fill asks for 256 pairs ahead (STRATA_FILL_AHEAD)",
+          "strata generate: pre-filled 5499 of 5499 slots from the profile in 3.4 s (2817 MB/s); slot 0 verified",
+          "strata generate: R4 hit path ON - resident experts are computed on the GPU",
+          "strata generate: 2 expert-pool workers + the host thread",
+          "strata generate: token graph hit path: 5499 resident experts, decided on the device",
+          "strata: prefill plan: chunk 8192, ring 96 kept: file set 35.4 GiB fits the page cache 51.3 GiB -> about 0.0 GB read from the drive per 32768-token prompt (4 chunks)",
+          "strata: prefill plan inputs: 40.0 GiB experts, 8.9 GiB in the GPU caches, 0.0 GiB RAM copy (0 lend slots kept), file tier 31.1 GiB; 51.3 GiB available for the page cache; PCIe 12.3 GB/s; drive 2.50 GB/s (nvme1n1 is NVMe); a 32768-token prompt",
+          "strata serve: the prompt path borrows 2488 CUDA0 cache slots (3.99 GiB)",
+          "strata verify: window up to 12 tokens, 104.4 MiB of device buffers",
+          "strata serve: conversation cache sized from the free RAM: 8192 MiB for up to 4 parked conversations, so an agent's next turn reuses its prompt (--conversation-cache-mib N sets it, 0 turns it off)",
+          "strata serve: PCIe share: start 0.65 from 2 pool workers (assumed 8 GB/s of expert bytes) and the 12.3 GB/s link (was 0.34)",
+          "strata serve: STRATA_ROUTE_TAIL_SKIP=7 is ON (default): a missed expert that every token of a verify window routes at rank 7 or lower is skipped (+10..20% decode on 12-16 GB cards that miss experts, answers differ slightly from 0.1.41); STRATA_ROUTE_TAIL_SKIP=0 turns it off",
+          "strata serve: adaptive overlap: off (STRATA_ADAPT_OVERLAP=1 turns it on)",
+          "strata serve: 721 MiB of VRAM free with everything loaded",
+          "strata serve: --lookup-max-t 12: MTP windows up to 6 tokens, window sizes 1,2,3,4,5,6,7,8,12",
+          "strata verify: capturing the 6-token window (627 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 18.2 ms",
+          "strata verify: capturing the 1-token window (609 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 18.7 ms",
+          "strata verify: capturing the 4-token window (593 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 20.0 ms",
+          "strata verify: capturing the 5-token window (575 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 21.0 ms",
+          "strata verify: capturing the 3-token window (557 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 20.1 ms",
+          "strata verify: capturing the 2-token window (541 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 19.8 ms",
+          "strata serve: PCIe share: the CPU pool takes 323 us per missed expert (5.4 GB/s of expert bytes), the link 12.3 GB/s -> pcie_frac 0.75 (was 0.65; --pcie-frac N fixes it, STRATA_PCIE_FRAC_DEFAULT=old keeps the start-up rule)",
+          "strata serve: prompt 126967 tokens = 0 reused + 126967 read in 127461 ms (996.1 tok/s), 1189 generated in 46853 ms (25.4 tok/s), drafts accepted 675 of 1367, 6 checkpoints",
+          "strata serve: decode expert cache hit rate: 88.1% (750793 hits / 852063 lookups)",
+          "strata serve: file tier I/O this request: the OS read 291.3 MB from storage (0 major faults) for 766279.1 MB of expert reads; page cache held 766279.1 MB at the read, not 0.0 MB; io prefetch: 0 read ahead (0.0 MB by pread), 0 used, 0 unused, 17879 skipped (cached), 0 dropped; decode waited 6060.3 ms in 20308 fetches; decode gate: cache room 1.23 of the experts, read-ahead used 100%, page cache held 100% of the decode's reads (EWMA), closed, closed in 484 windows so far, 3 flips; read ahead 0.0 MB, 0.0 MB of it used; 0 late, 0 not admitted (confidence), 0 (budget 0 MB/window)",
+          "strata serve: KV streaming: 98.23% of 11640000 block reads hit VRAM, 830.2 MiB read from RAM",
+          "strata serve: suffix drafts: 14 windows, 24 of 44 drafts accepted"
+        ],
+        "b": [
+          "strata generate: memory guard: limit 61.1 GiB (source: meminfo), current 2.9 GiB, reclaimable cache credited 0.0 GiB; available 58.2 GiB (MemAvailable 58.2 GiB), floor 2560 MiB",
+          "strata generate: PCIe probe: 12.3 GB/s host->device (best of 12.3 12.3 12.3 12.3) -> pcie_frac 0.34 (default 0.55)",
+          "strata generate: profile /opt/strata/data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots",
+          "strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 1.55 GiB of pinned RAM",
+          "strata generate: file tier (Linux defaults, the GGUF read in place): page-cached experts computed from the mapping (STRATA_COLD_OVERLAP=4), io prefetch with whole-blob preads on 8 I/O threads, the decode's read-ahead only while the page cache has room for it and it pays (STRATA_IO_PF_GATE=1); off: STRATA_COLD_OVERLAP=0, STRATA_IO_PREFETCH=0, STRATA_IO_PF_GATE=0",
+          "strata generate: CPU pool tasks/phase: 9 (automatic), participating threads: 3",
+          "strata generate: CPU pool: 2 workers by default (3 physical cores, 6 logical processors; bounded by every physical core but the host's)",
+          "strata generate: 2 pool workers on logical processors 4,5, the host thread on 3 (draining too) (--host-core first)",
+          "strata generate: CPU workers on logical processors 4,5 (2 workers, one per physical core; host on 3)",
+          "strata aux cpus: threads that are neither pool workers nor the host go to CPUs 9 (off at start; a request's aux_cpus=1 turns it on)",
+          "strata generate: expert cache auto: 10.03 GiB free, 700 MiB reserved (+186 MiB for the draft head, +256 MiB for what is allocated after the cache) -> 4107 slots",
+          "strata generate: expert cache 5499 slots, 8.91 GiB of VRAM; policy is",
+          "strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,",
+          "strata generate: the profile fill asks for 256 pairs ahead (STRATA_FILL_AHEAD)",
+          "strata generate: pre-filled 5499 of 5499 slots from the profile in 3.3 s (2879 MB/s); slot 0 verified",
+          "strata generate: R4 hit path ON - resident experts are computed on the GPU",
+          "strata generate: 2 expert-pool workers + the host thread",
+          "strata generate: token graph hit path: 5499 resident experts, decided on the device",
+          "strata: prefill plan: chunk 8192, ring 96 kept: file set 35.4 GiB fits the page cache 50.6 GiB -> about 0.0 GB read from the drive per 32768-token prompt (4 chunks)",
+          "strata: prefill plan inputs: 40.0 GiB experts, 8.9 GiB in the GPU caches, 0.0 GiB RAM copy (0 lend slots kept), file tier 31.1 GiB; 50.6 GiB available for the page cache; PCIe 12.3 GB/s; drive 2.50 GB/s (nvme1n1 is NVMe); a 32768-token prompt",
+          "strata serve: the prompt path borrows 2488 CUDA0 cache slots (3.99 GiB)",
+          "strata verify: window up to 12 tokens, 104.4 MiB of device buffers",
+          "strata serve: conversation cache sized from the free RAM: 8192 MiB for up to 4 parked conversations, so an agent's next turn reuses its prompt (--conversation-cache-mib N sets it, 0 turns it off)",
+          "strata serve: PCIe share: start 0.65 from 2 pool workers (assumed 8 GB/s of expert bytes) and the 12.3 GB/s link (was 0.34)",
+          "strata serve: STRATA_ROUTE_TAIL_SKIP=7 is ON (default): a missed expert that every token of a verify window routes at rank 7 or lower is skipped (+10..20% decode on 12-16 GB cards that miss experts, answers differ slightly from 0.1.41); STRATA_ROUTE_TAIL_SKIP=0 turns it off",
+          "strata serve: adaptive overlap: off (STRATA_ADAPT_OVERLAP=1 turns it on)",
+          "strata serve: 721 MiB of VRAM free with everything loaded",
+          "strata serve: --lookup-max-t 12: MTP windows up to 6 tokens, window sizes 1,2,3,4,5,6,7,8,12",
+          "strata verify: capturing the 6-token window (627 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 20.1 ms",
+          "strata verify: capturing the 1-token window (609 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 18.6 ms",
+          "strata verify: capturing the 3-token window (593 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 21.1 ms",
+          "strata verify: capturing the 4-token window (575 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 22.8 ms",
+          "strata verify: capturing the 5-token window (557 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 19.0 ms",
+          "strata verify: capturing the 2-token window (541 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 18.9 ms",
+          "strata serve: PCIe share: the CPU pool takes 332 us per missed expert (5.3 GB/s of expert bytes), the link 12.3 GB/s -> pcie_frac 0.75 (was 0.65; --pcie-frac N fixes it, STRATA_PCIE_FRAC_DEFAULT=old keeps the start-up rule)",
+          "strata verify: capturing the 8-token window (521 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 19.5 ms",
+          "strata serve: prompt 126968 tokens = 0 reused + 126968 read in 126503 ms (1003.7 tok/s), 1683 generated in 64370 ms (26.1 tok/s), drafts accepted 1009 of 1917, 6 checkpoints",
+          "strata serve: decode expert cache hit rate: 87.5% (1025656 hits / 1172389 lookups)",
+          "strata serve: file tier I/O this request: the OS read 325.5 MB from storage (0 major faults) for 829404.3 MB of expert reads; page cache held 829404.3 MB at the read, not 0.0 MB; io prefetch: 0 read ahead (0.0 MB by pread), 0 used, 0 unused, 30669 skipped (cached), 0 dropped; decode waited 6916.6 ms in 24114 fetches; decode gate: cache room 1.23 of the experts, read-ahead used 100%, page cache held 100% of the decode's reads (EWMA), closed, closed in 630 windows so far, 5 flips; read ahead 0.0 MB, 0.0 MB of it used; 0 late, 0 not admitted (confidence), 0 (budget 0 MB/window)",
+          "strata serve: KV streaming: 98.59% of 16027548 block reads hit VRAM, 907.4 MiB read from RAM",
+          "strata serve: suffix drafts: 14 windows, 24 of 47 drafts accepted"
+        ]
+      },
+      "gpu_full_lifetime": {
+        "a": {
+          "temperature_c": {
+            "mean": 55.20657276995305,
+            "peak": 62.0
+          },
+          "power_w": {
+            "mean": 80.85413145539906,
+            "peak": 168.06
+          },
+          "util_pct": {
+            "mean": 71.45539906103286,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 14975.178403755868,
+            "peak": 15623.0
+          },
+          "sm_mhz": {
+            "mean": 1103.6760563380283,
+            "peak": 1110.0
+          }
+        },
+        "b": {
+          "temperature_c": {
+            "mean": 56.89201877934272,
+            "peak": 63.0
+          },
+          "power_w": {
+            "mean": 87.3794366197183,
+            "peak": 186.91
+          },
+          "util_pct": {
+            "mean": 79.03755868544602,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 14749.464788732394,
+            "peak": 15641.0
+          },
+          "sm_mhz": {
+            "mean": 1083.4507042253522,
+            "peak": 1110.0
+          }
+        }
+      },
+      "request_metrics": {
+        "a": {
+          "prompt_tokens": 126967,
+          "output_tokens": 1189,
+          "finish": "stop",
+          "hit_rate": 0.881,
+          "pcie_share": 0.0,
+          "file_mb": 149618.2,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "drafts_offered": 1367,
+          "drafts_accepted": 675
+        },
+        "b": {
+          "prompt_tokens": 126968,
+          "output_tokens": 1683,
+          "finish": "stop",
+          "hit_rate": 0.875,
+          "pcie_share": 0.0,
+          "file_mb": 212724.9,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "drafts_offered": 1917,
+          "drafts_accepted": 1009
+        }
+      },
+      "host_post_health": {
+        "ram_used": 12951506944,
+        "ram_total": 65597706240,
+        "cpu": 31.1,
+        "disk_read_mb": 2.722831207506356,
+        "disk_write_mb": 0.0
+      },
+      "host_trailing_ram_samples": [
+        12909703168,
+        12911206400,
+        12917665792,
+        12915572736,
+        12913025024,
+        12911980544,
+        12910723072,
+        12910198784,
+        12908244992,
+        12929003520,
+        12928442368,
+        12927729664,
+        12925603840,
+        12925124608,
+        12924166144,
+        12913405952,
+        12912369664,
+        12911632384,
+        12911001600,
+        12918063104,
+        12925038592,
+        12924813312,
+        12923658240,
+        12922310656,
+        12924633088,
+        12924104704,
+        12923772928,
+        12921569280,
+        12921122816,
+        12922277888,
+        12921839616,
+        12921409536,
+        12921606144,
+        12921233408,
+        12924813312,
+        12929478656,
+        12927676416,
+        12925280256,
+        12927078400,
+        12927561728,
+        12926386176,
+        12924485632,
+        12923482112,
+        12926545920,
+        12927410176,
+        12925042688,
+        12925186048,
+        12924563456,
+        12929724416,
+        12928200704,
+        12928331776,
+        12925952000,
+        12923961344,
+        12927328256,
+        12924522496,
+        12924145664,
+        12923977728,
+        12923772928,
+        12928200704,
+        12951506944
+      ],
+      "page_cache_before": {
+        "fincore": [
+          {
+            "res": 45502201856,
+            "pages": 11108936,
+            "size": 47039860096,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf"
+          },
+          {
+            "res": 65536,
+            "pages": 16,
+            "size": 28800138432,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf"
+          },
+          {
+            "res": 1538035712,
+            "pages": 375497,
+            "size": 1538035200,
+            "file": "/srv/models/strata-iq3xxs/pack/iq3_xxs-native/dense.bin"
+          }
+        ]
+      },
+      "memory_before": "total        used        free      shared  buff/cache   available\nMem:     65597706240  1608556544 12018511872    21532672 52734894080 63989149696\nSwap:     4294963200   173453312  4121509888\n",
+      "page_cache_after": {
+        "fincore": [
+          {
+            "res": 45502201856,
+            "pages": 11108936,
+            "size": 47039860096,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf"
+          },
+          {
+            "res": 65536,
+            "pages": 16,
+            "size": 28800138432,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf"
+          },
+          {
+            "res": 1538035712,
+            "pages": 375497,
+            "size": 1538035200,
+            "file": "/srv/models/strata-iq3xxs/pack/iq3_xxs-native/dense.bin"
+          }
+        ]
+      },
+      "memory_after": "total        used        free      shared  buff/cache   available\nMem:     65597706240  1587412992 12032913408    21532672 52741672960 64010293248\nSwap:     4294963200   173453312  4121509888\n",
+      "host_vmstat_delta": {
+        "pgmajfault": 10,
+        "pswpin": 8,
+        "pswpout": 0,
+        "pgpgin": 603300,
+        "pgpgout": 43524
+      }
+    },
+    {
+      "phase": {
+        "id": "m1-20261107T170315-batch-3",
+        "phase": "results_saved",
+        "started": "2026-11-07T17:11:23.787040+09:00",
+        "scored": true,
+        "benchmark_started": "2026-11-07T17:11:37.363085+09:00",
+        "bench_container_id": "0e768905ec2d210bcf372938b17b42dfdeb482585a76ce71a2b2b043d178903c",
+        "metrics": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "output_tokens": 1189,
+            "prefill_tok_s": 996.7,
+            "decode_tok_s": 25.3,
+            "ttft_s": 127.63711634100036
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "output_tokens": 1809,
+            "prefill_tok_s": 1002.0,
+            "decode_tok_s": 26.0,
+            "ttft_s": 126.97482621499876
+          }
+        ],
+        "verdict": "PASS",
+        "finished": "2026-11-07T17:14:58.610304+09:00"
+      },
+      "config_sha256": {
+        "a": "96f3fcabb210406140a75705e1898b590968cbb87d4d73dbed4db05cc1d64c5e",
+        "b": "f6d2dd31db392dc4bead0af7c929aef6a6fdcae1bc30af1b955af2094784614f"
+      },
+      "summary": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.0038968570006545633,
+        "batch_wall_s": 196.3990949040017,
+        "decode_overlap_s": 46.85117347800042,
+        "both_busy_samples": 230,
+        "both_answering_samples": 230,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1189,
+            "finish_reason": "stop",
+            "wall_s": 174.48828981900078,
+            "ttft_s": 127.63711634100036,
+            "prefill_tok_s": 996.7,
+            "decode_tok_s": 25.3,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.881,
+            "file_mb": 149618.2,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "e9f384f7aaca39533ca4b4db111dc6a0c0a958f25d7a8ee39a6e293d7e79fe49"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 1809,
+            "finish_reason": "stop",
+            "wall_s": 196.39618247800172,
+            "ttft_s": 126.97482621499876,
+            "prefill_tok_s": 1002.0,
+            "decode_tok_s": 26.0,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.874,
+            "file_mb": 233484.0,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "178294a7f2579e5ed6fc2f53a8a39cde4306e3acc3f69ec8bd617f80734d6c6d"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "summary_sha256": "80aa281bb7e12ef16c926cbf163d1c79be211193eae6a083b81dc6370300998d",
+      "processes": {
+        "a": {
+          "pid": 18,
+          "args": [
+            "/opt/strata/engine/strata",
+            "--serve",
+            "--pack",
+            "/iq3xxs/pack/iq3_xxs-native",
+            "--native",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+            "--ple-gguf",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+            "--expert-profile",
+            "/opt/strata/data/expert-profile.bin",
+            "--mtp",
+            "/shared-mtp/rt",
+            "--mmap-experts",
+            "--max-context",
+            "131072",
+            "--kv",
+            "int8",
+            "--kv-resident",
+            "32768",
+            "--spec",
+            "6",
+            "--spec-min-p",
+            "0.5",
+            "--prefill",
+            "auto",
+            "--expert-cache",
+            "auto"
+          ],
+          "strata_env": {
+            "STRATA_PF_WMMA": "1",
+            "STRATA_SELECT_SIMT": "1",
+            "STRATA_SM70_TABLE": "1",
+            "STRATA_EXECV": "1",
+            "STRATA_GDN_TC": "1",
+            "STRATA_GDN_CONVL2": "2"
+          }
+        },
+        "b": {
+          "pid": 18,
+          "args": [
+            "/opt/strata/engine/strata",
+            "--serve",
+            "--pack",
+            "/iq3xxs/pack/iq3_xxs-native",
+            "--native",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf",
+            "--ple-gguf",
+            "/iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf",
+            "--expert-profile",
+            "/opt/strata/data/expert-profile.bin",
+            "--mtp",
+            "/shared-mtp/rt",
+            "--mmap-experts",
+            "--max-context",
+            "131072",
+            "--kv",
+            "int8",
+            "--kv-resident",
+            "32768",
+            "--spec",
+            "6",
+            "--spec-min-p",
+            "0.5",
+            "--prefill",
+            "auto",
+            "--expert-cache",
+            "auto"
+          ],
+          "strata_env": {
+            "STRATA_SELECT_SIMT": "1",
+            "STRATA_SM70_TABLE": "1",
+            "STRATA_PF_WMMA": "1",
+            "STRATA_EXECV": "1",
+            "STRATA_GDN_TC": "1",
+            "STRATA_GDN_CONVL2": "2"
+          }
+        }
+      },
+      "engine_notes": {
+        "a": [
+          "strata generate: memory guard: limit 61.1 GiB (source: meminfo), current 2.3 GiB, reclaimable cache credited 0.0 GiB; available 58.8 GiB (MemAvailable 58.8 GiB), floor 2560 MiB",
+          "strata generate: PCIe probe: 12.3 GB/s host->device (best of 12.3 12.3 12.3 12.3) -> pcie_frac 0.34 (default 0.55)",
+          "strata generate: profile /opt/strata/data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots",
+          "strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 1.55 GiB of pinned RAM",
+          "strata generate: file tier (Linux defaults, the GGUF read in place): page-cached experts computed from the mapping (STRATA_COLD_OVERLAP=4), io prefetch with whole-blob preads on 8 I/O threads, the decode's read-ahead only while the page cache has room for it and it pays (STRATA_IO_PF_GATE=1); off: STRATA_COLD_OVERLAP=0, STRATA_IO_PREFETCH=0, STRATA_IO_PF_GATE=0",
+          "strata generate: CPU pool tasks/phase: 9 (automatic), participating threads: 3",
+          "strata generate: CPU pool: 2 workers by default (3 physical cores, 6 logical processors; bounded by every physical core but the host's)",
+          "strata generate: 2 pool workers on logical processors 1,2, the host thread on 0 (draining too) (--host-core first)",
+          "strata generate: CPU workers on logical processors 1,2 (2 workers, one per physical core; host on 0)",
+          "strata aux cpus: threads that are neither pool workers nor the host go to CPUs 6 (off at start; a request's aux_cpus=1 turns it on)",
+          "strata generate: expert cache auto: 10.03 GiB free, 700 MiB reserved (+186 MiB for the draft head, +256 MiB for what is allocated after the cache) -> 4107 slots",
+          "strata generate: expert cache 5499 slots, 8.91 GiB of VRAM; policy is",
+          "strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,",
+          "strata generate: the profile fill asks for 256 pairs ahead (STRATA_FILL_AHEAD)",
+          "strata generate: pre-filled 5499 of 5499 slots from the profile in 3.4 s (2807 MB/s); slot 0 verified",
+          "strata generate: R4 hit path ON - resident experts are computed on the GPU",
+          "strata generate: 2 expert-pool workers + the host thread",
+          "strata generate: token graph hit path: 5499 resident experts, decided on the device",
+          "strata: prefill plan: chunk 8192, ring 96 kept: file set 35.4 GiB fits the page cache 51.4 GiB -> about 0.0 GB read from the drive per 32768-token prompt (4 chunks)",
+          "strata: prefill plan inputs: 40.0 GiB experts, 8.9 GiB in the GPU caches, 0.0 GiB RAM copy (0 lend slots kept), file tier 31.1 GiB; 51.4 GiB available for the page cache; PCIe 12.3 GB/s; drive 2.50 GB/s (nvme1n1 is NVMe); a 32768-token prompt",
+          "strata serve: the prompt path borrows 2488 CUDA0 cache slots (3.99 GiB)",
+          "strata verify: window up to 12 tokens, 104.4 MiB of device buffers",
+          "strata serve: conversation cache sized from the free RAM: 8192 MiB for up to 4 parked conversations, so an agent's next turn reuses its prompt (--conversation-cache-mib N sets it, 0 turns it off)",
+          "strata serve: PCIe share: start 0.65 from 2 pool workers (assumed 8 GB/s of expert bytes) and the 12.3 GB/s link (was 0.34)",
+          "strata serve: STRATA_ROUTE_TAIL_SKIP=7 is ON (default): a missed expert that every token of a verify window routes at rank 7 or lower is skipped (+10..20% decode on 12-16 GB cards that miss experts, answers differ slightly from 0.1.41); STRATA_ROUTE_TAIL_SKIP=0 turns it off",
+          "strata serve: adaptive overlap: off (STRATA_ADAPT_OVERLAP=1 turns it on)",
+          "strata serve: 721 MiB of VRAM free with everything loaded",
+          "strata serve: --lookup-max-t 12: MTP windows up to 6 tokens, window sizes 1,2,3,4,5,6,7,8,12",
+          "strata verify: capturing the 6-token window (627 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 17.6 ms",
+          "strata verify: capturing the 1-token window (609 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 19.5 ms",
+          "strata verify: capturing the 4-token window (593 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 20.8 ms",
+          "strata verify: capturing the 5-token window (575 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 21.3 ms",
+          "strata verify: capturing the 3-token window (557 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 19.8 ms",
+          "strata verify: capturing the 2-token window (541 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 20.4 ms",
+          "strata serve: PCIe share: the CPU pool takes 324 us per missed expert (5.4 GB/s of expert bytes), the link 12.3 GB/s -> pcie_frac 0.75 (was 0.65; --pcie-frac N fixes it, STRATA_PCIE_FRAC_DEFAULT=old keeps the start-up rule)",
+          "strata serve: prompt 126967 tokens = 0 reused + 126967 read in 127384 ms (996.7 tok/s), 1189 generated in 46925 ms (25.3 tok/s), drafts accepted 675 of 1367, 6 checkpoints",
+          "strata serve: decode expert cache hit rate: 88.1% (750793 hits / 852063 lookups)",
+          "strata serve: file tier I/O this request: the OS read 291.3 MB from storage (0 major faults) for 766279.1 MB of expert reads; page cache held 766279.1 MB at the read, not 0.0 MB; io prefetch: 0 read ahead (0.0 MB by pread), 0 used, 0 unused, 18057 skipped (cached), 0 dropped; decode waited 6089.0 ms in 20308 fetches; decode gate: cache room 1.23 of the experts, read-ahead used 100%, page cache held 100% of the decode's reads (EWMA), closed, closed in 484 windows so far, 3 flips; read ahead 0.0 MB, 0.0 MB of it used; 0 late, 0 not admitted (confidence), 0 (budget 0 MB/window)",
+          "strata serve: KV streaming: 98.23% of 11640000 block reads hit VRAM, 830.3 MiB read from RAM",
+          "strata serve: suffix drafts: 14 windows, 24 of 44 drafts accepted"
+        ],
+        "b": [
+          "strata generate: memory guard: limit 61.1 GiB (source: meminfo), current 3.0 GiB, reclaimable cache credited 0.0 GiB; available 58.1 GiB (MemAvailable 58.1 GiB), floor 2560 MiB",
+          "strata generate: PCIe probe: 12.3 GB/s host->device (best of 12.3 12.3 12.3 12.3) -> pcie_frac 0.34 (default 0.55)",
+          "strata generate: profile /opt/strata/data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots",
+          "strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 1.55 GiB of pinned RAM",
+          "strata generate: file tier (Linux defaults, the GGUF read in place): page-cached experts computed from the mapping (STRATA_COLD_OVERLAP=4), io prefetch with whole-blob preads on 8 I/O threads, the decode's read-ahead only while the page cache has room for it and it pays (STRATA_IO_PF_GATE=1); off: STRATA_COLD_OVERLAP=0, STRATA_IO_PREFETCH=0, STRATA_IO_PF_GATE=0",
+          "strata generate: CPU pool tasks/phase: 9 (automatic), participating threads: 3",
+          "strata generate: CPU pool: 2 workers by default (3 physical cores, 6 logical processors; bounded by every physical core but the host's)",
+          "strata generate: 2 pool workers on logical processors 4,5, the host thread on 3 (draining too) (--host-core first)",
+          "strata generate: CPU workers on logical processors 4,5 (2 workers, one per physical core; host on 3)",
+          "strata aux cpus: threads that are neither pool workers nor the host go to CPUs 9 (off at start; a request's aux_cpus=1 turns it on)",
+          "strata generate: expert cache auto: 10.03 GiB free, 700 MiB reserved (+186 MiB for the draft head, +256 MiB for what is allocated after the cache) -> 4107 slots",
+          "strata generate: expert cache 5499 slots, 8.91 GiB of VRAM; policy is",
+          "strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,",
+          "strata generate: the profile fill asks for 256 pairs ahead (STRATA_FILL_AHEAD)",
+          "strata generate: pre-filled 5499 of 5499 slots from the profile in 3.3 s (2898 MB/s); slot 0 verified",
+          "strata generate: R4 hit path ON - resident experts are computed on the GPU",
+          "strata generate: 2 expert-pool workers + the host thread",
+          "strata generate: token graph hit path: 5499 resident experts, decided on the device",
+          "strata: prefill plan: chunk 8192, ring 96 kept: file set 35.4 GiB fits the page cache 50.9 GiB -> about 0.0 GB read from the drive per 32768-token prompt (4 chunks)",
+          "strata: prefill plan inputs: 40.0 GiB experts, 8.9 GiB in the GPU caches, 0.0 GiB RAM copy (0 lend slots kept), file tier 31.1 GiB; 50.9 GiB available for the page cache; PCIe 12.3 GB/s; drive 2.50 GB/s (nvme1n1 is NVMe); a 32768-token prompt",
+          "strata serve: the prompt path borrows 2488 CUDA0 cache slots (3.99 GiB)",
+          "strata verify: window up to 12 tokens, 104.4 MiB of device buffers",
+          "strata serve: conversation cache sized from the free RAM: 8192 MiB for up to 4 parked conversations, so an agent's next turn reuses its prompt (--conversation-cache-mib N sets it, 0 turns it off)",
+          "strata serve: PCIe share: start 0.65 from 2 pool workers (assumed 8 GB/s of expert bytes) and the 12.3 GB/s link (was 0.34)",
+          "strata serve: STRATA_ROUTE_TAIL_SKIP=7 is ON (default): a missed expert that every token of a verify window routes at rank 7 or lower is skipped (+10..20% decode on 12-16 GB cards that miss experts, answers differ slightly from 0.1.41); STRATA_ROUTE_TAIL_SKIP=0 turns it off",
+          "strata serve: adaptive overlap: off (STRATA_ADAPT_OVERLAP=1 turns it on)",
+          "strata serve: 721 MiB of VRAM free with everything loaded",
+          "strata serve: --lookup-max-t 12: MTP windows up to 6 tokens, window sizes 1,2,3,4,5,6,7,8,12",
+          "strata verify: capturing the 6-token window (627 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 19.8 ms",
+          "strata verify: capturing the 1-token window (609 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 19.3 ms",
+          "strata verify: capturing the 3-token window (593 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 21.5 ms",
+          "strata verify: capturing the 4-token window (575 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 21.5 ms",
+          "strata verify: capturing the 5-token window (557 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 19.9 ms",
+          "strata verify: capturing the 2-token window (541 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 19.0 ms",
+          "strata serve: PCIe share: the CPU pool takes 326 us per missed expert (5.4 GB/s of expert bytes), the link 12.3 GB/s -> pcie_frac 0.75 (was 0.65; --pcie-frac N fixes it, STRATA_PCIE_FRAC_DEFAULT=old keeps the start-up rule)",
+          "strata verify: capturing the 8-token window (521 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 21.7 ms",
+          "strata serve: prompt 126968 tokens = 0 reused + 126968 read in 126720 ms (1002.0 tok/s), 1809 generated in 69495 ms (26.0 tok/s), drafts accepted 1087 of 2076, 6 checkpoints",
+          "strata serve: decode expert cache hit rate: 87.4% (1103672 hits / 1263390 lookups)",
+          "strata serve: file tier I/O this request: the OS read 334.2 MB from storage (0 major faults) for 850163.4 MB of expert reads; page cache held 850163.4 MB at the read, not 0.0 MB; io prefetch: 0 read ahead (0.0 MB by pread), 0 used, 0 unused, 28620 skipped (cached), 0 dropped; decode waited 7198.9 ms in 25322 fetches; decode gate: cache room 1.23 of the experts, read-ahead used 100%, page cache held 100% of the decode's reads (EWMA), closed, closed in 677 windows so far, 5 flips; read ahead 0.0 MB, 0.0 MB of it used; 0 late, 0 not admitted (confidence), 0 (budget 0 MB/window)",
+          "strata serve: KV streaming: 98.64% of 17296776 block reads hit VRAM, 944.6 MiB read from RAM",
+          "strata serve: suffix drafts: 23 windows, 38 of 61 drafts accepted"
+        ]
+      },
+      "gpu_full_lifetime": {
+        "a": {
+          "temperature_c": {
+            "mean": 55.5045871559633,
+            "peak": 62.0
+          },
+          "power_w": {
+            "mean": 86.585,
+            "peak": 166.41
+          },
+          "util_pct": {
+            "mean": 69.23853211009174,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 15044.935779816513,
+            "peak": 15623.0
+          },
+          "sm_mhz": {
+            "mean": 1096.5091743119267,
+            "peak": 1110.0
+          }
+        },
+        "b": {
+          "temperature_c": {
+            "mean": 57.10091743119266,
+            "peak": 63.0
+          },
+          "power_w": {
+            "mean": 87.38426605504587,
+            "peak": 177.1
+          },
+          "util_pct": {
+            "mean": 78.57339449541284,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 14782.564220183487,
+            "peak": 15641.0
+          },
+          "sm_mhz": {
+            "mean": 1084.165137614679,
+            "peak": 1110.0
+          }
+        }
+      },
+      "request_metrics": {
+        "a": {
+          "prompt_tokens": 126967,
+          "output_tokens": 1189,
+          "finish": "stop",
+          "hit_rate": 0.881,
+          "pcie_share": 0.0,
+          "file_mb": 149618.2,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "drafts_offered": 1367,
+          "drafts_accepted": 675
+        },
+        "b": {
+          "prompt_tokens": 126968,
+          "output_tokens": 1809,
+          "finish": "stop",
+          "hit_rate": 0.874,
+          "pcie_share": 0.0,
+          "file_mb": 233484.0,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "drafts_offered": 2076,
+          "drafts_accepted": 1087
+        }
+      },
+      "host_post_health": {
+        "ram_used": 12921499648,
+        "ram_total": 65597706240,
+        "cpu": 28.6,
+        "disk_read_mb": 2.3732693909211067,
+        "disk_write_mb": 0.0
+      },
+      "host_trailing_ram_samples": [
+        12904247296,
+        12904325120,
+        12904689664,
+        12904194048,
+        12906676224,
+        12908048384,
+        12907778048,
+        12908163072,
+        12906078208,
+        12909912064,
+        12910702592,
+        12911337472,
+        12927238144,
+        12925915136,
+        12927340544,
+        12926771200,
+        12926676992,
+        12926472192,
+        12926353408,
+        12941934592,
+        12923883520,
+        12922773504,
+        12922060800,
+        12920860672,
+        12920188928,
+        12918804480,
+        12917321728,
+        12912713728,
+        12909953024,
+        12911865856,
+        12911407104,
+        12910931968,
+        12908843008,
+        12911083520,
+        12909596672,
+        12909391872,
+        12915453952,
+        12916490240,
+        12922789888,
+        12923752448,
+        12922621952,
+        12922306560,
+        12921507840,
+        12924055552,
+        12922957824,
+        12921171968,
+        12919287808,
+        12918931456,
+        12933525504,
+        12932841472,
+        12931424256,
+        12935032832,
+        12934098944,
+        12934123520,
+        12932542464,
+        12928405504,
+        12927254528,
+        12923965440,
+        12923772928,
+        12921499648
+      ],
+      "page_cache_before": {
+        "fincore": [
+          {
+            "res": 45502201856,
+            "pages": 11108936,
+            "size": 47039860096,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf"
+          },
+          {
+            "res": 65536,
+            "pages": 16,
+            "size": 28800138432,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf"
+          },
+          {
+            "res": 1538035712,
+            "pages": 375497,
+            "size": 1538035200,
+            "file": "/srv/models/strata-iq3xxs/pack/iq3_xxs-native/dense.bin"
+          }
+        ]
+      },
+      "memory_before": "total        used        free      shared  buff/cache   available\nMem:     65597706240  1589669888 12030631936    21532672 52741693440 64008036352\nSwap:     4294963200   173453312  4121509888\n",
+      "page_cache_after": {
+        "fincore": [
+          {
+            "res": 45502201856,
+            "pages": 11108936,
+            "size": 47039860096,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf"
+          },
+          {
+            "res": 65536,
+            "pages": 16,
+            "size": 28800138432,
+            "file": "/srv/models/strata-iq3xxs/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00002-of-00002.gguf"
+          },
+          {
+            "res": 1538035712,
+            "pages": 375497,
+            "size": 1538035200,
+            "file": "/srv/models/strata-iq3xxs/pack/iq3_xxs-native/dense.bin"
+          }
+        ]
+      },
+      "memory_after": "total        used        free      shared  buff/cache   available\nMem:     65597706240  1585479680 12027863040    21532672 52748640256 64012226560\nSwap:     4294963200   173453312  4121509888\n",
+      "host_vmstat_delta": {
+        "pgmajfault": 13,
+        "pswpin": 9,
+        "pswpout": 0,
+        "pgpgin": 612284,
+        "pgpgout": 43188
+      }
+    }
+  ],
+  "decode_30_each_batch_both_agents": false,
+  "reference_id": "u1-20261107T124518",
+  "reference_medians": {
+    "prefill_tok_s": {
+      "a": 871.0,
+      "b": 877.2
+    },
+    "decode_tok_s": {
+      "a": 25.2,
+      "b": 27.7
+    },
+    "ttft_s": {
+      "a": 146.016564882,
+      "b": 145.00717244600014
+    }
+  }
+}

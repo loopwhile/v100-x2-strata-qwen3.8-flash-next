@@ -51,26 +51,32 @@ The mixed test has not been measured or promoted.
 - Choose **separate** runtime candidate settings for IQ2_XS and IQ3_S; do not copy IQ3_XXS defaults blindly. IQ3_S archive restoration requires disk/hash and active-service checks, not deletion of other models. Stage 6 is closed and is not reopened by Stage 7.
 - Preserve power/clock settings, operating tunnel, serving ports, Stage 3–6 results and rollback paths. Use dedicated Stage 7 names and keep empirical metrics separate from claims.
 
-## Stage 8 through C3 (CLOSED BY USER SCOPE — 2026-11-07)
+## Stage 8 through M2 (CLOSED BY USER SCOPE — 2026-11-07)
 
 Read [final continuation review](docs/STAGE8_CONTINUATION_REVIEW.md),
 [full metric summary](artifacts/stage8-followup-results-20261107/summary.md),
 [Stage 8 plan](docs/STAGE8_PLAN.md) and [current state](state/current.md).
 
-- U1 completed 3/3; follow-up C1/C2/C3 each completed 3/3 concurrent 128K C2
-  (**9/9 follow-up scored batches**) plus one separately unscored D1 diagnostic.
-  C3 medians: Prefill A/B 820.5/825.0 tok/s, Decode 29.0/28.7 tok/s,
-  TTFT 155.00/154.14 s. Dual-agent 30 tok/s goal NOT MET; no overall upgrade,
-  semantic-quality validation or production promotion.
-- Latest user instruction: **finish C3 only**. M1/M2/M3 were not launched.
-  Their proposed settings, scripts 107–110 and old continuation instructions
-  are audit/reference, not permission to resume. All U1/D1/C1/C2/C3 IDs and
-  the preparation-only u1-20261107T124317 ID are CLOSED; never reuse them.
+- U1 completed 3/3; follow-up C1/C2/C3/M1/M2 each completed 3/3 concurrent 128K C2
+  (**15/15 follow-up scored batches; 18/18 total Stage 8 scored batches**) plus
+  one separately unscored D1 diagnostic. C3 medians: Prefill A/B 820.5/825.0 tok/s,
+  Decode 29.0/28.7 tok/s, TTFT 155.00/154.14 s; M1 (`--spec 6`) Decode
+  25.3/26.1 tok/s; M2 (`--expert-cache-per-layer`) Decode 25.8/26.2 tok/s.
+  Dual-agent 30 tok/s goal NOT MET; no overall upgrade, semantic-quality
+  validation or production promotion.
+- Latest user instruction: **run M1 → M2 only, evaluate M3 without executing it,
+  and run no combination arms**. M3 was evaluated analytically/empirically as
+  feasible (~113 MiB VRAM trade-off) but unnecessary (KV VRAM hit already
+  97.7–98.9%, `kv-resolve` ~0.43 ms/window) and was NOT launched. Scripts 107–111
+  are retained as audit/reference, not permission to resume. All
+  U1/D1/C1/C2/C3/M1/M2 IDs and preparation-only u1-20261107T124317 are CLOSED;
+  never reuse them.
 - C2 uses a bounded 2 GiB pinned-resident budget per agent because D1 proved
   plain mmap has zero useful PCIe expert work despite fraction logs. C3 adds
-  existing upstream --adapt-async 1 relative to completed C2; no custom source
-  patch or new-kernel parity result is claimed. Keep these definitions explicit.
-- Preserve all 606 follow-up raw files, earlier U1/preparation receipts, runner
+  existing upstream --adapt-async 1 relative to completed C2; M1 and M2 each
+  apply one single setting relative to U1 using dedicated runner 111 while
+  preserving script 107 unchanged. Keep these definitions explicit.
+- Preserve all 952 follow-up raw files, earlier U1/preparation receipts, runner
   snapshots, images, historical serving containers, original models/native
   pack/MTP, cpusets, independent GPU mapping, 131072 context and INT8 KV.
   Never rerun archived S7-XXS-14 for a new baseline.

@@ -1,22 +1,29 @@
 {
-  "checked_at": "2026-11-07T14:57:42.637454+09:00",
+  "checked_at": "2026-11-07T17:32:30.140691+09:00",
   "host": "p520-llm",
   "running_containers": "",
   "gpu": "index, memory.used [MiB], power.limit [W], clocks.current.sm [MHz]\n0, 0 MiB, 150.00 W, 135 MHz\n1, 0 MiB, 150.00 W, 135 MHz",
   "compute": "",
-  "serving": "/strata-s7-xxs14-serve-a exited sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246\n/strata-s7-xxs14-serve-b exited sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246",
+  "serving": "/strata-s7-xxs14-serve-b exited 2095eed79b00\n/strata-s7-xxs14-serve-a exited 2095eed79b00\n/strata-jmn-iq2xs-agent-b exited strata-v100-jmnargi:9d77749\n/strata-jmn-iq2xs-agent-a exited strata-v100-jmnargi:9d77749",
   "clock_service": "active",
-  "unexecuted_m_directories": {
-    "M1": false,
-    "M2": false,
+  "stage8_arm_directories": {
+    "U1": true,
+    "D1": true,
+    "C1": true,
+    "C2": true,
+    "C3": true,
+    "M1": true,
+    "M2": true,
     "M3": false
   },
-  "remote_git_status": "?? scripts/103-stage7-cooling-c2.py",
+  "unexecuted_m3_directory_exists": false,
+  "remote_git_head": "a944720f6a19c6bdb6515152a1ef461ee5946fdf",
+  "remote_git_status": "",
   "protected_and_test_ports_listening": {
     "8080": false,
     "8081": false,
     "18086": false,
     "18087": false
   },
-  "publication_note": "Unrelated listener addresses omitted; port booleans derived from the original captured ss snapshot, preserved locally."
+  "publication_note": "Unrelated listener addresses omitted; port booleans derived from the live ss snapshot."
 }

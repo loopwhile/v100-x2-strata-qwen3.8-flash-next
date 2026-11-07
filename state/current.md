@@ -1,4 +1,19 @@
-# Current operation — C3 complete; user-requested Git publication, 2026-11-07
+# Current operation — S8-M1 and S8-M2 complete; M3 evaluated (not run), 2026-11-07
+
+**No remote experiment remains running. User-scoped prioritized continuation (`M1 → M2`, evaluate `M3` without executing, no combinations) is COMPLETE.**
+C1/C2/C3/M1/M2 each completed 3/3 concurrent 128K C2 (15/15 follow-up scored batches; 18/18 total Stage 8 scored batches with U1), plus one unscored D1 diagnostic. Dual-agent 30 tok/s goal NOT MET; no verified overall upgrade or promotion.
+
+- Active task: none executing. Final review `docs/STAGE8_CONTINUATION_REVIEW.md`; full metrics/resources `artifacts/stage8-followup-results-20261107/summary.md` (`summary.csv`, `summary.json`).
+- Newly completed IDs (CLOSED, no reuse/retry):
+  - **S8-M1** (`m1-20261107T170315`, `--spec 6` on U1): `3/3 PASS`, finished 17:15:04 KST, exit 0. Medians A/B: Prefill `996.7 / 1003.7 tok/s`, Decode `25.3 / 26.1 tok/s`, TTFT `127.64 / 126.77 s`, MTP acceptance `49.4% / 52.6%`, Expert hit `0.881 / 0.874`.
+  - **S8-M2** (`m2-20261107T171915`, `--expert-cache-per-layer` on U1): `3/3 PASS`, finished 17:31:26 KST, exit 0. Medians A/B: Prefill `994.6 / 1000.9 tok/s`, Decode `25.8 / 26.2 tok/s`, TTFT `127.89 / 127.12 s`, Expert hit `0.840 / 0.864` (`5472` slots, `114/layer`, `8.90 GiB`), MTP acceptance `66.3% / 59.1%`.
+- **S8-M3 (`--kv-resident 40960`)**: NOT EXECUTED per user scope. Offline planner/source evaluation confirmed mechanical feasibility (+~113.0 MiB QSA VRAM, auto-shrinking GPU expert cache by ~65–70 slots while keeping 1.55 GiB pinned KV RAM and 700 MiB VRAM reserve unchanged), but judged it unnecessary/counterproductive because `--kv-resident 32768` already yields `97.7%–98.9%` KV VRAM hit rate (`0.41–0.45 ms/window` `kv-resolve`) whereas decode is bottlenecked by CPU expert misses (`41–53 ms/window`).
+- Dedicated runner: `scripts/111-stage8-m1-m2.py` (SHA-256 `ba69cf7a92f3d10c3ba539b8191d3ae93627b32d7e61ab3fba2f9e13da009b36`), snapshot retained in `results/stage8-followup-runners/`. `scripts/107-stage8-followup.py` (`cec637b7...`) preserved byte-for-byte unchanged. P520 launcher tree `/tmp/stage8-m1m2-20261107/` retains logs and exit markers (`0`).
+- Raw backups: all **952 follow-up files SHA-256 matched** (`D1` 87 + `C1/C2/C3/M1/M2` 173 each) in `artifacts/stage8-followup-results-20261107/raw-backup-sha256.json` and `results/raw/<id>/`.
+- Final live check (`17:32:30 KST`): no running containers or GPU workloads; GPU0/GPU1 `0 MiB`, `150 W` limits, `135 MHz` idle, all scored SM peaks `<=1110 MHz`, `v100-clock-lock.service` `active`, no `S8-M3` directory created. Historical serving containers (`strata-s7-xxs14-serve-a/b`, `strata-jmn-iq2xs-agent-a/b`), images, models, ports `8080/8081` and ThinkPad `strata-tunnel.service` (`active` since `12:23:02 KST`) untouched.
+- User requested committing, pushing, and synchronizing ThinkPad, `origin/main`, and the P520 checkout. No GPU, container, serving, power, clock or tunnel operation is authorized by Git synchronization. Do not launch M3, combination arms, retries or production operations without a new explicit user scope.
+
+## Archived C1–C3 completion handoff — 2026-11-07
 
 **No remote experiment remains running. Latest user scope: “C3까지만 진행해줘.”**
 C1/C2/C3 each completed 3/3 concurrent 128K C2 (9/9), D1 separately unscored.

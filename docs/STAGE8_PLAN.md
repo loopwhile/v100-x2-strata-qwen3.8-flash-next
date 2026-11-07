@@ -1,13 +1,13 @@
 # Stage 8 — IQ3_XXS 128K dual-agent performance optimization plan
 
-**Status: COMPLETED THROUGH C3 — latest user scope; U1 and C1/C2/C3 each 3/3 C2 PASS, D1 separately unscored. Dual-agent 30 tok/s target NOT MET; no verified overall upgrade or promotion. M1/M2/M3 not run by user instruction. No further execution authorized.**
+**Status: COMPLETED THROUGH M2 — latest user scope; U1 and C1/C2/C3/M1/M2 each 3/3 C2 PASS (18/18 scored C2 total), D1 separately unscored. Dual-agent 30 tok/s target NOT MET; no verified overall upgrade or promotion. M3 evaluated analytically only and NOT run by user instruction; no combination arms run. No further execution authorized.**
 **Created:** 2026-11-07 (Asia/Seoul)  
 **Scope:** Qwen3.8-Flash-Next GSQ-RCO **IQ3_XXS**, two independent Tesla V100 16 GB agents, 131072-token context per agent.  
 **Decision:** Reuse the completed **S7-XXS-14** 0.1.54 C2 results as the archived baseline; **do not run an S8 0.1.54 baseline**. For each approved, supported new candidate: **preflight → server startup/health and basic inference check → exactly three fresh-process concurrent 128K C2 batches → review**. No one-batch speed-screen stage or mandatory final rerun.
 
-Final execution review: [continuation through C3](STAGE8_CONTINUATION_REVIEW.md) ·
+Final execution review: [continuation through M2](STAGE8_CONTINUATION_REVIEW.md) ·
 [full metrics/resources](../artifacts/stage8-followup-results-20261107/summary.md).
-The proposed M settings below are unexecuted reference only.
+Proposed M3 remains unexecuted reference only (evaluated as feasible but unnecessary).
 
 ## 1. Goal and limits
 
