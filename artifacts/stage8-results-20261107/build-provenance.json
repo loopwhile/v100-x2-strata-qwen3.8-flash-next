@@ -1,0 +1,23 @@
+{
+  "source_sha": "c3b3f5035506f3e966f1b4b7b188aeaabae92f1d",
+  "build": {
+    "source": "local",
+    "version": "0.1.57",
+    "archs": [
+      70
+    ],
+    "vision": "none",
+    "toolkit": 12,
+    "cuda_dirs": [
+      "/usr/local/cuda/bin",
+      "/usr/local/cuda/lib64"
+    ],
+    "src": "e098a67d9f6e6a24",
+    "vision_src": null
+  },
+  "engine_sha256": "77519ceb88fc6413666a0c5f9f7dc8447023a0c61d09cd22e7151711076c89d1",
+  "expert_profile_sha256": "8f59b4aa8873209dff11c11e37bcda9529a1335b724a1afeea37bf6388975baf",
+  "image_id": "sha256:590b604d9bcf5268ea03f6ab5b786e4051e69884eee8a328b6de54a4c55033d2",
+  "binary_version_reported": "strata 0.1.57",
+  "base_image_id_observed_prefix": "020bc241a628"
+}

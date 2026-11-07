@@ -1,0 +1,22 @@
+{
+  "checked_at": "2026-11-07T14:57:42.637454+09:00",
+  "host": "p520-llm",
+  "running_containers": "",
+  "gpu": "index, memory.used [MiB], power.limit [W], clocks.current.sm [MHz]\n0, 0 MiB, 150.00 W, 135 MHz\n1, 0 MiB, 150.00 W, 135 MHz",
+  "compute": "",
+  "serving": "/strata-s7-xxs14-serve-a exited sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246\n/strata-s7-xxs14-serve-b exited sha256:2095eed79b0038ef23d602a0490bf0d89c63ad8e84ace8654c5016b2a51d2246",
+  "clock_service": "active",
+  "unexecuted_m_directories": {
+    "M1": false,
+    "M2": false,
+    "M3": false
+  },
+  "remote_git_status": "?? scripts/103-stage7-cooling-c2.py",
+  "protected_and_test_ports_listening": {
+    "8080": false,
+    "8081": false,
+    "18086": false,
+    "18087": false
+  },
+  "publication_note": "Unrelated listener addresses omitted; port booleans derived from the original captured ss snapshot, preserved locally."
+}

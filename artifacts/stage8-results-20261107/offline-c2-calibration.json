@@ -1,0 +1,12 @@
+[
+  {
+    "id": "project-a",
+    "prompt_tokens": 126967,
+    "raw_prompt_sha256": "882a3617750ab8dbcb61d3e8e1d42641555a6b1450d060d7bb22a4f1161670b6"
+  },
+  {
+    "id": "project-b",
+    "prompt_tokens": 126968,
+    "raw_prompt_sha256": "5a19042f67dd7702e843595467e1d6c2b96414f565b0fbfa8036590709dba557"
+  }
+]

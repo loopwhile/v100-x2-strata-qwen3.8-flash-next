@@ -1,0 +1,14 @@
+{
+  "id": "u1-20261107T124317",
+  "verdict": "INCONCLUSIVE",
+  "error": "OSError(98, 'Address already in use')",
+  "started": "2026-11-07T12:43:51.276465+09:00",
+  "finished": "2026-11-07T12:44:29.463859+09:00",
+  "runner_sha256": "31e4d432491a7f94afa42f0a373f80f0572557480ba40de36f2d3076a773a092",
+  "scored_c2_batches": 0,
+  "startup_independent_verdict": "STARTUP_PASS_NOT_C2",
+  "explanation": "Completed startup row was incorrectly relabeled by the old exception handler after bind probe rejected TIME_WAIT before batch 1. No listeners or GPU work remained. Original progress and startup/API logs are preserved unchanged.",
+  "local_raw": "results/raw/u1-20261107T124317",
+  "source_sha": "c3b3f5035506f3e966f1b4b7b188aeaabae92f1d",
+  "image_id": "sha256:590b604d9bcf5268ea03f6ab5b786e4051e69884eee8a328b6de54a4c55033d2"
+}

@@ -50,3 +50,34 @@ The mixed test has not been measured or promoted.
 - IQ3_XXS S7-XXS-1..6, 8..13 and **14..16 are completed and closed**. Historical scripts/97 and scripts/99 and all results remain unchanged. S7-XXS-14/15/16 each passed **3/3 C2 (9/9 total)**; see [execution report](artifacts/stage7-results-20261101/stage7-iq3xxs-14-16-report.md) and [source/build audit](artifacts/stage7-results-20261101/stage7-iq3xxs-port-source-audit.md). Runner 100 pins the original 14 image and separate verified 15 WMMA2 / 16 LEAN images; source, compile, parity, dispatch and allocation gates were satisfied before enabling them. **Never rerun/reuse their IDs or treat retained runners as new execution orders.** No causal speedup or quality/promotion claim follows from these mechanical results. New experiments require separately approved scope and unique IDs. S7-XXS-7 remains optional/unauthorized. Do not silently inject SSD, WMMA2 or other flags into baseline arms.
 - Choose **separate** runtime candidate settings for IQ2_XS and IQ3_S; do not copy IQ3_XXS defaults blindly. IQ3_S archive restoration requires disk/hash and active-service checks, not deletion of other models. Stage 6 is closed and is not reopened by Stage 7.
 - Preserve power/clock settings, operating tunnel, serving ports, Stage 3–6 results and rollback paths. Use dedicated Stage 7 names and keep empirical metrics separate from claims.
+
+## Stage 8 through C3 (CLOSED BY USER SCOPE — 2026-11-07)
+
+Read [final continuation review](docs/STAGE8_CONTINUATION_REVIEW.md),
+[full metric summary](artifacts/stage8-followup-results-20261107/summary.md),
+[Stage 8 plan](docs/STAGE8_PLAN.md) and [current state](state/current.md).
+
+- U1 completed 3/3; follow-up C1/C2/C3 each completed 3/3 concurrent 128K C2
+  (**9/9 follow-up scored batches**) plus one separately unscored D1 diagnostic.
+  C3 medians: Prefill A/B 820.5/825.0 tok/s, Decode 29.0/28.7 tok/s,
+  TTFT 155.00/154.14 s. Dual-agent 30 tok/s goal NOT MET; no overall upgrade,
+  semantic-quality validation or production promotion.
+- Latest user instruction: **finish C3 only**. M1/M2/M3 were not launched.
+  Their proposed settings, scripts 107–110 and old continuation instructions
+  are audit/reference, not permission to resume. All U1/D1/C1/C2/C3 IDs and
+  the preparation-only u1-20261107T124317 ID are CLOSED; never reuse them.
+- C2 uses a bounded 2 GiB pinned-resident budget per agent because D1 proved
+  plain mmap has zero useful PCIe expert work despite fraction logs. C3 adds
+  existing upstream --adapt-async 1 relative to completed C2; no custom source
+  patch or new-kernel parity result is claimed. Keep these definitions explicit.
+- Preserve all 606 follow-up raw files, earlier U1/preparation receipts, runner
+  snapshots, images, historical serving containers, original models/native
+  pack/MTP, cpusets, independent GPU mapping, 131072 context and INT8 KV.
+  Never rerun archived S7-XXS-14 for a new baseline.
+- Initial/final serving state was empty. All owned experiment containers are
+  stopped and retained; historical serving pair stays stopped/preserved.
+  Keep existing 150 W limits, 135–1110 MHz lock, host settings, serving ports
+  and ThinkPad tunnel. Application clocks of 1312 MHz do not alone indicate a
+  missing GPU lock; inspect boot-service receipts and actual telemetry.
+- New work or promotion requires a new user scope and fresh live preflight;
+  no completed run or retained NEXT instruction authorizes it automatically.

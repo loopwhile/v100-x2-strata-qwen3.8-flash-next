@@ -1,9 +1,13 @@
 # Stage 8 — IQ3_XXS 128K dual-agent performance optimization plan
 
-**Status: PLANNED / NOT EXECUTED — documentation only; no host, container, Docker image, GPU, service, or tunnel change authorized by this document.**  
+**Status: COMPLETED THROUGH C3 — latest user scope; U1 and C1/C2/C3 each 3/3 C2 PASS, D1 separately unscored. Dual-agent 30 tok/s target NOT MET; no verified overall upgrade or promotion. M1/M2/M3 not run by user instruction. No further execution authorized.**
 **Created:** 2026-11-07 (Asia/Seoul)  
 **Scope:** Qwen3.8-Flash-Next GSQ-RCO **IQ3_XXS**, two independent Tesla V100 16 GB agents, 131072-token context per agent.  
 **Decision:** Reuse the completed **S7-XXS-14** 0.1.54 C2 results as the archived baseline; **do not run an S8 0.1.54 baseline**. For each approved, supported new candidate: **preflight → server startup/health and basic inference check → exactly three fresh-process concurrent 128K C2 batches → review**. No one-batch speed-screen stage or mandatory final rerun.
+
+Final execution review: [continuation through C3](STAGE8_CONTINUATION_REVIEW.md) ·
+[full metrics/resources](../artifacts/stage8-followup-results-20261107/summary.md).
+The proposed M settings below are unexecuted reference only.
 
 ## 1. Goal and limits
 
@@ -65,9 +69,19 @@ Do not touch existing 8080/8081 production/serving endpoints, ThinkPad `strata-t
 
 **No extra baseline / screening runs:** No S8-B0, no baseline 0.1.54 C2 remeasurement, no mandatory 1-run tuning screens and no mandatory final candidate-vs-baseline rerun. Instrumentation or a semantic coding suite is a separately scoped diagnostic, not part of the approved candidate's three C2 runs.
 
-## 4. Candidate registry (planned, not authorized to execute)
+## 4. Candidate registry (conditional; P0/U1 authorized by user 2026-11-07)
 
 The following are **conditional candidate slots**, not a command to execute all of them. Exactly 3 scored C2 batches **if and only if** the slot is approved and passes source/startup gates.
+
+Execution update: user requested Stage 8 and confirmed proceeding/recording on
+2026-11-07. P0 audit and U1's three scored batches are complete. U1 decode
+medians A 25.2 / B 27.7 tok/s; no verified overall upgrade. Additional slots
+were not selected after review and remain evidence-gated/unexecuted.
+That initial stop decision was challenged by the user and is superseded by
+the [continuation plan](STAGE8_CONTINUATION_PLAN.md): obtain necessary diagnostic
+evidence and advance eligible C/M arms instead of stopping at missing evidence.
+See [review](STAGE8_REVIEW.md), [measured report](../artifacts/stage8-results-20261107/stage8-u1-report.md),
+[source/host audit](STAGE8_SOURCE_AUDIT.md) and [current handoff](../state/current.md).
 
 | ID | Candidate / single primary change | Entry condition | Scored C2 |
 | --- | --- | --- | ---: |
