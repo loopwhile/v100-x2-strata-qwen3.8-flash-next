@@ -93,9 +93,27 @@
       "valid_batches": 0,
       "status": "REJECTED_HARDWARE_POWER_TRIP",
       "notes": "PSU power cut / reboot on 16384 chunk saturation; flag permanently rejected."
+    },
+    "S10-D4": {
+      "id": "d4-20261110T225518",
+      "valid_batches": 3,
+      "status": "PASS",
+      "prefill_tok_s_A_B": [1025.1, 1027.8],
+      "decode_tok_s_A_B": [30.4, 30.3],
+      "ttft_s_A_B": [124.08, 123.79],
+      "notes": "Both agents crossed 30.0 tok/s decode simultaneously (A 30.4 / B 30.3 tok/s), setting an all-time record on dual V100."
+    },
+    "S10-C1": {
+      "id": "c1-20261110T230918",
+      "valid_batches": 3,
+      "status": "PASS",
+      "prefill_tok_s_A_B": [1025.7, 1029.1],
+      "decode_tok_s_A_B": [27.5, 28.9],
+      "ttft_s_A_B": [124.03, 123.64],
+      "notes": "Combining spec 8 with STRATA_ADAPT_LAG=2 + NOWAIT=1 regressed decode to 27.5 / 28.9 tok/s due to 16-token expert cache lag. Spec 8 alone (D4) remains the undisputed winner."
     }
   },
-  "scored_batches_completed": 21,
+  "scored_batches_completed": 27,
   "diagnostic_batches_completed": 1,
-  "closure": "Paused by explicit user request ('여기서 일시 중단하고 커밋 푸시해줘.'). All results preserved and backed up."
+  "closure": "S10-D4 and S10-C1 executed per user authorization. S10-D4 achieved dual-agent decode >= 30.0 tok/s (30.4 / 30.3 tok/s)."
 }

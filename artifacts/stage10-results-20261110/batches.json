@@ -1,5 +1,44 @@
 [
   {
+    "arm": "S10-C1",
+    "id": "c1-20261110T230918-batch-1",
+    "overlap": true,
+    "prefill_tok_s_a": 1027.0,
+    "decode_tok_s_a": 27.6,
+    "ttft_s_a": 123.8796372820002,
+    "output_tokens_a": 1956,
+    "prefill_tok_s_b": 1029.1,
+    "decode_tok_s_b": 29.1,
+    "ttft_s_b": 123.63506455800007,
+    "output_tokens_b": 1757
+  },
+  {
+    "arm": "S10-C1",
+    "id": "c1-20261110T230918-batch-2",
+    "overlap": true,
+    "prefill_tok_s_a": 1025.3,
+    "decode_tok_s_a": 26.9,
+    "ttft_s_a": 124.08512213999984,
+    "output_tokens_a": 2197,
+    "prefill_tok_s_b": 1030.4,
+    "decode_tok_s_b": 28.9,
+    "ttft_s_b": 123.4802731220002,
+    "output_tokens_b": 2275
+  },
+  {
+    "arm": "S10-C1",
+    "id": "c1-20261110T230918-batch-3",
+    "overlap": true,
+    "prefill_tok_s_a": 1025.7,
+    "decode_tok_s_a": 27.5,
+    "ttft_s_a": 124.03470546300014,
+    "output_tokens_a": 1974,
+    "prefill_tok_s_b": 1026.5,
+    "decode_tok_s_b": 28.4,
+    "ttft_s_b": 123.94068633799998,
+    "output_tokens_b": 2087
+  },
+  {
     "arm": "S10-D2",
     "id": "d2-20261110T203905-batch-1",
     "overlap": true,
@@ -76,6 +115,45 @@
     "decode_tok_s_b": 29.3,
     "ttft_s_b": 123.24890157999971,
     "output_tokens_b": 1863
+  },
+  {
+    "arm": "S10-D4",
+    "id": "d4-20261110T225518-batch-1",
+    "overlap": true,
+    "prefill_tok_s_a": 957.2,
+    "decode_tok_s_a": 30.4,
+    "ttft_s_a": 132.88979251199999,
+    "output_tokens_a": 2017,
+    "prefill_tok_s_b": 959.8,
+    "decode_tok_s_b": 28.2,
+    "ttft_s_b": 132.54176142400001,
+    "output_tokens_b": 2451
+  },
+  {
+    "arm": "S10-D4",
+    "id": "d4-20261110T225518-batch-2",
+    "overlap": true,
+    "prefill_tok_s_a": 1028.7,
+    "decode_tok_s_a": 30.4,
+    "ttft_s_a": 123.6763689710001,
+    "output_tokens_a": 2017,
+    "prefill_tok_s_b": 1032.4,
+    "decode_tok_s_b": 30.3,
+    "ttft_s_b": 123.20865583500017,
+    "output_tokens_b": 1895
+  },
+  {
+    "arm": "S10-D4",
+    "id": "d4-20261110T225518-batch-3",
+    "overlap": true,
+    "prefill_tok_s_a": 1025.1,
+    "decode_tok_s_a": 30.6,
+    "ttft_s_a": 124.07731271700004,
+    "output_tokens_a": 1661,
+    "prefill_tok_s_b": 1027.8,
+    "decode_tok_s_b": 30.5,
+    "ttft_s_b": 123.78853064000032,
+    "output_tokens_b": 1895
   },
   {
     "arm": "S10-K1",

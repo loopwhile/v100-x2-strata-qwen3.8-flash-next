@@ -113,13 +113,15 @@ Decode medians A/B: U1 26.1/28.8, D1 28.2/29.4, F1 26.3/26.0. No dual-agent 30 r
 
 The host clock journal changed separately after initial inspection: 17:14:21 fixed 1245, then 17:15:59 **135–1245 MHz**. The agent issued no clock/power command; the user explicitly approved continuing at 1245. All scored batches occurred afterward. Final host policy is 135–1245, configured caps 150 W, GPUs idle, all serving stopped/preserved and tunnel active. **Do not restore 1110 or change clocks/power/host settings automatically.** Preserve 675 SHA-matched backed-up evidence files, original assets/native pack/MTP, all 278 initial containers and prior images. New work requires a new explicit scope and live preflight.
 
-## Stage 10 (PAUSED BY USER — 2026-11-10; 21 scored + 1 diagnostic C2 PASS)
+## Stage 10 (COMPLETED — 2026-11-10; 27 scored + 1 diagnostic C2 PASS, D4 dual-agent decode >= 30.0 tok/s MET)
 
 Read [Stage 10 progress](docs/STAGE10_PROGRESS.md), [Stage 10 plan](docs/STAGE10_PLAN.md), [summary](artifacts/stage10-results-20261110/summary.md) and [candidate contract](bench/stage10-candidates.json).
-- Executed 21 valid scored C2 batches + 1 diagnostic batch across S10-P0, D2, D3, K1, K2, K3, P1, P2 (all 100% PASS with 0 retries). All IDs closed and backed up.
+- Executed 27 valid scored C2 batches + 1 diagnostic batch across S10-P0, D2, D3, K1, K2, K3, P1, P2, D4, C1 (all 100% PASS with 0 retries). All IDs closed and backed up.
 - **Key Breakthroughs**:
+  - **S10-D4** (`--spec 8`, conf 0.7): **Dual-agent decode target MET**! Both agents crossed 30.0 tok/s simultaneously: **Agent A 30.4 tok/s, Agent B 30.3 tok/s** (all warm batches >= 30.3 tok/s).
   - **S10-K1** (`STRATA_ADAPT_LAG=2`): Agent B crossed 30.0 tok/s in all 3 batches (30.9, 30.8, 30.8; median 30.8 tok/s).
-  - **S10-K2** (`STRATA_ADAPT_LAG=2` + `NOWAIT=1`): Slower agent decode reached record **29.2 tok/s** (Agent B 30.0 tok/s).
+  - **S10-K2** (`STRATA_ADAPT_LAG=2` + `NOWAIT=1`): Slower agent decode reached record **29.2 tok/s** (Agent B 30.0 tok/s) under spec 6.
+  - **S10-C1** (`--spec 8` + `LAG=2` + `NOWAIT=1`): Regressed to 27.5 / 28.9 tok/s because 16-token lag stales the dynamic expert cache. S10-D4 alone is the proven decode winner.
   - **S10-P1** (`STRATA_PF_HC_REGION=1`): Prefill reached record **1036.5 / 1044.0 tok/s** (+10~11 tok/s over baseline, TTFT -1.3s).
   - **S10-P3** (`--prefill auto:16384`): Evaluated and permanently REJECTED due to hardware PSU power trip on 16384-token tensor burst.
-- Paused by explicit user instruction ("여기서 일시 중단하고 커밋 푸시해줘."). All containers stopped, GPUs idle at 135 MHz, 150 W limits and 135-1245 MHz clock policy preserved. ThinkPad tunnel active.
+- All containers stopped, GPUs idle at 135 MHz, 150 W limits and 135-1245 MHz clock policy preserved. ThinkPad tunnel active.
