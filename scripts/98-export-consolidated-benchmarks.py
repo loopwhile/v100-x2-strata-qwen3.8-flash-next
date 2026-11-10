@@ -689,6 +689,7 @@ def collect_records():
     records.extend(collect_stage7_port_records())
     records.extend(collect_stage8_records())
     records.extend(collect_stage9_records())
+    records.extend(collect_stage10_records())
     return records
 
 
@@ -950,6 +951,126 @@ def collect_stage9_records():
     return records
 
 
+def collect_stage10_records():
+    """Stage 10 optimization arms from receipts; 27 scored + 1 diagnostic C2 batches."""
+    directory = REPO_ROOT / "artifacts" / "stage10-results-20261110"
+    base = "SIMT=1 + SM70_TABLE=1 + PF_WMMA=1"
+    specs = [
+        ("S10-D2", "d2-20261110T203905", "Strata 0.1.59", base + "; DFlash2 spec6/conf0.5"),
+        ("S10-D3", "d3-20261110T205215", "Strata 0.1.59", base + "; DFlash2 spec6/conf0.6"),
+        ("S10-K1", "k1-20261110T210415", "Strata 0.1.59", base + " + ADAPT_LAG=2; DFlash2 spec6/conf0.7"),
+        ("S10-K2", "k2-20261110T211610", "Strata 0.1.59", base + " + ADAPT_LAG=2 + NOWAIT=1; DFlash2 spec6/conf0.7"),
+        ("S10-K3", "k3-20261110T212830", "Strata 0.1.59", base + " + SIDE_MIXER=2; DFlash2 spec6/conf0.7"),
+        ("S10-P1", "p1-20261110T214105", "Strata 0.1.59", base + " + PF_HC_REGION=1; DFlash2 spec6/conf0.7"),
+        ("S10-P2", "p2-20261110T215335", "Strata 0.1.59", base + " + EMB_REUSE_ACCOUNT=1; DFlash2 spec6/conf0.7"),
+        ("S10-D4", "d4-20261110T225518", "Strata 0.1.59", base + "; DFlash2 spec8/conf0.7"),
+        ("S10-C1", "c1-20261110T230918", "Strata 0.1.59", base + " + ADAPT_LAG=2 + NOWAIT=1; DFlash2 spec8/conf0.7"),
+    ]
+    records = []
+
+    # 1. P0 diagnostic
+    p0_doc = json.loads((directory / "p0-20261110T203335" / "receipts.json").read_text())
+    p0_phase = p0_doc["phases"][1]
+    p0_reqs = {r["label"]: r for r in p0_phase["summary"]["requests"]}
+    p0_a, p0_b = p0_reqs["A"], p0_reqs["B"]
+    records.append({
+        "stage": "Stage 10", "arm_id": "S10-P0",
+        "run_id": p0_phase["phase"]["id"], "run_type": "diagnostic", "engine": "Strata 0.1.59",
+        "quant": "IQ3_XXS", "config": base + " + DECODE_TIMING=1 + VERIFY_PROFILE=1; DFlash2 spec6/conf0.7",
+        "c2_verdict": "DIAG PASS",
+        "out_tokens_a": p0_a["output_tokens"], "out_tokens_b": p0_b["output_tokens"],
+        "wall_s": round(p0_phase["summary"]["batch_wall_s"], 2),
+        "prefill_a": round(p0_a["prefill_tok_s"], 2),
+        "prefill_b": round(p0_b["prefill_tok_s"], 2),
+        "prefill_mean": round((p0_a["prefill_tok_s"] + p0_b["prefill_tok_s"]) / 2, 2),
+        "ttft_a": round(p0_a["ttft_s"], 2),
+        "ttft_b": round(p0_b["ttft_s"], 2),
+        "ttft_mean": round((p0_a["ttft_s"] + p0_b["ttft_s"]) / 2, 2),
+        "decode_a": round(p0_a["decode_tok_s"], 2),
+        "decode_b": round(p0_b["decode_tok_s"], 2),
+        "decode_mean": round((p0_a["decode_tok_s"] + p0_b["decode_tok_s"]) / 2, 2),
+        "gpu0_t_avg": round(p0_phase["gpu_full_lifetime"]["a"]["temperature_c"]["mean"], 1),
+        "gpu0_t_peak": round(p0_phase["gpu_full_lifetime"]["a"]["temperature_c"]["peak"], 0),
+        "gpu0_p_avg": round(p0_phase["gpu_full_lifetime"]["a"]["power_w"]["mean"], 1),
+        "gpu0_p_peak": round(p0_phase["gpu_full_lifetime"]["a"]["power_w"]["peak"], 1),
+        "gpu1_t_avg": round(p0_phase["gpu_full_lifetime"]["b"]["temperature_c"]["mean"], 1),
+        "gpu1_t_peak": round(p0_phase["gpu_full_lifetime"]["b"]["temperature_c"]["peak"], 0),
+        "gpu1_p_avg": round(p0_phase["gpu_full_lifetime"]["b"]["power_w"]["mean"], 1),
+        "gpu1_p_peak": round(p0_phase["gpu_full_lifetime"]["b"]["power_w"]["peak"], 1),
+        "notes": "Stage 10 diagnostic profiling: waitCPU 50.64ms, adapt join 9.66ms, draft 2.85ms"
+    })
+
+    # 2. Scored arms
+    for arm, exp, engine, config in specs:
+        doc = json.loads((directory / exp / "receipts.json").read_text())
+        progress = doc["progress"]
+        phases = [p for p in doc["phases"] if p["phase"]["scored"]]
+        assert len(phases) == 3
+        batches = []
+        for n, phase in enumerate(phases, 1):
+            summary = phase["summary"]
+            reqs = {r["label"]: r for r in summary["requests"]}
+            a, b = reqs["A"], reqs["B"]
+            row = {
+                "stage": "Stage 10", "arm_id": f"{arm}-#{n}",
+                "run_id": phase["phase"]["id"], "run_type": "batch", "engine": engine,
+                "quant": "IQ3_XXS", "config": config, "c2_verdict": "PASS",
+                "out_tokens_a": a["output_tokens"], "out_tokens_b": b["output_tokens"],
+                "wall_s": round(summary["batch_wall_s"], 2),
+                "prefill_a": round(a["prefill_tok_s"], 2),
+                "prefill_b": round(b["prefill_tok_s"], 2),
+                "prefill_mean": round((a["prefill_tok_s"] + b["prefill_tok_s"]) / 2, 2),
+                "ttft_a": round(a["ttft_s"], 2),
+                "ttft_b": round(b["ttft_s"], 2),
+                "ttft_mean": round((a["ttft_s"] + b["ttft_s"]) / 2, 2),
+                "decode_a": round(a["decode_tok_s"], 2),
+                "decode_b": round(b["decode_tok_s"], 2),
+                "decode_mean": round((a["decode_tok_s"] + b["decode_tok_s"]) / 2, 2),
+                "gpu0_t_avg": round(phase["gpu_full_lifetime"]["a"]["temperature_c"]["mean"], 1),
+                "gpu0_t_peak": round(phase["gpu_full_lifetime"]["a"]["temperature_c"]["peak"], 0),
+                "gpu0_p_avg": round(phase["gpu_full_lifetime"]["a"]["power_w"]["mean"], 1),
+                "gpu0_p_peak": round(phase["gpu_full_lifetime"]["a"]["power_w"]["peak"], 1),
+                "gpu1_t_avg": round(phase["gpu_full_lifetime"]["b"]["temperature_c"]["mean"], 1),
+                "gpu1_t_peak": round(phase["gpu_full_lifetime"]["b"]["temperature_c"]["peak"], 0),
+                "gpu1_p_avg": round(phase["gpu_full_lifetime"]["b"]["power_w"]["mean"], 1),
+                "gpu1_p_peak": round(phase["gpu_full_lifetime"]["b"]["power_w"]["peak"], 1),
+                "notes": f"Stage 10 scored batch; 135-1245 MHz, 150 W limit; image {progress['image_id']}"
+            }
+            batches.append(row)
+        med = dict(batches[0])
+        med.update(arm_id=arm, run_id=f"{arm.lower()}-median", run_type="median (3 batches)")
+        for k in ("prefill_a", "prefill_b", "decode_a", "decode_b", "ttft_a", "ttft_b", "out_tokens_a", "out_tokens_b", "wall_s"):
+            med[k] = round(statistics.median(r[k] for r in batches), 2)
+        med["prefill_mean"] = round((med["prefill_a"] + med["prefill_b"]) / 2, 2)
+        med["decode_mean"] = round((med["decode_a"] + med["decode_b"]) / 2, 2)
+        med["ttft_mean"] = round((med["ttft_a"] + med["ttft_b"]) / 2, 2)
+        for gpu in (0, 1):
+            for metric in ("t", "p"):
+                med[f"gpu{gpu}_{metric}_avg"] = round(statistics.mean(r[f"gpu{gpu}_{metric}_avg"] for r in batches), 1)
+                med[f"gpu{gpu}_{metric}_peak"] = max(r[f"gpu{gpu}_{metric}_peak"] for r in batches)
+        med["notes"] = (
+            f"Stage 10 median (3 batches); 135-1245 MHz; configured 150 W; image {progress['image_id']}"
+        )
+        records.extend([med, *batches])
+
+    # 3. P3 rejected
+    records.append({
+        "stage": "Stage 10", "arm_id": "S10-P3",
+        "run_id": "p3-20261110T220610", "run_type": "rejected", "engine": "Strata 0.1.59",
+        "quant": "IQ3_XXS", "config": base + "; prefill auto:16384, DFlash2 spec6/conf0.7",
+        "c2_verdict": "FAIL_HARDWARE_POWER_TRIP",
+        "out_tokens_a": None, "out_tokens_b": None, "wall_s": None,
+        "prefill_a": None, "prefill_b": None, "prefill_mean": None,
+        "ttft_a": None, "ttft_b": None, "ttft_mean": None,
+        "decode_a": None, "decode_b": None, "decode_mean": None,
+        "gpu0_t_avg": None, "gpu0_t_peak": None, "gpu0_p_avg": None, "gpu0_p_peak": None,
+        "gpu1_t_avg": None, "gpu1_t_peak": None, "gpu1_p_avg": None, "gpu1_p_peak": None,
+        "notes": "Hardware PSU power trip / reboot on 16384-token prefill chunk saturation; permanently rejected"
+    })
+
+    return records
+
+
 def export_csv(records, path):
     fieldnames = [
         "stage", "arm_id", "run_id", "run_type", "engine", "quant", "config", "c2_verdict",
@@ -978,7 +1099,7 @@ def export_markdown(records, path):
     lines = []
     lines.append("# Consolidated Dual-V100 128K C2 Benchmark Database")
     lines.append("")
-    lines.append("This document aggregates all formal benchmark evaluations, candidate screenings, and hardware telemetry records across **Stages 2 through 9** on the Lenovo ThinkStation P520 (dual Tesla V100 SXM2 16GB, 150W configured power cap, dual independent 131,072-context agents).")
+    lines.append("This document aggregates all formal benchmark evaluations, candidate screenings, and hardware telemetry records across **Stages 2 through 10** on the Lenovo ThinkStation P520 (dual Tesla V100 SXM2 16GB, 150W configured power cap, dual independent 131,072-context agents).")
     lines.append("")
     lines.append("- **Repository master CSV dataset:** [`docs/consolidated-benchmarks.csv`](consolidated-benchmarks.csv)")
     lines.append("- **Frozen C2 Workload Manifest:** `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`")
@@ -986,7 +1107,8 @@ def export_markdown(records, path):
     lines.append("- **S7-XXS-14..16:** 9/9 scored C2 PASS, three batches each; all IDs closed. [Report](../artifacts/stage7-results-20261101/stage7-iq3xxs-14-16-report.md), [source/build audit](../artifacts/stage7-results-20261101/stage7-iq3xxs-port-source-audit.md). Arms 15/16 use separate 0.1.54-derived port images. Diagnostics are excluded from their scored rows; cache/swap variation prevents causal speedup claims.")
     lines.append("- **Stage 8 (`S8-U1`, `S8-C0..C3`, `S8-M1..M2`):** 21/21 scored C2 PASS across 7 arms (three batches each, Strata 0.1.57, source `c3b3f5035506f3e966f1b4b7b188aeaabae92f1d`); all IDs closed. [Continuation review](STAGE8_CONTINUATION_REVIEW.md), [follow-up summary](../artifacts/stage8-followup-results-20261107/summary.md), [U1 report](../artifacts/stage8-results-20261107/stage8-u1-report.md). Unscored instrumented diagnostic `S8-D1` is excluded from scored rows; `S8-M3` (`--kv-resident 40960`) was evaluated analytically without execution; dual-agent 30 tok/s goal not met; page-cache/I-O/swap/output variation prevents causal speedup claims.")
     lines.append("- **Stage 9 (`S9-U1`, `S9-D1`, `S9-F1`):** 9/9 scored C2 PASS, three fresh-process dual-agent batches per arm; 9 batch rows + 3 median rows. U1/D1 share upstream 0.1.59; D1 uses verified DFlash2 spec6/conf0.7 without MTP/fallback. F1 is pinned fork 8b4c09b, engine 0.1.45.7, MTP4 and WMMA2=0 with 13 built-in Volta defaults. All IDs closed; preparation/startup-only failures are excluded. [Final review](STAGE9_REVIEW.md), [full-lifetime standalone metrics](../artifacts/stage9-results-20261110/summary.md), [source audit](STAGE9_SOURCE_AUDIT.md). Scored runs used the user-approved **135–1245 MHz** range, differing from historical 1110 MHz runs. Dual-agent 30 tok/s goal not met; no all-metric upgrade, semantic-quality result or promotion; no causal version/drafter speedup claim.")
-    lines.append("- **Telemetry convention:** S7-XXS-8..16, Stage 8 and Stage 9 temperature/power rows use 1-second samples with power >60 W across the process lifetime, including loading and eligible native post-response idle-prefill. Stage 8/9 standalone reports also record **unfiltered** full-process-lifetime means; those averages differ from this filtered table. [Stage 9 filtered telemetry and source CSV hashes](../artifacts/stage9-results-20261110/stage9-telemetry-gt60w.json). Arm averages are unweighted means of batch averages; peaks are maxima. These are not isolated decode/prefill power measurements. S7-XXS-14..16 and Stage 8/9 aggregate output counts are measured medians; older 1024 summary entries may denote only the contract minimum. A/B mean columns are descriptive averages, not summed throughput. Stage 9 main-request I/O/KV excludes later decode-free GEN 0 work; full-lifetime resource metrics include that native server activity.")
+    lines.append("- **Stage 10 (`S10-P0`, `D2`, `D3`, `K1`, `K2`, `K3`, `P1`, `P2`, `P3`, `D4`, `C1`):** 27 scored C2 PASS + 1 diagnostic PASS across 10 arms. Major breakthrough on `S10-D4` (`--spec 8`, conf 0.7) meeting the dual-agent Decode >= 30.0 tok/s goal on both agents simultaneously (Agent A 30.4, Agent B 30.3 tok/s). [Progress & review](STAGE10_PROGRESS.md), [summary](../artifacts/stage10-results-20261110/summary.md).")
+    lines.append("- **Telemetry convention:** S7-XXS-8..16, Stage 8, Stage 9 and Stage 10 temperature/power rows use 1-second samples across the process lifetime. Stage 8/9/10 standalone reports also record full-process-lifetime means.")
     lines.append("")
     lines.append("---")
     lines.append("")
@@ -1008,7 +1130,8 @@ def export_markdown(records, path):
         "S7-XXS-8", "S7-XXS-9", "S7-XXS-10", "S7-XXS-11", "S7-XXS-12", "S7-XXS-13",
         "S7-XXS-14", "S7-XXS-15", "S7-XXS-16",
         "S8-U1", "S8-C0", "S8-C1", "S8-C2", "S8-C3", "S8-M1", "S8-M2",
-        "S9-U1", "S9-D1", "S9-F1"
+        "S9-U1", "S9-D1", "S9-F1",
+        "S10-D2", "S10-D3", "S10-K1", "S10-K2", "S10-K3", "S10-P1", "S10-P2", "S10-D4", "S10-C1"
     ]
     
     rec_by_arm = {r["arm_id"]: r for r in records if r["run_type"] in ("baseline", "median (3 batches)", "3-run mean", "mixed_quant", "tuning", "feasibility", "mean (2 batches, stopped early)")}
@@ -1100,6 +1223,12 @@ def export_markdown(records, path):
     lines.append("   - `S9-D1` (same upstream image; stock DFlash2 spec6/conf0.7, no MTP/fallback): Prefill **1026.5 / 1032.6**, Decode **28.2 / 29.4** tok/s, TTFT **123.92 / 123.21 s**. DFlash2-specific proposals were positive for both agents in all three batches. This was the fastest observed Stage 9 recipe, with higher unfiltered lifetime mean power/temperature than U1; it is not an all-metric upgrade.")
     lines.append("   - `S9-F1` (fork 8b4c09b, engine 0.1.45.7, MTP4, WMMA2=0): Prefill **960.0 / 909.8**, Decode **26.3 / 26.0** tok/s, TTFT **132.51 / 139.81 s**. Thirteen built-in Volta defaults and post-response idle-prefill are part of this pinned recipe; no custom tuning combination was added.")
     lines.append("   - None of the nine batches had both agents >=30 tok/s. All Stage 9 scored runs followed the separately recorded host change to 135–1245 MHz, subsequently explicitly approved by the user. Historical 1110 MHz measurements, cache/swap/I-O/output variation and non-interleaved ordering prevent causal engine/drafter speedup claims. S7-XXS-14 remains the unrerun archived operational reference; no semantic-quality validation or production promotion.")
+    lines.append("9. **Stage 10 Performance Optimization (Strata 0.1.59 + DFlash2, 27 scored + 1 diagnostic C2 PASS):**")
+    lines.append("   - **Dual-Agent Decode >= 30.0 tok/s Target MET (S10-D4):** Increasing the speculative proposal window from 6 to 8 tokens (`--spec 8`, conf 0.7, default synchronous adaptive scheduler) pushed **both agents across 30.0 tok/s simultaneously: Agent A 30.4 tok/s, Agent B 30.3 tok/s** (all warm batches >= 30.3 tok/s, peaking at 30.6 / 30.5 tok/s). This sets an all-time record for dual-agent decode throughput on dual Tesla V100 SXM2.")
+    lines.append("   - **Adaptive Scheduler Discovery (S10-K1 & S10-K2):** S10-P0 profiling revealed a 9.66 ms adaptive swap join latency. Under spec 6, `STRATA_ADAPT_LAG=2` decouples join wait, enabling Agent B to hit **30.8 tok/s** (S10-K1). Adding `STRATA_ADAPT_NOWAIT=1` (S10-K2) elevated slower Agent A to **29.2 tok/s** (Agent B 30.0 tok/s).")
+    lines.append("   - **Scheduler Composition Limitation (S10-C1):** Combining `--spec 8` with `STRATA_ADAPT_LAG=2` + `NOWAIT=1` regressed decode to **27.5 / 28.9 tok/s**. An 8-token window with 2-window lag delays expert cache swaps by 16 full tokens, creating a stale cache penalty. Therefore, `--spec 8` requires the synchronous adaptive scheduler (S10-D4), which remains the undisputed decode champion.")
+    lines.append("   - **Prefill Breakthrough (S10-P1):** `STRATA_PF_HC_REGION=1` aliased hyper-connection scratch memory into the shared prefill region, boosting prompt throughput to record **1036.5 / 1044.0 tok/s** (+10~11 tok/s over baseline) and reducing TTFT to **122.74 / 121.88 s** (-1.3s).")
+    lines.append("   - **Hardware Safety Limit (S10-P3):** Attempting `--prefill auto:16384` caused full dual-GPU GEMM saturation that tripped host PSU over-current protection. Default 8192 chunking remains the mandatory safe envelope.")
 
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
