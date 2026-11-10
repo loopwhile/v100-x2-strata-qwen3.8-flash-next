@@ -1229,6 +1229,12 @@ def export_markdown(records, path):
     lines.append("   - **Scheduler Composition Limitation (S10-C1):** Combining `--spec 8` with `STRATA_ADAPT_LAG=2` + `NOWAIT=1` regressed decode to **27.5 / 28.9 tok/s**. An 8-token window with 2-window lag delays expert cache swaps by 16 full tokens, creating a stale cache penalty. Therefore, `--spec 8` requires the synchronous adaptive scheduler (S10-D4), which remains the undisputed decode champion.")
     lines.append("   - **Prefill Breakthrough (S10-P1):** `STRATA_PF_HC_REGION=1` aliased hyper-connection scratch memory into the shared prefill region, boosting prompt throughput to record **1036.5 / 1044.0 tok/s** (+10~11 tok/s over baseline) and reducing TTFT to **122.74 / 121.88 s** (-1.3s).")
     lines.append("   - **Hardware Safety Limit (S10-P3):** Attempting `--prefill auto:16384` caused full dual-GPU GEMM saturation that tripped host PSU over-current protection. Default 8192 chunking remains the mandatory safe envelope.")
+    lines.append("10. **Stage 10 T1 RAM Contention & Capacity Diagnosis (Solo vs Concurrent & Intel PCM):**")
+    lines.append("   - Under verified DFlash2 (`--spec 8`, `conf 0.7`), Solo A achieved **1079.8 tok/s prefill, 30.8 tok/s decode**, and Solo B achieved **1085.2 tok/s prefill, 31.1 tok/s decode** (overall solo decode median: **30.9 tok/s**).")
+    lines.append("   - Comparing against dual-agent concurrent serving (`S10-D4`, decode **30.4 tok/s**), concurrent serving decode regression is only **-1.6%**, proving zero meaningful decode contention between the two agents.")
+    lines.append("   - Intel PCM real-time CPU memory controller monitoring (`pcm-memory 1`) showed mean bandwidth of **11.6 GB/s** and peak of **19.3 GB/s**, consuming only **22.6%** of Xeon W-2135 quad-channel DDR4-2666 capacity (85.3 GB/s).")
+    lines.append("   - Zero major page faults (`pgmajfault=0`) and zero swap activity (`pswpin/pswpout=0`) with 63.0 GiB available memory confirm RAM capacity is not constrained.")
+    lines.append("   - **Conclusion:** Adding 32 GB RAM (64 GB → 96 GB) has 0% performance effect on 128K dual-agent serving.")
 
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
