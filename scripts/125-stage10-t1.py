@@ -279,7 +279,7 @@ def main():
             pcm_handle = (current / "pcm-memory.log").open("w")
             handles.append(pcm_handle)
             pcm_proc = sp.Popen(["/usr/sbin/pcm-memory", "1", "-csv=" + str(current / "pcm-memory.csv")],
-                                stdout=pcm_handle, stderr=sp.STDOUT, env=dict(os.environ, PCM_NO_MSR="1"))
+                                stdout=pcm_handle, stderr=sp.STDOUT)
             collectors.append(pcm_proc)
 
             configs, models, servers = {}, {}, {}
