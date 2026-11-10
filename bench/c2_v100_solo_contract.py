@@ -54,75 +54,86 @@ def load_tokenizer_and_template(config_path: Path):
     return tok, template, openai_to_messages
 
 
-def diversify_body(code: str, index: int) -> str:
-    assigned: dict[str, str] = {}
-    anon_counter = 0
+def diversify_block(block: str, project_id: str, section: int) -> str:
+    suffix = f"_{project_id.lower()}_{section:06d}"
 
-    def replace(match: re.Match[str]) -> str:
-        nonlocal anon_counter
-        name = match.group(0)
-        if name in KEEP_IDENTIFIERS:
-            return name
-        if name not in assigned:
-            anon_counter += 1
-            assigned[name] = f"v{anon_counter}_t{index}"
-        return assigned[name]
+    def replace(match):
+        word = match.group(0)
+        if word in KEEP_IDENTIFIERS or word.startswith("__"):
+            return word
+        return word + suffix
 
-    return IDENTIFIER.sub(replace, code)
+    return IDENTIFIER.sub(replace, block)
 
 
-def render(spec: dict, units: int, pad: int = 0, diversify_identifiers: bool = False) -> str:
-    parts = [spec["prefix"]]
-    body = spec["repeated_section"]
-    if diversify_identifiers:
-        body = diversify_body(body, 1)
-    parts.extend([body] * units)
-    if pad:
-        parts.append(spec["padding"] * pad)
-    return "\n".join(parts)
+def render(spec: dict, units: int, pad_units: int = 0, *, diversify_identifiers: bool = False) -> str:
+    blocks = spec.get("padding_blocks") or spec.get("seed_blocks")
+    anchors = spec.get("anchor_blocks") or []
+    parts = [
+        f"# {spec['title']}\n",
+        f"# project_id={spec['project_id']}\n",
+        "# Synthetic deterministic benchmark material follows.\n",
+    ]
+    for i, anchor in enumerate(anchors, 1):
+        parts.append(f"\n# === {spec['project_id']} GROUND-TRUTH ANCHOR {i:02d} ===\n{anchor.rstrip()}\n")
+    for i in range(units):
+        block = blocks[i % len(blocks)]
+        block = block.replace("{{SECTION}}", f"{i + 1:06d}").replace("{{PROJECT}}", spec["project_id"])
+        if diversify_identifiers:
+            block = diversify_block(block, spec["project_id"], i + 1)
+        parts.append(f"\n# --- {spec['project_id']} SECTION {i + 1:06d} ---\n{block.rstrip()}\n")
+    if pad_units:
+        marker = f" {spec['project_id']}_PAD"
+        parts.append("\n# deterministic calibration padding\n" + marker * pad_units + "\n")
+    parts.append("\n# FINAL REQUEST\n" + spec["final_instruction"].strip() + "\n")
+    return "".join(parts)
 
 
 def request_body(content: str, manifest: dict) -> dict:
     return {
+        "model": "strata",
         "messages": [{"role": "user", "content": content}],
-        "max_tokens": manifest.get("output_tokens", 4096),
-        "temperature": 0.0,
+        "max_tokens": manifest["output_tokens"],
+        "temperature": manifest.get("sampling", {}).get("temperature", 0),
+        "top_p": manifest.get("sampling", {}).get("top_p", 1),
+        "seed": manifest.get("sampling", {}).get("seed", 520),
+        "reasoning_effort": "none",
         "stream": True,
-        "chat_template_kwargs": {"enable_thinking": False},
-        "extra_body": {
-            "reasoning_effort": "none",
-            "thinking": {"type": "disabled"},
-            "strata_tune": {"adaptive_route": False, "trace": False},
-        },
+        "stream_options": {"include_usage": True},
     }
 
 
-def post_template_count(body: dict, tok, template, openai_to_messages) -> int:
-    messages = openai_to_messages(body["messages"])
-    rendered = template.render(messages, enable_thinking=False)
-    return len(tok.encode(rendered))
+def post_template_count(req: dict, tok, template, openai_to_messages) -> int:
+    messages, tools, kwargs = openai_to_messages(req)
+    prompt = template.render(messages, tools, **kwargs)
+    return len(tok.encode(prompt, parse_special=True))
 
 
-def materialize_one(manifest: dict, spec: dict, tok, template, openai_to_messages) -> dict:
-    target = int(manifest["effective_target_tokens"])
-    reserve = int(manifest.get("output_tokens", 4096))
-    context = int(manifest.get("context_limit", 131072))
-    minimum_total = int(manifest.get("minimum_total_tokens", 129000))
-    diversify = bool(manifest.get("diversify_repeated_identifiers", False))
-
-    def count_units(units: int) -> int:
-        req = request_body(render(spec, units, diversify_identifiers=diversify), manifest)
-        return post_template_count(req, tok, template, openai_to_messages)
+def materialize_one(manifest: dict, spec: dict, tok, template, openai_to_messages):
+    context = int(manifest["context_tokens"])
+    reserve = int(manifest["output_tokens"])
+    target = context - reserve - STRATA_CTX_SLACK
+    minimum_total = int(context * float(manifest.get("min_context_utilization", 0.99)))
+    diversify = bool(manifest.get("diversify_identifiers", False))
 
     def count_text(text: str) -> int:
-        req = request_body(text, manifest)
-        return post_template_count(req, tok, template, openai_to_messages)
+        return post_template_count(request_body(text, manifest), tok, template, openai_to_messages)
 
-    lo, hi = 1, 4096
-    best_units = 1
+    low = high = 1
+    while True:
+        n = count_text(render(spec, high, diversify_identifiers=diversify))
+        if n > target:
+            break
+        low = high
+        high *= 2
+        if high > 131072:
+            raise RuntimeError("unable to bracket prompt target")
+
+    best_units = low
+    lo, hi = low, high - 1
     while lo <= hi:
         mid = (lo + hi) // 2
-        n = count_units(mid)
+        n = count_text(render(spec, mid, diversify_identifiers=diversify))
         if n <= target:
             best_units = mid
             lo = mid + 1
