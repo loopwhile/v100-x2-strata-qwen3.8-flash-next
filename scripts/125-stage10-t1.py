@@ -461,4 +461,7 @@ def main():
 
 
 if __name__ == "__main__":
+    if sys.argv[1:] == ["--sample-host"]:
+        sample_host()
+        sys.exit(0)
     main()
