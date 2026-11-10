@@ -179,8 +179,9 @@ def validate_drafter(effective, spec, draft_conf):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--id", required=True, help="Experiment ID (e.g. t1-20261110T234500)")
-    p.add_argument("--condition", choices=["all", "a", "b", "c"], default="all",
-                   help="Run condition: a (Solo A), b (Solo B), c (Concurrent), or all (all three conditions)")
+    p.add_argument("--condition", choices=["all", "a", "b", "c", "ab"], default="all",
+                   help="Run condition: a (Solo A), b (Solo B), ab (Solo A then B), c (Concurrent), or all")
+    p.add_argument("--batches", type=int, default=3, help="Number of C2 batches per condition (default 3)")
     p.add_argument("--spec", type=int, default=8)
     p.add_argument("--draft-conf", type=float, default=0.7)
     p.add_argument("--prefill", default="auto")
@@ -236,12 +237,18 @@ def main():
 
     # Build sequence of phases
     phases = []
-    if args.condition in ("all", "a"):
-        phases.extend(["solo-a-startup", "solo-a-batch-1", "solo-a-batch-2", "solo-a-batch-3"])
-    if args.condition in ("all", "b"):
-        phases.extend(["solo-b-startup", "solo-b-batch-1", "solo-b-batch-2", "solo-b-batch-3"])
+    if args.condition in ("all", "a", "ab"):
+        phases.append("solo-a-startup")
+        for i in range(1, args.batches + 1):
+            phases.append(f"solo-a-batch-{i}")
+    if args.condition in ("all", "b", "ab"):
+        phases.append("solo-b-startup")
+        for i in range(1, args.batches + 1):
+            phases.append(f"solo-b-batch-{i}")
     if args.condition in ("all", "c"):
-        phases.extend(["concurrent-startup", "concurrent-batch-1", "concurrent-batch-2", "concurrent-batch-3"])
+        phases.append("concurrent-startup")
+        for i in range(1, args.batches + 1):
+            phases.append(f"concurrent-batch-{i}")
 
     owned = []
     try:
@@ -285,7 +292,7 @@ def main():
             configs, models, servers = {}, {}, {}
             for s in active_sides:
                 base = json.loads((root / f"results/stage5-iq3xxs/agent-{s}.json").read_text())
-                model = f"qwen3.8-flash-next-iq3_xxs_s10_{args.id}_{phase}_{s}".replace("-", "_")
+                model = "qwen3.8-flash-next-iq3_xxs_s10_" + f"{args.id}_{phase}_{s}".replace("-", "_")
                 cfg, expected = config_for(base, args.spec, args.draft_conf, args.prefill, model)
                 configs[s], models[s] = cfg, cfg["model_name"]
                 save(current / f"agent-{s}.json", cfg)
@@ -333,12 +340,37 @@ def main():
                     assert run("docker", "inspect", servers[s], "--format", "{{.State.Running}}") == "true", f"Server exited {s}"
                 time.sleep(2)
 
+            probe = """
+import json, os, pathlib
+out = []
+for p in pathlib.Path('/proc').glob('[0-9]*'):
+ try:
+  cmd = (p/'cmdline').read_bytes().decode().split('\\0')[:-1]
+  if not cmd or cmd[0] != '/opt/strata/engine/strata': continue
+  env = dict(x.split('=', 1) for x in (p/'environ').read_bytes().decode().split('\\0') if x.startswith('STRATA_'))
+  out.append({'pid': int(p.name), 'pid_start_ticks': (p/'stat').read_text().split()[21], 'args': cmd, 'strata_env': env})
+ except (FileNotFoundError, PermissionError, ProcessLookupError): pass
+print(json.dumps(out))
+"""
             for s in active_sides:
                 save(current / f"health-before-{s}.json", api(s, "health"))
                 metrics = api(s, "metrics")
                 save(current / f"metrics-before-{s}.json", metrics)
                 assert metrics.get("requests_kept") == 0
                 assert run("docker", "exec", servers[s], "sha256sum", "/opt/strata/engine/strata").split()[0] == ENGINE_SHA256
+
+                processes = json.loads(run("docker", "exec", servers[s], "/opt/strata/.venv/bin/python", "-c", probe))
+                assert len(processes) == 1, processes
+                save(current / f"engine-process-{s}.json", processes[0])
+                effective = processes[0]["args"]
+                for flag, val in expected.items():
+                    assert effective[effective.index(flag) + 1] == val, (flag, effective)
+                validate_drafter(effective, args.spec, args.draft_conf)
+
+                time.sleep(1)
+                notes = (current / f"logs/agent-{s}.log").read_text(errors="replace")
+                assert re.search(r"strata dflash2: \d+-token draft head", notes), f"DFlash2 head not found in agent-{s}.log"
+                assert "no MTP layer is loaded (--draft-fallback none)" in notes, f"MTP fallback detected in agent-{s}.log"
 
             record.update(phase="startup_inference" if "startup" in phase else "benchmark", benchmark_started=now())
             save(exp_dir / "progress.json", checkpoint)
