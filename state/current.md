@@ -1,3 +1,9 @@
+# Current operation — Stage 10 PLANNED (2026-11-10 KST), Stage 9 CLOSED
+
+**Planning only:** [Stage 10 plan](../docs/STAGE10_PLAN.md) defines prospective S9-D1-derived DFlash2/Adaptive/Prefill candidates with Prefill >=1100 and Decode >=30 tok/s goals for **each** concurrent V100 agent (stretch Prefill 1200). **No Stage 10 runner, Docker build, GPU test, source patch, serving action or production promotion has been executed or authorized by this documentation commit.** Stage 9's 147-record consolidated DB and all Stage 2–9 evidence are unchanged. A future campaign requires a separate user-approved execution scope and live host preflight. Last known host state remains the 2026-11-10 Stage 9 final audit described below, not a fresh host inspection.
+
+---
+
 # Current operation — Stage 9 CLOSED (2026-11-10 KST)
 
 **No remote experiment or serving workload remains running. U1/D1/F1 each completed 3/3 concurrent 128K C2: 9/9 total PASS. Dual-agent 30 tok/s goal NOT MET. No all-metric upgrade, semantic-quality validation or production promotion.**
