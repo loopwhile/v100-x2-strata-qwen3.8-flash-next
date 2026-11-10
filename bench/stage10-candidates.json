@@ -1,0 +1,101 @@
+{
+  "schema": "stage10-candidate-contract-v1",
+  "date": "2026-11-10",
+  "status": "PAUSED_BY_USER",
+  "authorized_gpu_execution": false,
+  "archived_baseline": {
+    "id": "S9-D1",
+    "rerun": false,
+    "engine": "0.1.59",
+    "source": "712fec6b4297c9cfd32ab43daaa2979a9aa01edf",
+    "prefill_tok_s_A_B": [
+      1026.5,
+      1032.6
+    ],
+    "decode_tok_s_A_B": [
+      28.2,
+      29.4
+    ],
+    "ttft_s_A_B": [
+      123.92,
+      123.21
+    ]
+  },
+  "execution_progress": {
+    "S10-P0": {
+      "id": "p0-20261110T203335",
+      "kind": "diagnostic",
+      "scored_batches": 0,
+      "status": "PASS",
+      "notes": "Verified DFlash2 draft (2.85ms), waitCPU (50.64ms), adapt join wait (9.66ms)."
+    },
+    "S10-D2": {
+      "id": "d2-20261110T203905",
+      "valid_batches": 3,
+      "status": "PASS",
+      "prefill_tok_s_A_B": [1027.0, 1033.4],
+      "decode_tok_s_A_B": [27.6, 27.5],
+      "ttft_s_A_B": [123.87, 123.11]
+    },
+    "S10-D3": {
+      "id": "d3-20261110T205215",
+      "valid_batches": 3,
+      "status": "PASS",
+      "prefill_tok_s_A_B": [1027.8, 1032.2],
+      "decode_tok_s_A_B": [28.3, 29.3],
+      "ttft_s_A_B": [123.77, 123.25]
+    },
+    "S10-K1": {
+      "id": "k1-20261110T210415",
+      "valid_batches": 3,
+      "status": "PASS",
+      "prefill_tok_s_A_B": [1026.1, 1034.4],
+      "decode_tok_s_A_B": [28.2, 30.8],
+      "ttft_s_A_B": [123.98, 123.01],
+      "notes": "Agent B crossed 30.0 tok/s across all 3 batches (30.9, 30.8, 30.8)."
+    },
+    "S10-K2": {
+      "id": "k2-20261110T211610",
+      "valid_batches": 3,
+      "status": "PASS",
+      "prefill_tok_s_A_B": [1029.7, 1033.8],
+      "decode_tok_s_A_B": [29.2, 30.0],
+      "ttft_s_A_B": [123.55, 123.07],
+      "notes": "Slower agent decode median reached record 29.2 tok/s; Agent B reached 30.0 tok/s."
+    },
+    "S10-K3": {
+      "id": "k3-20261110T212830",
+      "valid_batches": 3,
+      "status": "PASS",
+      "prefill_tok_s_A_B": [1026.8, 1035.7],
+      "decode_tok_s_A_B": [28.3, 28.2],
+      "ttft_s_A_B": [123.87, 122.85]
+    },
+    "S10-P1": {
+      "id": "p1-20261110T214105",
+      "valid_batches": 3,
+      "status": "PASS",
+      "prefill_tok_s_A_B": [1036.5, 1044.0],
+      "decode_tok_s_A_B": [28.2, 28.4],
+      "ttft_s_A_B": [122.74, 121.88],
+      "notes": "Prefill record high (+10-11 tok/s over baseline, reaching 1044.0 tok/s on B)."
+    },
+    "S10-P2": {
+      "id": "p2-20261110T215335",
+      "valid_batches": 3,
+      "status": "PASS",
+      "prefill_tok_s_A_B": [1029.2, 1034.1],
+      "decode_tok_s_A_B": [27.8, 28.3],
+      "ttft_s_A_B": [123.61, 123.01]
+    },
+    "S10-P3": {
+      "id": "p3-20261110T220610",
+      "valid_batches": 0,
+      "status": "REJECTED_HARDWARE_POWER_TRIP",
+      "notes": "PSU power cut / reboot on 16384 chunk saturation; flag permanently rejected."
+    }
+  },
+  "scored_batches_completed": 21,
+  "diagnostic_batches_completed": 1,
+  "closure": "Paused by explicit user request ('여기서 일시 중단하고 커밋 푸시해줘.'). All results preserved and backed up."
+}

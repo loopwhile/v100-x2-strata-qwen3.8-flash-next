@@ -1,0 +1,9 @@
+{
+  "arm": "S10-P3",
+  "id": "p3-20261110T220610",
+  "status": "REJECTED_HARDWARE_POWER_TRIP",
+  "valid_batches": 0,
+  "prefill": "auto:16384",
+  "error": "Hardware PSU power cut/reboot triggered twice consecutively upon starting 16384-token prefill chunk. Flag rejected to protect hardware safety.",
+  "report": null
+}
