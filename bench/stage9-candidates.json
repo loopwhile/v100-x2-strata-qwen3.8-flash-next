@@ -1,7 +1,7 @@
 {
   "schema": "stage9-candidate-contract-v1",
   "date": "2026-11-10",
-  "status": "PLANNED_NO_EXECUTION",
+  "status": "CLOSED_EXECUTED_9_OF_9_PASS",
   "authorized_gpu_execution": false,
   "archived_baseline": {
     "id": "S7-XXS-14",
@@ -50,7 +50,7 @@
       "B": 1
     },
     "power_limit_w": 150,
-    "sm_clock_ceiling_mhz": 1110,
+    "sm_clock_ceiling_mhz": 1245,
     "env": {
       "STRATA_SELECT_SIMT": "1",
       "STRATA_SM70_TABLE": "1",
@@ -81,7 +81,7 @@
       "scored_batches": 3,
       "engine": "0.1.59",
       "ref": "Niko1221/Strata@v0.2.13",
-      "engine_source_sha": "P0_PENDING",
+      "engine_source_sha": "712fec6b4297c9cfd32ab43daaa2979a9aa01edf",
       "drafting": "mtp",
       "spec": 4,
       "spec_min_p": 0.5
@@ -96,8 +96,11 @@
       "require_no_mtp": true,
       "require_no_fallback": true,
       "require_dflash2_active_metrics": true,
-      "pack_sha256": "P0_PENDING",
-      "spec_and_conf": "VERIFY_P0_DEFAULTS_TYPICALLY_6_0.35"
+      "pack_sha256": "4a42b98220ea7880664002c8edda1563aecbae754b762a2e2f31b2b91ee93ecd",
+      "pack_name": "qwen3.8-flash-next-dflash2.q4_0-selq4.pack",
+      "pack_bytes": 339694592,
+      "spec": 6,
+      "confidence_policy": "Pinned upstream conf_for(cuda, slots_of(frozen_args,16384)); record numeric result before scored runs; no sweep"
     },
     {
       "id": "S9-F1",
@@ -133,5 +136,67 @@
     "quality_gate"
   ],
   "historical_results_immutable": true,
-  "no_automatic_promotion": true
+  "no_automatic_promotion": true,
+  "authorization": "User selected P0 -> U1 -> D1 -> F1, then explicitly requested Implement the plan on 2026-11-10; no service interruption or promotion.",
+  "execution_amendment": {
+    "date": "2026-11-10",
+    "user_instructions": [
+      "중단하지마!",
+      "1245로 진행할거야!"
+    ],
+    "observed_sm_clock_ceiling_mhz": 1245,
+    "closed_zero_scored_preparation": "u1-20261110T173436",
+    "new_id_required": true,
+    "agent_hardware_settings_changes": false
+  },
+  "execution_progress": {
+    "U1": {
+      "id": "u1-20261110T173748",
+      "valid_batches": 3,
+      "status": "PASS"
+    },
+    "D1": {
+      "id": "d1-20261110T175220",
+      "valid_batches": 3,
+      "status": "PASS"
+    },
+    "F1": {
+      "id": "f1-20261110T180620",
+      "status": "PASS",
+      "valid_batches": 3
+    }
+  },
+  "scored_batches_completed": 9,
+  "dual_agent_30_goal_met": false,
+  "semantic_quality_validated": false,
+  "production_promoted": false,
+  "host_clock_timeline": {
+    "initial_range_mhz": [
+      135,
+      1110
+    ],
+    "observed_service_changes": [
+      {
+        "time_kst": "2026-11-10T17:14:21+09:00",
+        "range_mhz": [
+          1245,
+          1245
+        ]
+      },
+      {
+        "time_kst": "2026-11-10T17:15:59+09:00",
+        "range_mhz": [
+          135,
+          1245
+        ]
+      }
+    ],
+    "agent_clock_commands": false,
+    "all_scored_runs_after_last_change": true,
+    "final_range_mhz": [
+      135,
+      1245
+    ]
+  },
+  "closure": "All IDs closed; retained contract/runners are audit only. New execution requires new explicit user scope."
 }

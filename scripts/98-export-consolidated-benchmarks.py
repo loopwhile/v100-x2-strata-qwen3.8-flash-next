@@ -2,7 +2,7 @@
 """
 scripts/98-export-consolidated-benchmarks.py
 
-Generates consolidated benchmark reports across ALL stages (Stages 2, 3, 4, 5, 6, 7, 8):
+Generates consolidated benchmark reports across ALL stages (Stages 2 through 9):
   - docs/consolidated-benchmarks.csv
   - docs/CONSOLIDATED_BENCHMARKS.md
 
@@ -688,6 +688,7 @@ def collect_records():
 
     records.extend(collect_stage7_port_records())
     records.extend(collect_stage8_records())
+    records.extend(collect_stage9_records())
     return records
 
 
@@ -868,6 +869,87 @@ def collect_stage8_records():
         records.extend([aggregate, *batch_rows])
     return records
 
+def collect_stage9_records():
+    """Closed Stage 9 arms from sanitized receipts; no P520/raw-log dependency."""
+    directory = REPO_ROOT / "artifacts" / "stage9-results-20261110"
+    telemetry = json.loads((directory / "stage9-telemetry-gt60w.json").read_text())["runs"]
+    base = "SIMT=1 + SM70_TABLE=1 + PF_WMMA=1"
+    specs = [
+        ("S9-U1", "u1-20261110T173748", "Strata 0.1.59", base + "; MTP spec4/min-p0.5"),
+        ("S9-D1", "d1-20261110T175220", "Strata 0.1.59", base + "; DFlash2 spec6/conf0.7, no MTP/fallback"),
+        ("S9-F1", "f1-20261110T180620", "Strata 0.1.45.7 (jmnargi fork 8b4c09b)", base + "; MTP spec4/min-p0.5, WMMA2=0, 13 fork defaults"),
+    ]
+    records = []
+    for arm, experiment, engine, config in specs:
+        doc = json.loads((directory / experiment / "receipts.json").read_text())
+        progress = doc["progress"]
+        assert progress["arm"] == arm and progress["id"] == experiment
+        assert doc["status"] == "3/3 C2 PASS" and progress["owned_containers_stopped"]
+        phases = [p for p in doc["phases"] if p["phase"]["scored"]]
+        assert [p["phase"]["id"] for p in phases] == [f"{experiment}-batch-{n}" for n in (1, 2, 3)]
+        batches = []
+        for n, phase in enumerate(phases, 1):
+            summary = phase["summary"]
+            assert phase["phase"]["verdict"] == "PASS"
+            assert summary["pass_mechanical"] and summary["active_overlap"] and summary["post_health"]
+            assert summary["warmup_count"] == 0
+            reqs = {r["label"]: r for r in summary["requests"]}
+            a, b = reqs["A"], reqs["B"]
+            assert [a["prompt_tokens"], b["prompt_tokens"]] == [126967, 126968]
+            assert all(r["output_tokens"] >= 1024 and r["finish_reason"] == "stop" and r["cache_n"] == r["cached_tokens"] == 0 for r in (a, b))
+            if arm == "S9-D1":
+                assert all(phase["dflash2_activity"][s]["dflash2_offered"] > 0 for s in "ab")
+            row = {
+                "stage": "Stage 9", "arm_id": f"{arm}-#{n}",
+                "run_id": phase["phase"]["id"], "run_type": "batch", "engine": engine,
+                "quant": "IQ3_XXS", "config": config, "c2_verdict": "PASS",
+                "out_tokens_a": a["output_tokens"], "out_tokens_b": b["output_tokens"],
+                "wall_s": round(summary["batch_wall_s"], 2),
+            }
+            for key, source in (("prefill", "prefill_tok_s"), ("ttft", "ttft_s"), ("decode", "decode_tok_s")):
+                row[f"{key}_a"] = round(a[source], 2)
+                row[f"{key}_b"] = round(b[source], 2)
+                row[f"{key}_mean"] = round((a[source] + b[source]) / 2, 2)
+            for gpu in (0, 1):
+                t = telemetry[row["run_id"]][str(gpu)]
+                assert t["samples"] > 0
+                row.update({f"gpu{gpu}_t_avg": t["temp_mean_c"], f"gpu{gpu}_t_peak": t["temp_peak_c"],
+                            f"gpu{gpu}_p_avg": t["power_mean_w"], f"gpu{gpu}_p_peak": t["power_peak_w"]})
+            vm = phase["host_vmstat_delta"]
+            physical = "/".join(str(phase["request_physical_read_mb"][s]) for s in "ab")
+            row["notes"] = (
+                f"Closed scored batch; clock 135-1245 MHz (user approved), configured 150 W; "
+                f">60 W lifetime telemetry, includes native post-response idle-prefill; "
+                f"main-request OS read A/B {physical} MB; host major faults {vm['pgmajfault']}; "
+                f"swap in/out pages {vm['pswpin']}/{vm['pswpout']}; image {progress['image_id']}; "
+                "historical 1110 MHz/cache/output differences prevent causal claims; no quality validation or promotion"
+            )
+            batches.append(row)
+        aggregate = dict(batches[0])
+        aggregate.update(arm_id=arm, run_id=f"{arm.lower()}-median", run_type="median (3 batches)")
+        # Compute performance medians from original receipt precision, then round.
+        for key, source in (("prefill", "prefill_tok_s"), ("ttft", "ttft_s"), ("decode", "decode_tok_s")):
+            for label, side in (("A", "a"), ("B", "b")):
+                values = [next(r[source] for r in p["summary"]["requests"] if r["label"] == label) for p in phases]
+                aggregate[f"{key}_{side}"] = round(statistics.median(values), 2)
+            aggregate[f"{key}_mean"] = round((aggregate[f"{key}_a"] + aggregate[f"{key}_b"]) / 2, 2)
+        for key in ("out_tokens_a", "out_tokens_b", "wall_s"):
+            aggregate[key] = statistics.median(r[key] for r in batches)
+        for gpu in (0, 1):
+            for metric in ("t", "p"):
+                aggregate[f"gpu{gpu}_{metric}_avg"] = round(statistics.mean(r[f"gpu{gpu}_{metric}_avg"] for r in batches), 1)
+                aggregate[f"gpu{gpu}_{metric}_peak"] = max(r[f"gpu{gpu}_{metric}_peak"] for r in batches)
+        aggregate["notes"] = (
+            f"3/3 C2 PASS; all IDs closed; clock 135-1245 MHz vs historical 1110; configured 150 W; "
+            f">60 W lifetime GPU means, mean of batch means/max peaks; measured output medians; image {progress['image_id']}; "
+            "full-lifetime unfiltered metrics in Stage 9 standalone report; cache/output/clock confounding; "
+            "dual-agent 30 goal not met; no semantic quality validation or promotion"
+        )
+        records.extend([aggregate, *batches])
+    assert len(records) == 12
+    return records
+
+
 def export_csv(records, path):
     fieldnames = [
         "stage", "arm_id", "run_id", "run_type", "engine", "quant", "config", "c2_verdict",
@@ -896,14 +978,15 @@ def export_markdown(records, path):
     lines = []
     lines.append("# Consolidated Dual-V100 128K C2 Benchmark Database")
     lines.append("")
-    lines.append("This document aggregates all formal benchmark evaluations, candidate screenings, and hardware telemetry records across **Stages 2 through 8** on the Lenovo ThinkStation P520 (dual Tesla V100 SXM2 16GB, 150W power cap, dual independent 131,072-context agents).")
+    lines.append("This document aggregates all formal benchmark evaluations, candidate screenings, and hardware telemetry records across **Stages 2 through 9** on the Lenovo ThinkStation P520 (dual Tesla V100 SXM2 16GB, 150W configured power cap, dual independent 131,072-context agents).")
     lines.append("")
     lines.append("- **Repository master CSV dataset:** [`docs/consolidated-benchmarks.csv`](consolidated-benchmarks.csv)")
     lines.append("- **Frozen C2 Workload Manifest:** `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`")
     lines.append("- **Hardware Baseline:** Dual independent agents (GPU 0 / cpuset `0-2,6-8` vs GPU 1 / cpuset `3-5,9-11`), INT8 KV, frozen prompts (~126,967 tokens each), minimum output 1024 tokens.")
     lines.append("- **S7-XXS-14..16:** 9/9 scored C2 PASS, three batches each; all IDs closed. [Report](../artifacts/stage7-results-20261101/stage7-iq3xxs-14-16-report.md), [source/build audit](../artifacts/stage7-results-20261101/stage7-iq3xxs-port-source-audit.md). Arms 15/16 use separate 0.1.54-derived port images. Diagnostics are excluded from their scored rows; cache/swap variation prevents causal speedup claims.")
     lines.append("- **Stage 8 (`S8-U1`, `S8-C0..C3`, `S8-M1..M2`):** 21/21 scored C2 PASS across 7 arms (three batches each, Strata 0.1.57, source `c3b3f5035506f3e966f1b4b7b188aeaabae92f1d`); all IDs closed. [Continuation review](STAGE8_CONTINUATION_REVIEW.md), [follow-up summary](../artifacts/stage8-followup-results-20261107/summary.md), [U1 report](../artifacts/stage8-results-20261107/stage8-u1-report.md). Unscored instrumented diagnostic `S8-D1` is excluded from scored rows; `S8-M3` (`--kv-resident 40960`) was evaluated analytically without execution; dual-agent 30 tok/s goal not met; page-cache/I-O/swap/output variation prevents causal speedup claims.")
-    lines.append("- **Telemetry convention:** S7-XXS-8..16 and Stage 8 (`S8-U1`, `S8-C0..C3`, `S8-M1..M2`) temperature/power rows use 1-second samples with power >60 W across the process lifetime, including loading (Stage 8 standalone reports also record unfiltered full-process-lifetime means). Arm averages are unweighted means of batch averages; peaks are maxima. These are not isolated decode/prefill power measurements. S7-XXS-14..16 and Stage 8 aggregate output counts are measured medians; older 1024 summary entries may denote only the contract minimum. A/B mean columns are descriptive averages, not summed throughput.")
+    lines.append("- **Stage 9 (`S9-U1`, `S9-D1`, `S9-F1`):** 9/9 scored C2 PASS, three fresh-process dual-agent batches per arm; 9 batch rows + 3 median rows. U1/D1 share upstream 0.1.59; D1 uses verified DFlash2 spec6/conf0.7 without MTP/fallback. F1 is pinned fork 8b4c09b, engine 0.1.45.7, MTP4 and WMMA2=0 with 13 built-in Volta defaults. All IDs closed; preparation/startup-only failures are excluded. [Final review](STAGE9_REVIEW.md), [full-lifetime standalone metrics](../artifacts/stage9-results-20261110/summary.md), [source audit](STAGE9_SOURCE_AUDIT.md). Scored runs used the user-approved **135–1245 MHz** range, differing from historical 1110 MHz runs. Dual-agent 30 tok/s goal not met; no all-metric upgrade, semantic-quality result or promotion; no causal version/drafter speedup claim.")
+    lines.append("- **Telemetry convention:** S7-XXS-8..16, Stage 8 and Stage 9 temperature/power rows use 1-second samples with power >60 W across the process lifetime, including loading and eligible native post-response idle-prefill. Stage 8/9 standalone reports also record **unfiltered** full-process-lifetime means; those averages differ from this filtered table. [Stage 9 filtered telemetry and source CSV hashes](../artifacts/stage9-results-20261110/stage9-telemetry-gt60w.json). Arm averages are unweighted means of batch averages; peaks are maxima. These are not isolated decode/prefill power measurements. S7-XXS-14..16 and Stage 8/9 aggregate output counts are measured medians; older 1024 summary entries may denote only the contract minimum. A/B mean columns are descriptive averages, not summed throughput. Stage 9 main-request I/O/KV excludes later decode-free GEN 0 work; full-lifetime resource metrics include that native server activity.")
     lines.append("")
     lines.append("---")
     lines.append("")
@@ -924,7 +1007,8 @@ def export_markdown(records, path):
         "S7-XXS-1", "S7-XXS-2", "S7-XXS-4",
         "S7-XXS-8", "S7-XXS-9", "S7-XXS-10", "S7-XXS-11", "S7-XXS-12", "S7-XXS-13",
         "S7-XXS-14", "S7-XXS-15", "S7-XXS-16",
-        "S8-U1", "S8-C0", "S8-C1", "S8-C2", "S8-C3", "S8-M1", "S8-M2"
+        "S8-U1", "S8-C0", "S8-C1", "S8-C2", "S8-C3", "S8-M1", "S8-M2",
+        "S9-U1", "S9-D1", "S9-F1"
     ]
     
     rec_by_arm = {r["arm_id"]: r for r in records if r["run_type"] in ("baseline", "median (3 batches)", "3-run mean", "mixed_quant", "tuning", "feasibility", "mean (2 batches, stopped early)")}
@@ -945,9 +1029,9 @@ def export_markdown(records, path):
     lines.append("")
     lines.append("---")
     lines.append("")
-    lines.append("## 2. Hardware Telemetry Comparison (Stages 5, 7 & 8)")
+    lines.append("## 2. Hardware Telemetry Comparison (Stages 5, 7, 8 & 9)")
     lines.append("")
-    lines.append("Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during full 128K C2 evaluations (150W TDP limit):")
+    lines.append("Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during full 128K C2 evaluations (150W configured limit); see the >60 W filtering convention and the Stage 9 clock-condition caveat above:")
     lines.append("")
     lines.append("| Stage / Arm | Quant | Engine | Overrides | GPU0 Avg Temp | GPU0 Peak Temp | GPU0 Avg Pwr | GPU0 Peak Pwr | GPU1 Avg Temp | GPU1 Peak Temp | GPU1 Avg Pwr | GPU1 Peak Pwr |")
     lines.append("| :--- | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |")
@@ -997,7 +1081,7 @@ def export_markdown(records, path):
     lines.append("   - `STRATA_Q8_GATHER_WIDE=0` (S7-XXS-10) showed no measurable decode effect.")
     lines.append("   - `--prefill 4096` (S7-XXS-12) regressed prefill by **−36.7%** (TTFT ~126 s → ~200 s) and was stopped after 2 batches.")
     lines.append("   - Common-mode shift: all arms showed ~1.2% higher prefill than archived S7-XXS-2, including decode-only switches, confirming cross-date confounders.")
-    lines.append("5. **Physical Power & Thermal Profile:**")
+    lines.append("5. **Historical Physical Power & Thermal Profile (before Stage 9's 1245 MHz condition):**")
     lines.append("   - Sustained decode power is low (~45–75 W) with SM clocks steady at 1110 MHz.")
     lines.append("   - Dense 128K prefill draws 120–140 W average with transient spikes up to 166–204 W, causing dynamic clock throttling down to 795–1050 MHz to stay within the 150W TDP envelope.")
     lines.append("   - Operating temperatures never exceeded 70 °C, comfortably below V100's 85 °C thermal throttle point.")
@@ -1008,9 +1092,14 @@ def export_markdown(records, path):
     lines.append("7. **Stage 8 Engine 0.1.57 Upgrade & Runtime Candidates (21/21 scored C2 PASS, closed):**")
     lines.append("   - `S8-U1` (`0.1.57` baseline): prefill **871.0 / 877.2**, decode **25.2 / 27.7** tok/s (unwarmed/partially warmed OS page cache with 3.5–19.8 GB NVMe expert reads per agent). Unscored diagnostic `S8-D1` proved plain `--mmap-experts` has zero GPU-pinned PCIe expert transfers (`actual_pcie_share = 0.0`) despite startup `pcie_frac` logs.")
     lines.append("   - `S8-C0` (`S8-C1` minus `--pool-workers 3`, default 2 pool workers under warm 43.81 GiB page cache): prefill **997.2 / 1006.3** tok/s (TTFT **127.57 / 126.42 s**), decode **25.6 / 27.9** tok/s, whole-host CPU user **27.1%** (~290.5 / 337.9 MB physical OS reads, 5 major faults) — confirming warm-cache 0.1.57 prefill matches `S8-C1` (**998.1 / 1007.2** tok/s) and archived `S7-XXS-14` (**997.6 / 1006.6** tok/s) without `--pool-workers 3`.")
-    lines.append("   - `S8-C1` (`--pool-workers 3`): prefill **998.1 / 1007.2**, decode **26.2 / 28.3** tok/s under warm page cache (whole-host CPU user **32.1%**). `S8-C2` (`--resident-budget-gib 2` bounded 2 GiB mapped/pinned resident budget per agent): enabled non-zero PCIe expert offload (API offload-share medians **0.015 / 0.012**), decode **26.6 / 27.9** tok/s, prefill **823.4 / 827.2** tok/s (~24.2 / 23.1 GB engine-reported physical reads per agent as lent prompt slots fell outside the 2 GiB ranked complement). `S8-C3` (`C2 + --adapt-async 1`): highest IQ3_XXS decode medians at **29.0 / 28.7** tok/s, prefill **820.5 / 825.0** tok/s (TTFT **155.00 / 154.14 s**); dual-agent **30.0 tok/s** goal was **not met**.")
+    lines.append("   - `S8-C1` (`--pool-workers 3`): prefill **998.1 / 1007.2**, decode **26.2 / 28.3** tok/s under warm page cache (whole-host CPU user **32.1%**). `S8-C2` (`--resident-budget-gib 2` bounded 2 GiB mapped/pinned resident budget per agent): enabled non-zero PCIe expert offload (API offload-share medians **0.015 / 0.012**), decode **26.6 / 27.9** tok/s, prefill **823.4 / 827.2** tok/s (~24.2 / 23.1 GB engine-reported physical reads per agent as lent prompt slots fell outside the 2 GiB ranked complement). `S8-C3` (`C2 + --adapt-async 1`): highest Stage 8 IQ3_XXS decode medians at **29.0 / 28.7** tok/s, prefill **820.5 / 825.0** tok/s (TTFT **155.00 / 154.14 s**); dual-agent **30.0 tok/s** goal was **not met**.")
     lines.append("   - `S8-M1` (`--spec 6` on U1): MTP draft acceptance dropped to **49.4% / 52.6%**, decode **25.3 / 26.1** tok/s, prefill **996.7 / 1003.7** tok/s. `S8-M2` (`--expert-cache-per-layer` on U1, `4107→5472` per-layer slots in 8.90 GiB VRAM): expert hit **0.840 / 0.864**, decode **25.8 / 26.2** tok/s, prefill **994.6 / 1000.9** tok/s.")
     lines.append("   - `S8-M3` (`--kv-resident 40960`) was evaluated analytically without execution (+~113 MiB VRAM trading ~65–70 expert slots while QSA KV VRAM hit rate is already **97.7–98.9%** and `kv-resolve` is ~0.41–0.45 ms/window). Varying OS page-cache/I-O/swap states and output-token lengths prevent causal cross-arm speedup claims; no quality suite or production promotion is established.")
+    lines.append("8. **Stage 9 upstream 0.1.59 MTP / DFlash2 and pinned V100 fork (9/9 C2 PASS, closed):**")
+    lines.append("   - `S9-U1`: Prefill **966.0 / 973.6**, Decode **26.1 / 28.8** tok/s, TTFT **131.67 / 130.67 s**. The first batch (637.8 / 647.1 Prefill; 42.75 / 47.63 GB physical reads) remains included in all-three-batch medians.")
+    lines.append("   - `S9-D1` (same upstream image; stock DFlash2 spec6/conf0.7, no MTP/fallback): Prefill **1026.5 / 1032.6**, Decode **28.2 / 29.4** tok/s, TTFT **123.92 / 123.21 s**. DFlash2-specific proposals were positive for both agents in all three batches. This was the fastest observed Stage 9 recipe, with higher unfiltered lifetime mean power/temperature than U1; it is not an all-metric upgrade.")
+    lines.append("   - `S9-F1` (fork 8b4c09b, engine 0.1.45.7, MTP4, WMMA2=0): Prefill **960.0 / 909.8**, Decode **26.3 / 26.0** tok/s, TTFT **132.51 / 139.81 s**. Thirteen built-in Volta defaults and post-response idle-prefill are part of this pinned recipe; no custom tuning combination was added.")
+    lines.append("   - None of the nine batches had both agents >=30 tok/s. All Stage 9 scored runs followed the separately recorded host change to 135–1245 MHz, subsequently explicitly approved by the user. Historical 1110 MHz measurements, cache/swap/I-O/output variation and non-interleaved ordering prevent causal engine/drafter speedup claims. S7-XXS-14 remains the unrerun archived operational reference; no semantic-quality validation or production promotion.")
 
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")

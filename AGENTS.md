@@ -91,7 +91,7 @@ Read [final continuation review](docs/STAGE8_CONTINUATION_REVIEW.md),
 - New work or promotion requires a new user scope and fresh live preflight;
   no completed run or retained NEXT instruction authorizes it automatically.
 
-## Stage 9 (PLANNED 2026-11-10; no execution yet)
+## Stage 9 (CLOSED 2026-11-10; 9/9 C2 PASS, dual-agent 30 tok/s NOT MET)
 
 Read [Stage 9 plan](docs/STAGE9_PLAN.md), [source audit](docs/STAGE9_SOURCE_AUDIT.md) and [candidate contract](bench/stage9-candidates.json) before proposing any execution. A GitHub documentation commit does NOT authorize P520 GPU work, server interruption, image replacement or production promotion.
 
@@ -100,3 +100,15 @@ Read [Stage 9 plan](docs/STAGE9_PLAN.md), [source audit](docs/STAGE9_SOURCE_AUDI
 - Verify full 0.1.59 *engine* source SHA rather than substituting v0.2.13's app tag, CUDA12/sm_70 build compatibility, fork WMMA2 default versus S7-XXS-14's no-port path, and DFlash2 head/pack/VRAM and actual active draft counters before scoring. Fork and upstream binaries are separate sources and images.
 - Preserve original model/pack/KV/MTP assets, CPU/GPU mapping, frozen C2 workload, 150 W cap/1110 MHz limit, serving ports, historical containers/results and ThinkPad tunnel. Inspect live host before any possible new run; the Nov 7 state is not proof of idleness on Nov 10.
 - Evaluate **both agents' Prefill, Decode, TTFT, full-lifetime GPU thermal/power mean and peak, CPU/RAM/swap/page-cache/I/O and acceptance**. No score or promotion claim without raw receipts; no semantic-quality claim from mechanical C2 PASS.
+
+## Stage 9 execution amendment — 2026-11-10 user instruction
+
+The user explicitly said “중단하지마!” and “1245로 진행할거야!” after observed startup SM clocks reached 1245 MHz. For this authorized Stage 9 campaign, accept observed SM clocks up to **1245 MHz** while preserving the existing 150 W limits and all hardware/host settings; this does not authorize a clock/power command. The original `u1-20261110T173436` is CLOSED, startup-only, zero scored C2, automatically failed under the previous 1110 MHz gate. Preserve it and use a new ID under the amended clock observation criterion. No scored retries, baseline reruns, tuning combinations or promotion. Historical clock envelopes differ and must remain explicit in comparisons.
+
+## Stage 9 closure — read before any new work
+
+Read [final review](docs/STAGE9_REVIEW.md), [full metrics](artifacts/stage9-results-20261110/summary.md) and [final host audit](artifacts/stage9-results-20261110/final-host-check.json). U1 `u1-20261110T173748`, D1 `d1-20261110T175220` and F1 `f1-20261110T180620` each completed 3/3 concurrent 128K C2, **9/9 total**. All IDs, first startup-only `u1-20261110T173436`, and P0 preparation attempts are CLOSED. Never rerun/reuse them. Scripts 113–119 and original plan are audit/reference only; the candidate manifest is no longer execution-authorized. No extra tuning, reference rerun or promotion.
+
+Decode medians A/B: U1 26.1/28.8, D1 28.2/29.4, F1 26.3/26.0. No dual-agent 30 result, all-metric upgrade, or semantic quality validation. D1 improved descriptive speed but had higher full-lifetime mean power/temperatures; S7-XXS-14 remains the unrerun archived operational reference.
+
+The host clock journal changed separately after initial inspection: 17:14:21 fixed 1245, then 17:15:59 **135–1245 MHz**. The agent issued no clock/power command; the user explicitly approved continuing at 1245. All scored batches occurred afterward. Final host policy is 135–1245, configured caps 150 W, GPUs idle, all serving stopped/preserved and tunnel active. **Do not restore 1110 or change clocks/power/host settings automatically.** Preserve 675 SHA-matched backed-up evidence files, original assets/native pack/MTP, all 278 initial containers and prior images. New work requires a new explicit scope and live preflight.

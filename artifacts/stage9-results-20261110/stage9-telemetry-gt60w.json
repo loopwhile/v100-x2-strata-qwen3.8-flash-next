@@ -1,0 +1,169 @@
+{
+  "schema": "stage9-telemetry-gt60w-v1",
+  "method": "Select 1-second nvidia-smi samples with power.draw > 60 W per GPU, over the full process lifetime including loading, any native idle-prefill, and shutdown. Means over selected samples; peaks over selected samples. Arm aggregate means average the three batch means; peaks take their maxima. Not decode-only telemetry.",
+  "source": "SHA-verified local raw backups; source CSV digests match raw-backup-sha256.json",
+  "runs": {
+    "u1-20261110T173748-batch-1": {
+      "0": {
+        "samples": 159,
+        "temp_mean_c": 53.9,
+        "temp_peak_c": 62.0,
+        "power_mean_w": 102.5,
+        "power_peak_w": 194.21,
+        "source_csv_sha256": "33dc1dfca0559b9f012f9ac571863828e8075c4c8b916545d0fccbc53f5b612c"
+      },
+      "1": {
+        "samples": 173,
+        "temp_mean_c": 56.6,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 107.8,
+        "power_peak_w": 219.88,
+        "source_csv_sha256": "33dc1dfca0559b9f012f9ac571863828e8075c4c8b916545d0fccbc53f5b612c"
+      }
+    },
+    "u1-20261110T173748-batch-2": {
+      "0": {
+        "samples": 172,
+        "temp_mean_c": 58.4,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 102.6,
+        "power_peak_w": 201.81,
+        "source_csv_sha256": "eaf02d57bbd5a566ea0b0ef937f062334659c93f36e6b400fbe083502a07ba9e"
+      },
+      "1": {
+        "samples": 183,
+        "temp_mean_c": 59.2,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 105.3,
+        "power_peak_w": 212.37,
+        "source_csv_sha256": "eaf02d57bbd5a566ea0b0ef937f062334659c93f36e6b400fbe083502a07ba9e"
+      }
+    },
+    "u1-20261110T173748-batch-3": {
+      "0": {
+        "samples": 169,
+        "temp_mean_c": 59.4,
+        "temp_peak_c": 65.0,
+        "power_mean_w": 105.8,
+        "power_peak_w": 201.29,
+        "source_csv_sha256": "b0e7a956368c1fc654f7e80d8b615b60d1e2114bb70e6d96e73f437d96baeec0"
+      },
+      "1": {
+        "samples": 181,
+        "temp_mean_c": 59.6,
+        "temp_peak_c": 65.0,
+        "power_mean_w": 102.5,
+        "power_peak_w": 211.44,
+        "source_csv_sha256": "b0e7a956368c1fc654f7e80d8b615b60d1e2114bb70e6d96e73f437d96baeec0"
+      }
+    },
+    "d1-20261110T175220-batch-1": {
+      "0": {
+        "samples": 187,
+        "temp_mean_c": 57.6,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 100.0,
+        "power_peak_w": 201.95,
+        "source_csv_sha256": "62ef44e31917493c19edbd51410b49e2f0a8d9b17fd7baf1acb1428746a23c4c"
+      },
+      "1": {
+        "samples": 169,
+        "temp_mean_c": 59.2,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 105.8,
+        "power_peak_w": 226.24,
+        "source_csv_sha256": "62ef44e31917493c19edbd51410b49e2f0a8d9b17fd7baf1acb1428746a23c4c"
+      }
+    },
+    "d1-20261110T175220-batch-2": {
+      "0": {
+        "samples": 181,
+        "temp_mean_c": 59.3,
+        "temp_peak_c": 66.0,
+        "power_mean_w": 103.2,
+        "power_peak_w": 200.74,
+        "source_csv_sha256": "3fdf3caa10b178a7ea8861bbb73f0bd33b453d40e94f0991959f678ab89136ca"
+      },
+      "1": {
+        "samples": 174,
+        "temp_mean_c": 59.6,
+        "temp_peak_c": 65.0,
+        "power_mean_w": 108.2,
+        "power_peak_w": 222.36,
+        "source_csv_sha256": "3fdf3caa10b178a7ea8861bbb73f0bd33b453d40e94f0991959f678ab89136ca"
+      }
+    },
+    "d1-20261110T175220-batch-3": {
+      "0": {
+        "samples": 186,
+        "temp_mean_c": 59.5,
+        "temp_peak_c": 66.0,
+        "power_mean_w": 101.8,
+        "power_peak_w": 221.58,
+        "source_csv_sha256": "4f3ae33ed70f75d4d376db0ff9238db28215bf1166a2519fede25b68c037403c"
+      },
+      "1": {
+        "samples": 172,
+        "temp_mean_c": 59.9,
+        "temp_peak_c": 65.0,
+        "power_mean_w": 108.2,
+        "power_peak_w": 218.0,
+        "source_csv_sha256": "4f3ae33ed70f75d4d376db0ff9238db28215bf1166a2519fede25b68c037403c"
+      }
+    },
+    "f1-20261110T180620-batch-1": {
+      "0": {
+        "samples": 184,
+        "temp_mean_c": 56.7,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 98.6,
+        "power_peak_w": 202.74,
+        "source_csv_sha256": "27db088c85a26bfa06e1198564ff4ca287c2e31521b2044305c490a097a09922"
+      },
+      "1": {
+        "samples": 185,
+        "temp_mean_c": 57.3,
+        "temp_peak_c": 63.0,
+        "power_mean_w": 101.2,
+        "power_peak_w": 217.53,
+        "source_csv_sha256": "27db088c85a26bfa06e1198564ff4ca287c2e31521b2044305c490a097a09922"
+      }
+    },
+    "f1-20261110T180620-batch-2": {
+      "0": {
+        "samples": 163,
+        "temp_mean_c": 59.0,
+        "temp_peak_c": 65.0,
+        "power_mean_w": 106.3,
+        "power_peak_w": 207.55,
+        "source_csv_sha256": "f2b31b2651cc3a42003d327607155914bac3b7281587ad8b52003640949a868b"
+      },
+      "1": {
+        "samples": 178,
+        "temp_mean_c": 58.5,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 104.4,
+        "power_peak_w": 242.06,
+        "source_csv_sha256": "f2b31b2651cc3a42003d327607155914bac3b7281587ad8b52003640949a868b"
+      }
+    },
+    "f1-20261110T180620-batch-3": {
+      "0": {
+        "samples": 177,
+        "temp_mean_c": 58.6,
+        "temp_peak_c": 64.0,
+        "power_mean_w": 98.9,
+        "power_peak_w": 218.63,
+        "source_csv_sha256": "d94e2a446b232e5f6dcd4ee98bfda83e52d5d96807b753968292e4fc8580daab"
+      },
+      "1": {
+        "samples": 192,
+        "temp_mean_c": 58.9,
+        "temp_peak_c": 65.0,
+        "power_mean_w": 104.2,
+        "power_peak_w": 222.51,
+        "source_csv_sha256": "d94e2a446b232e5f6dcd4ee98bfda83e52d5d96807b753968292e4fc8580daab"
+      }
+    }
+  }
+}

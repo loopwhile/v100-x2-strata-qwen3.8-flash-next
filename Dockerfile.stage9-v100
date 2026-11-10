@@ -1,0 +1,22 @@
+# Isolated Stage 9 sources; existing images and runtime assets are never changed.
+FROM nvidia/cuda:12.9.1-devel-ubuntu24.04
+ARG STRATA_REPO
+ARG STRATA_REF
+ARG STRATA_VERSION
+ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 LANG=C.UTF-8 STRATA_EXECV=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential ca-certificates curl git libatomic1 libgomp1 \
+    python3 python3-pip python3-venv unzip \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/strata
+RUN git init . && git remote add origin "https://github.com/${STRATA_REPO}.git" \
+    && git fetch --depth 1 origin "${STRATA_REF}" && git checkout --detach FETCH_HEAD \
+    && test "$(git rev-parse HEAD)" = "${STRATA_REF}" && git remote remove origin
+RUN python3 -m venv .venv && .venv/bin/pip install --no-cache-dir \
+    -r requirements.txt -r requirements-build.txt
+COPY docker/build_stage9_v100_engine.py /opt/strata/stage9-build.py
+RUN STRATA_EXPECTED_REF="${STRATA_REF}" STRATA_EXPECTED_VERSION="${STRATA_VERSION}" \
+    .venv/bin/python stage9-build.py
+LABEL org.opencontainers.image.revision="${STRATA_REF}" \
+      org.opencontainers.image.version="${STRATA_VERSION}" lab.stage="9"
+ENTRYPOINT ["/opt/strata/.venv/bin/python"]

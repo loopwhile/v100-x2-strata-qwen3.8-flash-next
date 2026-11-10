@@ -1,0 +1,130 @@
+{
+  "upstream-image.json": {
+    "source": "local",
+    "version": "0.1.59",
+    "archs": [
+      70
+    ],
+    "vision": "none",
+    "toolkit": 12,
+    "cuda_dirs": [
+      "/usr/local/cuda/bin",
+      "/usr/local/cuda/lib64"
+    ],
+    "src": "6cebf8ebfa293181",
+    "vision_src": null,
+    "git_revision": "712fec6b4297c9cfd32ab43daaa2979a9aa01edf",
+    "vendored_ggml": true,
+    "build_commands": [
+      [
+        ".venv/bin/cmake",
+        "-S",
+        ".",
+        "-B",
+        "/opt/strata/build-stage9",
+        "-G",
+        "Ninja",
+        "-DCMAKE_MAKE_PROGRAM=/opt/strata/.venv/bin/ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSTRATA_ENABLE_CUDA=ON",
+        "-DSTRATA_BUILD_TESTS=OFF",
+        "-DSTRATA_EXPERIMENTAL_SM60=ON",
+        "-DCMAKE_CUDA_ARCHITECTURES=70",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc"
+      ],
+      [
+        ".venv/bin/cmake",
+        "--build",
+        "/opt/strata/build-stage9",
+        "--target",
+        "strata",
+        "-j",
+        "6"
+      ]
+    ],
+    "binary_sha256": "ccca488231f12da422be4a80b5c7f165b7593f6388907cac92d3c3f0d4229031"
+  },
+  "fork-image.json": {
+    "source": "local",
+    "version": "0.1.45.7",
+    "archs": [
+      70
+    ],
+    "vision": "none",
+    "toolkit": 12,
+    "cuda_dirs": [
+      "/usr/local/cuda/bin",
+      "/usr/local/cuda/lib64"
+    ],
+    "src": "777dc06da4d303a1",
+    "vision_src": null,
+    "git_revision": "8b4c09bd3d9213b2d47880826c6e818c3140664d",
+    "vendored_ggml": false,
+    "build_commands": [
+      [
+        ".venv/bin/cmake",
+        "-S",
+        ".",
+        "-B",
+        "/opt/strata/build-stage9",
+        "-G",
+        "Ninja",
+        "-DCMAKE_MAKE_PROGRAM=/opt/strata/.venv/bin/ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSTRATA_ENABLE_CUDA=ON",
+        "-DSTRATA_BUILD_TESTS=OFF",
+        "-DSTRATA_EXPERIMENTAL_SM60=ON",
+        "-DCMAKE_CUDA_ARCHITECTURES=70",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DSTRATA_GGML_DIR=/opt/strata/third_party/llama.cpp"
+      ],
+      [
+        ".venv/bin/cmake",
+        "--build",
+        "/opt/strata/build-stage9",
+        "--target",
+        "strata",
+        "-j",
+        "6"
+      ]
+    ],
+    "binary_sha256": "83f73ab0c7a9fc44af46e7ee5d5c505cc3bc1634ae452b185f2b62d29ce9eea9"
+  },
+  "preflight-v2/preparation.json": {
+    "source_revision": "712fec6b4297c9cfd32ab43daaa2979a9aa01edf",
+    "pack_name": "qwen3.8-flash-next-dflash2.q4_0-selq4.pack",
+    "pack_bytes": 339694592,
+    "pack_sha256": "4a42b98220ea7880664002c8edda1563aecbae754b762a2e2f31b2b91ee93ecd",
+    "weight_revision": "a22a1744e85c17364dcc54a6a420af7135d4c7f6",
+    "expected_slots": 4139,
+    "draft_conf": 0.7,
+    "spec": 6,
+    "original_vocab_sha256": "b1e1d3a7a9e4bf862dcd5923ce661fb59bbd07907e594df5cf86a62ac235cb91",
+    "confidence_policy": "drafting.conf_for(cuda, drafting.slots_of(frozen_args,16384))",
+    "offline_calibration": [
+      {
+        "id": "project-a",
+        "prompt_tokens": 126967,
+        "raw_prompt_sha256": "882a3617750ab8dbcb61d3e8e1d42641555a6b1450d060d7bb22a4f1161670b6"
+      },
+      {
+        "id": "project-b",
+        "prompt_tokens": 126968,
+        "raw_prompt_sha256": "5a19042f67dd7702e843595467e1d6c2b96414f565b0fbfa8036590709dba557"
+      }
+    ],
+    "verdict": "PREPARATION_PASS_NOT_C2"
+  },
+  "p0-summary.json": {
+    "status": "SOURCE_BUILD_ASSETS_OFFLINE_PASS_STARTUP_REQUIRED_PER_ARM",
+    "scored_batches": 0,
+    "images": {
+      "upstream": "sha256:dd8913d85f1811af034b66f3817ec392a82abdd28082e98e8a44b1d826bfea3d",
+      "fork": "sha256:b390db7e6e2fc974c15c7683d7490477beff6955ffdf227c3f5cecced9a7e59d"
+    },
+    "assets_verified": 15,
+    "drafting_gate": "drafting-argument-gate-v2.txt",
+    "fork_version": "strata 0.1.45.7\n",
+    "pack": "preflight-v2/preparation.json"
+  }
+}

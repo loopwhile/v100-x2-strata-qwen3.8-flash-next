@@ -1,0 +1,1715 @@
+{
+  "checked": "2026-11-10T18:26:22.997534+09:00",
+  "host": "p520-llm",
+  "boot_id": "7b3d1b01-7d2e-4d15-a0f5-04c25dee167c",
+  "historical_containers": [
+    {
+      "id": "36bfbf1e93e2",
+      "name": "strata-s8-c0-20261107T192030-batch-3-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b0510d6b4fe1",
+      "name": "strata-s8-c0-20261107T192030-batch-3-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c1293a46f37f",
+      "name": "strata-s8-c0-20261107T192030-batch-3-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "5e38a785352f",
+      "name": "strata-s8-c0-20261107T192030-batch-2-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "5f8c55daaf00",
+      "name": "strata-s8-c0-20261107T192030-batch-2-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "ff3a78951d92",
+      "name": "strata-s8-c0-20261107T192030-batch-2-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "dbad8344ad08",
+      "name": "strata-s8-c0-20261107T192030-batch-1-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "df6c7d37b750",
+      "name": "strata-s8-c0-20261107T192030-batch-1-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "7623822f4e70",
+      "name": "strata-s8-c0-20261107T192030-batch-1-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "cb89d6802bba",
+      "name": "strata-s8-c0-20261107T192030-startup-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "447cf510731b",
+      "name": "strata-s8-c0-20261107T192030-startup-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a89255acd9a7",
+      "name": "strata-s8-m2-20261107T171915-batch-3-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e90fb827a2a6",
+      "name": "strata-s8-m2-20261107T171915-batch-3-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a10cba9f1d40",
+      "name": "strata-s8-m2-20261107T171915-batch-3-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "02a11536ec35",
+      "name": "strata-s8-m2-20261107T171915-batch-2-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "090e097d7c9d",
+      "name": "strata-s8-m2-20261107T171915-batch-2-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4ec803662c76",
+      "name": "strata-s8-m2-20261107T171915-batch-2-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "607bd56482e0",
+      "name": "strata-s8-m2-20261107T171915-batch-1-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6854549f2a9c",
+      "name": "strata-s8-m2-20261107T171915-batch-1-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "34839134d062",
+      "name": "strata-s8-m2-20261107T171915-batch-1-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "788fff12d337",
+      "name": "strata-s8-m2-20261107T171915-startup-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b41dea90036e",
+      "name": "strata-s8-m2-20261107T171915-startup-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "0e768905ec2d",
+      "name": "strata-s8-m1-20261107T170315-batch-3-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e33033a9ae31",
+      "name": "strata-s8-m1-20261107T170315-batch-3-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c35e4cf93458",
+      "name": "strata-s8-m1-20261107T170315-batch-3-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "0fe3538fe6ac",
+      "name": "strata-s8-m1-20261107T170315-batch-2-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "652f9a0b5d7d",
+      "name": "strata-s8-m1-20261107T170315-batch-2-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "59f561c1d00a",
+      "name": "strata-s8-m1-20261107T170315-batch-2-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "dc24f6d320f7",
+      "name": "strata-s8-m1-20261107T170315-batch-1-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "1a511579cb46",
+      "name": "strata-s8-m1-20261107T170315-batch-1-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "d67a9438357b",
+      "name": "strata-s8-m1-20261107T170315-batch-1-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "d974857242d7",
+      "name": "strata-s8-m1-20261107T170315-startup-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "570887fdbbd8",
+      "name": "strata-s8-m1-20261107T170315-startup-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "810232bcb9ab",
+      "name": "strata-s8-c3-20261107T144114-batch-3-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "0d6ca8fe8ff2",
+      "name": "strata-s8-c3-20261107T144114-batch-3-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "21a422e6a9f5",
+      "name": "strata-s8-c3-20261107T144114-batch-3-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "ce2c5fe8910b",
+      "name": "strata-s8-c3-20261107T144114-batch-2-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "72d8fa9e943a",
+      "name": "strata-s8-c3-20261107T144114-batch-2-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "0eaa747c11c3",
+      "name": "strata-s8-c3-20261107T144114-batch-2-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "7c34079f174f",
+      "name": "strata-s8-c3-20261107T144114-batch-1-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c659336556c7",
+      "name": "strata-s8-c3-20261107T144114-batch-1-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "fd7b5862b4ed",
+      "name": "strata-s8-c3-20261107T144114-batch-1-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a3936c0bdc7b",
+      "name": "strata-s8-c3-20261107T144114-startup-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b27167e3c142",
+      "name": "strata-s8-c3-20261107T144114-startup-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "014dda6878f3",
+      "name": "strata-s8-c2-20261107T142619-batch-3-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "98c47dc77042",
+      "name": "strata-s8-c2-20261107T142619-batch-3-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "9e21bd77e410",
+      "name": "strata-s8-c2-20261107T142619-batch-3-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c1329a0e1b63",
+      "name": "strata-s8-c2-20261107T142619-batch-2-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4b581e7e6c25",
+      "name": "strata-s8-c2-20261107T142619-batch-2-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6959f5bc4e99",
+      "name": "strata-s8-c2-20261107T142619-batch-2-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "cecd51c0a99a",
+      "name": "strata-s8-c2-20261107T142619-batch-1-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "229e69a60cf0",
+      "name": "strata-s8-c2-20261107T142619-batch-1-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "12080d0cb9a0",
+      "name": "strata-s8-c2-20261107T142619-batch-1-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "8caac4eeacfe",
+      "name": "strata-s8-c2-20261107T142619-startup-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "97c81f3b6aa1",
+      "name": "strata-s8-c2-20261107T142619-startup-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4cb474572a9d",
+      "name": "strata-s8-c1-20261107T141343-batch-3-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f5dc1d3ebf82",
+      "name": "strata-s8-c1-20261107T141343-batch-3-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "dccad13df6b4",
+      "name": "strata-s8-c1-20261107T141343-batch-3-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b050a7336c5f",
+      "name": "strata-s8-c1-20261107T141343-batch-2-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "09a44346a6e8",
+      "name": "strata-s8-c1-20261107T141343-batch-2-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a61855f3b238",
+      "name": "strata-s8-c1-20261107T141343-batch-2-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "9976ac4f757b",
+      "name": "strata-s8-c1-20261107T141343-batch-1-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "63b2531f4282",
+      "name": "strata-s8-c1-20261107T141343-batch-1-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "48a947308197",
+      "name": "strata-s8-c1-20261107T141343-batch-1-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "bee802b0d18f",
+      "name": "strata-s8-c1-20261107T141343-startup-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "ac09517aa44d",
+      "name": "strata-s8-c1-20261107T141343-startup-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "7ed33b7bf077",
+      "name": "strata-s8-d1-20261107T140752-diagnostic-1-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "5cf951392185",
+      "name": "strata-s8-d1-20261107T140752-diagnostic-1-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "8ea61b203cde",
+      "name": "strata-s8-d1-20261107T140752-diagnostic-1-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f191a7b7190f",
+      "name": "strata-s8-d1-20261107T140752-startup-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "49dc102add89",
+      "name": "strata-s8-d1-20261107T140752-startup-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "34c54b8af9d8",
+      "name": "strata-s8-u1-20261107T124518-batch-3-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "de384622d421",
+      "name": "strata-s8-u1-20261107T124518-batch-3-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "1f1128e6eb58",
+      "name": "strata-s8-u1-20261107T124518-batch-3-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "39be72d21a34",
+      "name": "strata-s8-u1-20261107T124518-batch-2-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "dcb13af1f27b",
+      "name": "strata-s8-u1-20261107T124518-batch-2-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f1777b44da34",
+      "name": "strata-s8-u1-20261107T124518-batch-2-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e557322daa4e",
+      "name": "strata-s8-u1-20261107T124518-batch-1-bench",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "405e654e3438",
+      "name": "strata-s8-u1-20261107T124518-batch-1-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "594fd696db97",
+      "name": "strata-s8-u1-20261107T124518-batch-1-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "1151226b6449",
+      "name": "strata-s8-u1-20261107T124518-startup-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "8f107f6f7d33",
+      "name": "strata-s8-u1-20261107T124518-startup-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "daffe0619b04",
+      "name": "strata-s8-u1-20261107T124317-startup-b",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "ceb432861943",
+      "name": "strata-s8-u1-20261107T124317-startup-a",
+      "image": "590b604d9bcf",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4e12a4af8bed",
+      "name": "strata-s7-cooling-20261104T003222-3-bench",
+      "image": "2095eed79b00",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6f03d66659de",
+      "name": "strata-s7-cooling-20261104T003222-2-bench",
+      "image": "2095eed79b00",
+      "preserved_stopped": true
+    },
+    {
+      "id": "7fd978238541",
+      "name": "strata-s7-cooling-20261104T003222-1-bench",
+      "image": "2095eed79b00",
+      "preserved_stopped": true
+    },
+    {
+      "id": "09b50ca08bf6",
+      "name": "strata-s7-xxs14-serve-b",
+      "image": "2095eed79b00",
+      "preserved_stopped": true
+    },
+    {
+      "id": "7d5e9120c539",
+      "name": "strata-s7-xxs14-serve-a",
+      "image": "2095eed79b00",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6d1d9fa0e1f8",
+      "name": "strata-s7-port-xxs-16-3-bench",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-lean-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b57f5eb24181",
+      "name": "strata-s7-port-xxs-16-3-b",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-lean-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "0ae21034c32f",
+      "name": "strata-s7-port-xxs-16-3-a",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-lean-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6a4e845e3f36",
+      "name": "strata-s7-port-xxs-16-2-bench",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-lean-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "0f0e2ec8880d",
+      "name": "strata-s7-port-xxs-16-2-b",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-lean-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c5abe09ba22d",
+      "name": "strata-s7-port-xxs-16-2-a",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-lean-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "71348c21b249",
+      "name": "strata-s7-port-xxs-16-1-bench",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-lean-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "11710b857a2d",
+      "name": "strata-s7-port-xxs-16-1-b",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-lean-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f0392f8bcbc7",
+      "name": "strata-s7-port-xxs-16-1-a",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-lean-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f43d8f62e47f",
+      "name": "strata-s7-port-smoke16-1-b",
+      "image": "57b951d4375d",
+      "preserved_stopped": true
+    },
+    {
+      "id": "fe2424bbc040",
+      "name": "strata-s7-port-smoke16-1-a",
+      "image": "57b951d4375d",
+      "preserved_stopped": true
+    },
+    {
+      "id": "9abbbb32feb2",
+      "name": "strata-s7-port-build-receipt-16-1",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-lean-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "68d6b4fdc2f8",
+      "name": "strata-s7-port-xxs-15-3-bench",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e5ac180d17bd",
+      "name": "strata-s7-port-xxs-15-3-b",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "3884b049120d",
+      "name": "strata-s7-port-xxs-15-3-a",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "85585c8f3c8e",
+      "name": "strata-s7-port-xxs-15-2-bench",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c88577412598",
+      "name": "strata-s7-port-xxs-15-2-b",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "5f0d46eb34da",
+      "name": "strata-s7-port-xxs-15-2-a",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b64694c2d3e0",
+      "name": "strata-s7-port-xxs-15-1-bench",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "3fefb6f731e0",
+      "name": "strata-s7-port-xxs-15-1-b",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "1c341e8de4e3",
+      "name": "strata-s7-port-xxs-15-1-a",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b8f55e99116a",
+      "name": "strata-s7-port-smoke15-1-b",
+      "image": "95b0e4a50a77",
+      "preserved_stopped": true
+    },
+    {
+      "id": "1a93d25c1fb5",
+      "name": "strata-s7-port-smoke15-1-a",
+      "image": "95b0e4a50a77",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c50e8cb60e23",
+      "name": "strata-s7-port-15-parity-1",
+      "image": "95b0e4a50a77",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4ff277dc8853",
+      "name": "strata-s7-port-15-parity-0",
+      "image": "95b0e4a50a77",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c63f9db08dee",
+      "name": "strata-s7-port-build-receipt-15-3",
+      "image": "strata-v100-upstream:0.1.54-v100-wmma2-s7-20261101",
+      "preserved_stopped": true
+    },
+    {
+      "id": "2946114500bd",
+      "name": "unruffled_kare",
+      "image": "e665ca308780",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a83e145178e3",
+      "name": "gifted_almeida",
+      "image": "3168677986ca",
+      "preserved_stopped": true
+    },
+    {
+      "id": "eb5d52708746",
+      "name": "strata-s7-port-smoke14-trace-2-b",
+      "image": "2095eed79b00",
+      "preserved_stopped": true
+    },
+    {
+      "id": "06fab992882e",
+      "name": "strata-s7-port-smoke14-trace-2-a",
+      "image": "2095eed79b00",
+      "preserved_stopped": true
+    },
+    {
+      "id": "50c38f412085",
+      "name": "strata-s7-port-trace-build-1",
+      "image": "2095eed79b00",
+      "preserved_stopped": true
+    },
+    {
+      "id": "1bda190fc26c",
+      "name": "strata-s7-port-xxs-14-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "1c22270acff0",
+      "name": "strata-s7-port-xxs-14-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f841b60e8dbf",
+      "name": "strata-s7-port-xxs-14-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e86a527b6e46",
+      "name": "strata-s7-port-xxs-14-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4cc14847c14f",
+      "name": "strata-s7-port-xxs-14-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "8411ba9e091c",
+      "name": "strata-s7-port-xxs-14-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "7307d88162d2",
+      "name": "strata-s7-port-xxs-14-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4c091c11183d",
+      "name": "strata-s7-port-xxs-14-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "90be39166ca0",
+      "name": "strata-s7-port-xxs-14-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c113c1440fc4",
+      "name": "strata-s7-xxs-13-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "7abadc018615",
+      "name": "strata-s7-xxs-13-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "387f417ef053",
+      "name": "strata-s7-xxs-13-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "39d018b5f7af",
+      "name": "strata-s7-xxs-13-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "93563f488fa4",
+      "name": "strata-s7-xxs-13-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "9e1edc3c0ac1",
+      "name": "strata-s7-xxs-13-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c76b13912194",
+      "name": "strata-s7-xxs-13-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "5ea1ed07b5e8",
+      "name": "strata-s7-xxs-13-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e66c53d20651",
+      "name": "strata-s7-xxs-13-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "2fbe338d3870",
+      "name": "strata-s7-xxs-11-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "56fd89f3af41",
+      "name": "strata-s7-xxs-11-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c4cf9c1867c7",
+      "name": "strata-s7-xxs-11-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a8385c8160cb",
+      "name": "strata-s7-xxs-11-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "373424bf54e4",
+      "name": "strata-s7-xxs-11-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "94e30c329578",
+      "name": "strata-s7-xxs-11-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "60f083ce6a17",
+      "name": "strata-s7-xxs-11-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "9ae4abeeb29c",
+      "name": "strata-s7-xxs-11-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "23ede182d9db",
+      "name": "strata-s7-xxs-11-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "bb568686c6ad",
+      "name": "strata-s7-xxs-10-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "2f50621a79f5",
+      "name": "strata-s7-xxs-10-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "3476326f7e62",
+      "name": "strata-s7-xxs-10-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f3843b00ea04",
+      "name": "strata-s7-xxs-10-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "101f7a004637",
+      "name": "strata-s7-xxs-10-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6af0d63796ed",
+      "name": "strata-s7-xxs-10-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f7059a0b5400",
+      "name": "strata-s7-xxs-10-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "bae6ee99ee1e",
+      "name": "strata-s7-xxs-10-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "cf52d2a253a3",
+      "name": "strata-s7-xxs-10-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6cb93e66941d",
+      "name": "strata-s7-xxs-12-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "bf4f710e164a",
+      "name": "strata-s7-xxs-12-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "228e8a926f5f",
+      "name": "strata-s7-xxs-12-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "0d6e223aa94a",
+      "name": "strata-s7-xxs-12-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b3880ea15ec4",
+      "name": "strata-s7-xxs-12-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e7d48fcb39e2",
+      "name": "strata-s7-xxs-12-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "3be03e4d06e0",
+      "name": "strata-s7-xxs-9-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "9807671c368c",
+      "name": "strata-s7-xxs-9-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c4701c0d05b5",
+      "name": "strata-s7-xxs-9-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "8ce8e53eedd6",
+      "name": "strata-s7-xxs-9-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f0fb89b40a0f",
+      "name": "strata-s7-xxs-9-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "8ec754e6d91d",
+      "name": "strata-s7-xxs-9-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f65797c336aa",
+      "name": "strata-s7-xxs-9-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b6efc80765e5",
+      "name": "strata-s7-xxs-9-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e157e95198a1",
+      "name": "strata-s7-xxs-9-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "50d42dc05b82",
+      "name": "strata-s7-xxs-8-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "19d2fb543245",
+      "name": "strata-s7-xxs-8-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "556d8e6e3cd4",
+      "name": "strata-s7-xxs-8-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "d03a227efbb6",
+      "name": "strata-s7-xxs-8-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "255f0aeb6113",
+      "name": "strata-s7-xxs-8-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b28778b01fdb",
+      "name": "strata-s7-xxs-8-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c266b38c0080",
+      "name": "strata-s7-xxs-8-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "7169e559be76",
+      "name": "strata-s7-xxs-8-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b754eec86599",
+      "name": "strata-s7-xxs-8-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "32ce10d92487",
+      "name": "strata-s7-xxs-diag-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "667fa58350f0",
+      "name": "strata-s7-xxs-diag-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "71fc3c0de35e",
+      "name": "strata-s7-xxs-diag-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "569a35126ffd",
+      "name": "strata-s7-xxs-6-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6543443d3f45",
+      "name": "strata-s7-xxs-6-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "5dea0d9efb34",
+      "name": "strata-s7-xxs-6-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "96f46585a52f",
+      "name": "strata-s7-xxs-6-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f7be2d4d355f",
+      "name": "strata-s7-xxs-6-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e0236a3cf79d",
+      "name": "strata-s7-xxs-6-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "cb6f1425d5a1",
+      "name": "strata-s7-xxs-6-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "7cf4852ea879",
+      "name": "strata-s7-xxs-6-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "1cdca18d477a",
+      "name": "strata-s7-xxs-6-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "09d6a07c7e1e",
+      "name": "strata-s7-xxs-5-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "2d32c80b8a62",
+      "name": "strata-s7-xxs-5-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "1e8e2aaa9357",
+      "name": "strata-s7-xxs-5-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "44e99e89c711",
+      "name": "strata-s7-xxs-5-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4609bd4f441e",
+      "name": "strata-s7-xxs-5-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "fce84d716760",
+      "name": "strata-s7-xxs-5-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "ae691440e7e2",
+      "name": "strata-s7-xxs-5-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a4b666ca5d3f",
+      "name": "strata-s7-xxs-5-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "654272c74c68",
+      "name": "strata-s7-xxs-5-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e0b037bff4b4",
+      "name": "strata-s7-xxs-4-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b78f6bc3b7cd",
+      "name": "strata-s7-xxs-4-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "233a0e272d07",
+      "name": "strata-s7-xxs-4-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6cae67e44e71",
+      "name": "strata-s7-xxs-4-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4ac941ec47c4",
+      "name": "strata-s7-xxs-4-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4f16bdbd5866",
+      "name": "strata-s7-xxs-4-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b607f41d4b34",
+      "name": "strata-s7-xxs-4-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c440a3e3bf22",
+      "name": "strata-s7-xxs-4-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c8274730b3a1",
+      "name": "strata-s7-xxs-4-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4278e78b524f",
+      "name": "strata-s7-xxs-3-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c5f1c360c651",
+      "name": "strata-s7-xxs-3-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "fe47e8c58b13",
+      "name": "strata-s7-xxs-3-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f02d35d679bc",
+      "name": "strata-s7-xxs-3-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e1c7cf74df7a",
+      "name": "strata-s7-xxs-3-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6936120f9358",
+      "name": "strata-s7-xxs-3-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a148a50d9b22",
+      "name": "strata-s7-xxs-3-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "2880b48b9c38",
+      "name": "strata-s7-xxs-3-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "0cf763c83618",
+      "name": "strata-s7-xxs-3-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a315e79886c5",
+      "name": "strata-s7-xxs-2-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "74238dcb656e",
+      "name": "strata-s7-xxs-2-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "2b9e218e29c5",
+      "name": "strata-s7-xxs-2-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a60f5b2bd081",
+      "name": "strata-s7-xxs-2-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "9d6b33cd592d",
+      "name": "strata-s7-xxs-2-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "21c73968ce20",
+      "name": "strata-s7-xxs-2-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "5b667cd1f932",
+      "name": "strata-s7-xxs-2-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "68de5b396dcf",
+      "name": "strata-s7-xxs-2-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c48725b26fc7",
+      "name": "strata-s7-xxs-2-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "8bbaa9ee67b5",
+      "name": "strata-s7-xxs-1-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "d38c2bc92ae9",
+      "name": "strata-s7-xxs-1-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "9ab9bfd9b029",
+      "name": "strata-s7-xxs-1-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "2ae6feff3bf5",
+      "name": "strata-s7-xxs-1-2-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "72efa65321c1",
+      "name": "strata-s7-xxs-1-2-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "12c02f683695",
+      "name": "strata-s7-xxs-1-2-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "3d1615b19b4a",
+      "name": "strata-s7-xxs-1-1-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a361489958b2",
+      "name": "strata-s7-xxs-1-1-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "59c9676572fb",
+      "name": "strata-s7-xxs-1-1-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e252df52a67f",
+      "name": "strata-s7-compat-3-bench",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6664049f70e0",
+      "name": "strata-s7-compat-3-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "2af14f21404e",
+      "name": "strata-s7-compat-3-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "58f24479a44e",
+      "name": "strata-s7xxs-smoke-b",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "77929a86e939",
+      "name": "strata-s7xxs-smoke-a",
+      "image": "strata-v100-upstream:0.1.54",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6be0a341642e",
+      "name": "strata-s5xxs-t8-b",
+      "image": "strata-v100-upstream:0.1.50",
+      "preserved_stopped": true
+    },
+    {
+      "id": "bba4c65af15b",
+      "name": "strata-s5xxs-t8-a",
+      "image": "strata-v100-upstream:0.1.50",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4bb21b162d84",
+      "name": "strata-s5xxs-t7default-b",
+      "image": "strata-v100-jmnargi:2c9b1dd",
+      "preserved_stopped": true
+    },
+    {
+      "id": "efce223552e5",
+      "name": "strata-s5xxs-t7default-a",
+      "image": "strata-v100-jmnargi:2c9b1dd",
+      "preserved_stopped": true
+    },
+    {
+      "id": "1d3fd6960705",
+      "name": "strata-s5xxs-t6-b",
+      "image": "strata-v100-upstream:0.1.50",
+      "preserved_stopped": true
+    },
+    {
+      "id": "cf7cc4ad2a56",
+      "name": "strata-s5xxs-t6-a",
+      "image": "strata-v100-upstream:0.1.50",
+      "preserved_stopped": true
+    },
+    {
+      "id": "ab17ed9a1e47",
+      "name": "strata-s5xxs-t4-b",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "f6f88b736eb8",
+      "name": "strata-s5xxs-t4-a",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "319734afe55c",
+      "name": "strata-s5xxs-t3-b",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "c476f73e86d8",
+      "name": "strata-s5xxs-t3-a",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a881c50e9ce2",
+      "name": "strata-s5xxs-t2-b",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6f69692697a3",
+      "name": "strata-s5xxs-t2-a",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "336ad3cdbb3c",
+      "name": "strata-s5xxs-t1-b",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e72ec8c50d09",
+      "name": "strata-s5xxs-t1-a",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "5097ca914dbd",
+      "name": "strata-s5-iq3xxs-trial-b",
+      "image": "strata-v100-jmnargi:2c9b1dd",
+      "preserved_stopped": true
+    },
+    {
+      "id": "78e935279b0a",
+      "name": "strata-s5-iq3xxs-trial-a",
+      "image": "strata-v100-jmnargi:2c9b1dd",
+      "preserved_stopped": true
+    },
+    {
+      "id": "512e64a2d06c",
+      "name": "strata-s6-iq3s-agent-b",
+      "image": "strata-v100-jmnargi:2c9b1dd",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4b746dfadff9",
+      "name": "strata-s6-iq3s-agent-a",
+      "image": "strata-v100-jmnargi:2c9b1dd",
+      "preserved_stopped": true
+    },
+    {
+      "id": "5723375f4fd1",
+      "name": "strata-s4b-mixed-iq2xs-agent-b",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "1b598e603e2d",
+      "name": "strata-s4b-mixed-iq3xxs-agent-a",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "b19b291ebfd5",
+      "name": "strata-s4c-iq2xs-agent-b",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a2d51a2c2b63",
+      "name": "strata-s4c-iq2xs-agent-a",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "a1c601f9d56b",
+      "name": "strata-s4b-iq2xs-agent-b",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4d8061ebd11c",
+      "name": "strata-s4b-iq2xs-agent-a",
+      "image": "strata-v100-upstream:0.1.47",
+      "preserved_stopped": true
+    },
+    {
+      "id": "3d7a4c17005c",
+      "name": "strata-s4a-iq2xs-agent-b",
+      "image": "strata-v100-upstream:0.1.44.1",
+      "preserved_stopped": true
+    },
+    {
+      "id": "202918be49c9",
+      "name": "strata-s4a-iq2xs-agent-a",
+      "image": "strata-v100-upstream:0.1.44.1",
+      "preserved_stopped": true
+    },
+    {
+      "id": "d801644e06c9",
+      "name": "qwen27-iq3xxs-q8-v100-opt-03",
+      "image": "strata-v100-jmnargi:9d77749",
+      "preserved_stopped": true
+    },
+    {
+      "id": "49c20c71985b",
+      "name": "qwen27-iq3xxs-q8-v100-opt-02",
+      "image": "strata-v100-jmnargi:9d77749",
+      "preserved_stopped": true
+    },
+    {
+      "id": "168bdcb1fb85",
+      "name": "qwen27-iq3xxs-q8-v100-opt-01",
+      "image": "strata-v100-jmnargi:9d77749",
+      "preserved_stopped": true
+    },
+    {
+      "id": "aea18a09b91a",
+      "name": "qwen27-iq3xxs-q8-gpu1-04",
+      "image": "strata-v100-jmnargi:9d77749",
+      "preserved_stopped": true
+    },
+    {
+      "id": "6b055325d0d2",
+      "name": "qwen27-iq3xxs-q8-gpu1-03",
+      "image": "strata-v100-jmnargi:9d77749",
+      "preserved_stopped": true
+    },
+    {
+      "id": "e210fd542f9e",
+      "name": "qwen27-iq3xxs-q8-gpu1-02",
+      "image": "strata-v100-jmnargi:9d77749",
+      "preserved_stopped": true
+    },
+    {
+      "id": "4dda6adbd9e0",
+      "name": "qwen27-iq3xxs-q8-gpu1-01",
+      "image": "strata-v100-jmnargi:9d77749",
+      "preserved_stopped": true
+    },
+    {
+      "id": "fefd2c318531",
+      "name": "qwen27-iq3s-gpu1",
+      "image": "strata-v100-jmnargi:9d77749",
+      "preserved_stopped": true
+    },
+    {
+      "id": "3b489b7140d1",
+      "name": "strata-jmn-iq2xs-agent-b",
+      "image": "strata-v100-jmnargi:9d77749",
+      "preserved_stopped": true
+    },
+    {
+      "id": "9546cb655108",
+      "name": "strata-jmn-iq2xs-agent-a",
+      "image": "strata-v100-jmnargi:9d77749",
+      "preserved_stopped": true
+    }
+  ],
+  "all_historical_images_preserved": true,
+  "running_containers": 0,
+  "gpu_compute_processes": 0,
+  "gpu_csv": "index, uuid, memory.used [MiB], utilization.gpu [%], temperature.gpu, power.limit [W], clocks.current.sm [MHz]\n0, GPU-ef3074d2-f4f9-3f23-56d2-2ae6fe90694f, 0 MiB, 0 %, 37, 150.00 W, 135 MHz\n1, GPU-bb94e2a3-e900-d9e5-b580-194e4a36fb3a, 0 MiB, 0 %, 40, 150.00 W, 135 MHz",
+  "clock_service": "active",
+  "clock_service_definition": "# /etc/systemd/system/v100-clock-lock.service\n[Unit]\nDescription=Limit Tesla V100 GPU clocks to 135-1245 MHz\nAfter=nvidia-v100-init.service\nRequires=nvidia-v100-init.service\nConditionPathExists=/dev/nvidia0\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/nvidia-smi -i 00000000:65:00.0 -lgc 135,1245\nExecStart=/usr/bin/nvidia-smi -i 00000000:B3:00.0 -lgc 135,1245\nRemainAfterExit=yes\n\n[Install]\nWantedBy=multi-user.target",
+  "clock_journal": "Nov 10 16:33:52 p520-llm systemd[1]: Starting v100-clock-lock.service - Limit Tesla V100 GPU clocks to 135-1110 MHz...\nNov 10 16:33:52 p520-llm nvidia-smi[3369]: GPU clocks set to \"(gpuClkMin 135, gpuClkMax 1110)\" for GPU 00000000:65:00.0\nNov 10 16:33:52 p520-llm nvidia-smi[3369]: All done.\nNov 10 16:33:52 p520-llm nvidia-smi[3432]: GPU clocks set to \"(gpuClkMin 135, gpuClkMax 1110)\" for GPU 00000000:B3:00.0\nNov 10 16:33:52 p520-llm nvidia-smi[3432]: All done.\nNov 10 16:33:52 p520-llm systemd[1]: Finished v100-clock-lock.service - Limit Tesla V100 GPU clocks to 135-1110 MHz.\nNov 10 17:14:21 p520-llm systemd[1]: v100-clock-lock.service: Deactivated successfully.\nNov 10 17:14:21 p520-llm systemd[1]: Stopped v100-clock-lock.service - Limit Tesla V100 GPU clocks to 135-1110 MHz.\nNov 10 17:14:21 p520-llm systemd[1]: Stopping v100-clock-lock.service - Limit Tesla V100 GPU clocks to 135-1110 MHz...\nNov 10 17:14:21 p520-llm systemd[1]: Starting v100-clock-lock.service - Limit Tesla V100 GPU clocks to 135-1110 MHz...\nNov 10 17:14:21 p520-llm nvidia-smi[45189]: GPU clocks set to \"(gpuClkMin 1245, gpuClkMax 1245)\" for GPU 00000000:65:00.0\nNov 10 17:14:21 p520-llm nvidia-smi[45189]: All done.\nNov 10 17:14:21 p520-llm nvidia-smi[45193]: GPU clocks set to \"(gpuClkMin 1245, gpuClkMax 1245)\" for GPU 00000000:B3:00.0\nNov 10 17:14:21 p520-llm nvidia-smi[45193]: All done.\nNov 10 17:14:21 p520-llm systemd[1]: Finished v100-clock-lock.service - Limit Tesla V100 GPU clocks to 135-1110 MHz.\nNov 10 17:15:59 p520-llm systemd[1]: v100-clock-lock.service: Deactivated successfully.\nNov 10 17:15:59 p520-llm systemd[1]: Stopped v100-clock-lock.service - Limit Tesla V100 GPU clocks to 135-1245 MHz.\nNov 10 17:15:59 p520-llm systemd[1]: Stopping v100-clock-lock.service - Limit Tesla V100 GPU clocks to 135-1245 MHz...\nNov 10 17:15:59 p520-llm systemd[1]: Starting v100-clock-lock.service - Limit Tesla V100 GPU clocks to 135-1245 MHz...\nNov 10 17:15:59 p520-llm nvidia-smi[45877]: GPU clocks set to \"(gpuClkMin 135, gpuClkMax 1245)\" for GPU 00000000:65:00.0\nNov 10 17:15:59 p520-llm nvidia-smi[45877]: All done.\nNov 10 17:15:59 p520-llm nvidia-smi[45879]: GPU clocks set to \"(gpuClkMin 135, gpuClkMax 1245)\" for GPU 00000000:B3:00.0\nNov 10 17:15:59 p520-llm nvidia-smi[45879]: All done.\nNov 10 17:15:59 p520-llm systemd[1]: Finished v100-clock-lock.service - Limit Tesla V100 GPU clocks to 135-1245 MHz.",
+  "clock_boot_receipt_unchanged": false,
+  "clock_transition": "Initial boot 135-1110; later 17:14:21 1245-1245; 17:15:59 135-1245. No clock/power command was issued by this agent. User explicitly approved proceeding at 1245 before the nine scored batches.",
+  "configured_clock_range_mhz": [
+    135,
+    1245
+  ],
+  "serving_and_test_ports_free": true,
+  "original_asset_stats_unchanged": true,
+  "original_asset_count": 15,
+  "memory": "total        used        free      shared  buff/cache   available\nMem:     65597710336  1573838848 11776978944      253952 52990111744 64023871488\nSwap:     4294963200    43462656  4251500544",
+  "worktree": "",
+  "remote_head": "dbc9620be571835e793333d8d2349efd517a6a43",
+  "arms": [
+    {
+      "arm": "U1",
+      "id": "u1-20261110T173748",
+      "scored_pass": 3,
+      "containers_stopped": true
+    },
+    {
+      "arm": "D1",
+      "id": "d1-20261110T175220",
+      "scored_pass": 3,
+      "containers_stopped": true
+    },
+    {
+      "arm": "F1",
+      "id": "f1-20261110T180620",
+      "scored_pass": 3,
+      "containers_stopped": true
+    }
+  ],
+  "remote_audit": "/home/loopwhile/v100-x2-strata-qwen3.8-flash-next/results/stage9-final-audit-20261110T182624.json"
+}

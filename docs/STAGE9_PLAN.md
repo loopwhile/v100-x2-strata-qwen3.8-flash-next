@@ -1,6 +1,6 @@
 # Stage 9 — dual-V100 IQ3_XXS engine and drafter comparison
 
-**Status: PLANNED ONLY — 2026-11-10 KST. No host tests, new images, C2 results, deployments, or service changes have been made by this commit.**
+**Status: CLOSED — 2026-11-10 KST. U1/D1/F1 each completed 3/3 concurrent 128K C2 (9/9 total). Dual-agent 30 tok/s goal NOT MET. No promotion. [Final review](STAGE9_REVIEW.md). Original protocol below is archived; it is not permission to rerun.**
 
 ## Objective and reference selection
 
@@ -58,4 +58,14 @@ A future **separately approved** execution must: inspect live host; create only 
 
 Per **agent** and **batch**: Prefill tok/s, Decode tok/s, TTFT, wall time, output count/hash, overlap and validity, MTP/DFlash2 proposed/accepted and acceptance rate, draft/verify timing, Expert/KV hit rates, GPU temperature **mean+peak**, power **mean+peak**, SM/utilization and VRAM **mean+peak**, CPU utilization, RAM available/used/peak, swap in/out, major page faults, page cache and physical I/O. Separate full-process-lifetime averages from phase-only metrics. Keep the 3 individual batches, medians and ranges. Compare U1 against D1 (same engine), and compare each against archived S7; do not attribute cross-date cache/swap/output differences solely to engine code. Evaluate both agents **and the slower agent**, not averages only. Prefer a verified non-dominated balanced recipe; acceptable gains must not hide serious Prefill/TTFT/power/temperature regression. A mechanical C2 pass does not prove coding-agent/tool-call quality: separate quality validation is required before an eventual promotion.
 
-**Stage 9 current scored results: none. GitHub plan creation alone does not authorize P520 operations.**
+**Stage 9 final scored results: 9/9 PASS; all IDs CLOSED. Retained plans/runners never authorize a new run.**
+
+## Approved implementation details (2026-11-10)
+
+Pinned engine SHA `712fec6b4297c9cfd32ab43daaa2979a9aa01edf`; separate fork SHA unchanged. D1 stock Q4_0-selector pack and SHA are pinned in the candidate contract. Use the upstream hardware/default confidence rule (currently 4139 estimated slots at 16 GiB → conf 0.7, spec 6), not the earlier illustrative 0.35. Use dedicated loopback ports 18086/18087 with host networking to avoid modifying either API server. A/B run names use an underscore suffix after iq3_xxs so upstream recognizes the model as DFlash2-compatible. Separate draft/verify component timing is profiling-only in these sources; preserve the unprofiled scored recipe and label unavailable component timing explicitly. No automatic retries, reference reruns, tuning combinations, production promotion or Git publication.
+
+## User clock-observation amendment (2026-11-10, after first startup)
+
+User explicitly directed continuing with observed 1245 MHz. Accept SM telemetry up to **1245 MHz** for the scoped campaign without changing any hardware power/clock/host setting. The first startup-only `u1-20261110T173436` automatically ended under the original 1110 MHz predicate before any scored C2; it stays closed and immutable. A new U1 ID is authorized under the amended criterion; no scored retries or extra batches. Earlier 1110 MHz requirements above describe the original plan and historical conditions. All comparisons must distinguish the observed clock envelopes.
+
+Final host audit established that the clock service was separately restarted at 17:14:21 (1245–1245) and 17:15:59 (135–1245), after initial inspection and before all scored runs. The agent did not issue either change; the user subsequently explicitly approved proceeding at 1245. Final host range is 135–1245 and is preserved. All 278 initial containers and original images remain retained/stopped, original asset sizes/mtimes unchanged after the P0 full SHA checks, GPUs idle, tunnel active. [Final audit](../artifacts/stage9-results-20261110/final-host-check.json).
