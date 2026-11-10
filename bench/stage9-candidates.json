@@ -1,0 +1,137 @@
+{
+  "schema": "stage9-candidate-contract-v1",
+  "date": "2026-11-10",
+  "status": "PLANNED_NO_EXECUTION",
+  "authorized_gpu_execution": false,
+  "archived_baseline": {
+    "id": "S7-XXS-14",
+    "rerun": false,
+    "engine": "0.1.54",
+    "source": "870aedd9e1ebe1c91f94da93b59af17729f6c5c0",
+    "prefill_tok_s_A_B": [
+      997.6,
+      1006.6
+    ],
+    "decode_tok_s_A_B": [
+      26.4,
+      26.2
+    ],
+    "ttft_s_A_B": [
+      127.53,
+      126.48
+    ],
+    "temp_peak_C_A_B": [
+      65,
+      64
+    ],
+    "power_avg_W_A_B": [
+      81.84,
+      85.38
+    ],
+    "power_peak_W_A_B": [
+      172.87,
+      177.57
+    ]
+  },
+  "shared": {
+    "model": "Qwen3.8-Flash-Next GSQ-RCO IQ3_XXS",
+    "context": 131072,
+    "kv": "int8",
+    "kv_resident": 32768,
+    "mmap_experts": true,
+    "prefill": "auto",
+    "expert_cache": "auto",
+    "cpusets": {
+      "A": "0-2,6-8",
+      "B": "3-5,9-11"
+    },
+    "gpus": {
+      "A": 0,
+      "B": 1
+    },
+    "power_limit_w": 150,
+    "sm_clock_ceiling_mhz": 1110,
+    "env": {
+      "STRATA_SELECT_SIMT": "1",
+      "STRATA_SM70_TABLE": "1",
+      "STRATA_PF_WMMA": "1"
+    },
+    "manifest": "bench/workloads/v100-performance-v1.json",
+    "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+    "harness": "bench/c2_v100_contract.py",
+    "harness_sha256": "a8e42cc5a71421a7287618fd5be0332ae40f312426e4d243ce1c7619fdfc5246",
+    "prompt_tokens": {
+      "A": 126967,
+      "B": 126968
+    },
+    "min_output_per_agent": 1024,
+    "require_finish_stop": true,
+    "require_active_decode_overlap": true,
+    "require_zero_prefix_cache": true
+  },
+  "candidates": [
+    {
+      "id": "S9-P0",
+      "kind": "preflight",
+      "scored_batches": 0
+    },
+    {
+      "id": "S9-U1",
+      "kind": "scored",
+      "scored_batches": 3,
+      "engine": "0.1.59",
+      "ref": "Niko1221/Strata@v0.2.13",
+      "engine_source_sha": "P0_PENDING",
+      "drafting": "mtp",
+      "spec": 4,
+      "spec_min_p": 0.5
+    },
+    {
+      "id": "S9-D1",
+      "kind": "scored",
+      "scored_batches": 3,
+      "engine": "0.1.59",
+      "same_engine_image_as": "S9-U1",
+      "drafting": "dflash2",
+      "require_no_mtp": true,
+      "require_no_fallback": true,
+      "require_dflash2_active_metrics": true,
+      "pack_sha256": "P0_PENDING",
+      "spec_and_conf": "VERIFY_P0_DEFAULTS_TYPICALLY_6_0.35"
+    },
+    {
+      "id": "S9-F1",
+      "kind": "scored",
+      "scored_batches": 3,
+      "ref": "jmnargi/Strata-V100@8b4c09bd3d9213b2d47880826c6e818c3140664d",
+      "engine": "0.1.45.7",
+      "drafting": "mtp",
+      "spec": 4,
+      "spec_min_p": 0.5,
+      "conditional_fork_env": {
+        "STRATA_PF_WMMA2": "0_IF_SOURCE_DISPATCH_PROVEN"
+      }
+    },
+    {
+      "id": "S9-R1",
+      "kind": "review",
+      "scored_batches": 0
+    }
+  ],
+  "scored_batches_max": 9,
+  "measurement_fields": [
+    "prefill_tok_s",
+    "decode_tok_s",
+    "ttft_s",
+    "gpu_temp_mean_peak",
+    "gpu_power_mean_peak",
+    "gpu_vram_mean_peak",
+    "cpu_ram_swap_cache_io",
+    "draft_acceptance",
+    "health",
+    "wall_time",
+    "quality_gate"
+  ],
+  "historical_results_immutable": true,
+  "no_automatic_promotion": true
+}

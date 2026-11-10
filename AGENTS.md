@@ -90,3 +90,13 @@ Read [final continuation review](docs/STAGE8_CONTINUATION_REVIEW.md),
   missing GPU lock; inspect boot-service receipts and actual telemetry.
 - New work or promotion requires a new user scope and fresh live preflight;
   no completed run or retained NEXT instruction authorizes it automatically.
+
+## Stage 9 (PLANNED 2026-11-10; no execution yet)
+
+Read [Stage 9 plan](docs/STAGE9_PLAN.md), [source audit](docs/STAGE9_SOURCE_AUDIT.md) and [candidate contract](bench/stage9-candidates.json) before proposing any execution. A GitHub documentation commit does NOT authorize P520 GPU work, server interruption, image replacement or production promotion.
+
+- Operational reference remains **S7-XXS-14**, already CLOSED. No reference rerun. Stage 8 C1 is the speed-oriented alternative and C0 the lower-CPU alternative; neither is a proven balanced all-metric upgrade. Do not promote C3 for Decode alone at the expense of Prefill/TTFT.
+- **S9-P0** source/host gate; **S9-U1** upstream engine 0.1.59 + baseline MTP recipe; **S9-D1** same pinned 0.1.59 engine + explicitly loaded, hash-verified DFlash2 (no MTP/fallback); **S9-F1** pinned V100 fork 8b4c09bd... + baseline MTP. Three independently valid, fresh dual-agent 128K C2 batches per supported scored arm (9 maximum), without any S7 baseline test. No new combinations or unapproved tuning.
+- Verify full 0.1.59 *engine* source SHA rather than substituting v0.2.13's app tag, CUDA12/sm_70 build compatibility, fork WMMA2 default versus S7-XXS-14's no-port path, and DFlash2 head/pack/VRAM and actual active draft counters before scoring. Fork and upstream binaries are separate sources and images.
+- Preserve original model/pack/KV/MTP assets, CPU/GPU mapping, frozen C2 workload, 150 W cap/1110 MHz limit, serving ports, historical containers/results and ThinkPad tunnel. Inspect live host before any possible new run; the Nov 7 state is not proof of idleness on Nov 10.
+- Evaluate **both agents' Prefill, Decode, TTFT, full-lifetime GPU thermal/power mean and peak, CPU/RAM/swap/page-cache/I/O and acceptance**. No score or promotion claim without raw receipts; no semantic-quality claim from mechanical C2 PASS.

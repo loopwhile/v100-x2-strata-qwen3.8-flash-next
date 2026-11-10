@@ -1,4 +1,14 @@
-# Current operation — S8-C0 (`C1` minus `--pool-workers 3`) complete; M1–M2 & M3 evaluation retained, 2026-11-07
+# Current operation — Stage 9 planned, NOT executed (2026-11-10 KST)
+
+**Only GitHub documentation and a candidate manifest are being committed. No P520 execution, no Docker build or service changes, and no Stage 9 benchmark results.** Last Stage 8 live check dated 2026-11-07 is historical and must not be mistaken for present host state.
+
+- Primary baseline **S7-XXS-14** is CLOSED and will never be remeasured (Prefill A/B 997.6/1006.6, Decode 26.4/26.2, TTFT 127.53/126.48 s). S8-C1 and S8-C0 are Stage 8 secondary reference points only, no promotion.
+- Stage 9 new arm set **S9-U1** upstream 0.1.59 + MTP, **S9-D1** identical upstream 0.1.59 + forced, verified DFlash2 without fallback, **S9-F1** pinned latest V100 fork 8b4c09bd... + MTP, each 3 C2 if source/host/startup checks pass. P0 and R1 unscored. No C2 launched; no reusable closed ID.
+- See docs/STAGE9_PLAN.md, docs/STAGE9_SOURCE_AUDIT.md and bench/stage9-candidates.json. Upstream *engine* SHA, fork effective WMMA2 path, and DFlash2 pack/VRAM are P0 pending checks. New execution/host changes are not authorized by Git synchronization.
+
+---
+
+# Archived operation — S8-C0 (`C1` minus `--pool-workers 3`) complete; M1–M2 & M3 evaluation retained, 2026-11-07
 
 **No remote experiment remains running. User-requested isolated `S8-C0` (`c0-20261107T192030`, `S8-C1` with `--pool-workers 3` removed) is COMPLETE (`3/3` concurrent 128K C2 PASS).**
 C0/C1/C2/C3/M1/M2 each completed 3/3 concurrent 128K C2 (18/18 follow-up scored batches; 21/21 total Stage 8 scored batches with U1), plus one unscored D1 diagnostic. Dual-agent 30 tok/s goal NOT MET; no verified overall upgrade or promotion.
