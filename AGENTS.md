@@ -1,5 +1,28 @@
 # Repository agent instructions
 
+## Current serving contract — 2026-11-11 user scope
+
+- After successful deployment checks, the user stopped both operating
+  containers. Preserve that stopped state during Git synchronization; do not
+  start serving or rerun inference merely to commit/push or update a checkout.
+- The user selected **S10-D4** (not S9-D1) for a new stable operating pair:
+  containers and API model IDs **`p520-llm-a` / `p520-llm-b`**. See
+  [operating guide](docs/P520_SERVING.md) and `scripts/127-p520-serving.py`.
+- Keep P520 loopback 8080/8081 and ThinkPad 18080/18081 unchanged. OpenCode's
+  stable selections are `p520-a/p520-llm-a` and `p520-b/p520-llm-b`.
+- Use native API `aliases` for those IDs. Keep canonical model names Qwen-shaped
+  (`qwen3.8-flash-next-iq3_xxs_p520_a/b`): the unmodified server detects DFlash2
+  compatibility from that name. Bare canonical `p520-llm-a/b` selected MTP in the
+  preserved startup-only attempt. Require actual DFlash2/fallback/argv checks.
+- Recipe: pinned upstream 0.1.59 image, IQ3_XXS + stock DFlash2, spec 8,
+  confidence 0.7, prefill auto; independent GPU/CPU assignments and INT8 128K
+  settings retained. No new combination or archived C2 rerun is authorized.
+- Preserve historical containers and versioned serving releases. Future image
+  upgrades require their own scope; retain old images/configs/containers for
+  rollback and keep the client-facing IDs/ports fixed. Do not mutate engine
+  binaries inside existing containers. Do not stop active serving for experiments
+  without explicit approval. Power/clock/tunnel settings remain protected.
+
 This repository is a live dual-V100 inference deployment and benchmark harness.
 Before changing code or running P520 commands, read [Stage 4 plan](docs/STAGE4_PLAN.md)
 and [Antigravity handoff](docs/STAGE4_ANTIGRAVITY_HANDOFF.md).

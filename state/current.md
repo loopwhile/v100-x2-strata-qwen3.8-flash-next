@@ -1,4 +1,21 @@
-# Current operation — Stage 10 COMPLETED (2026-11-10 KST), 27 scored + 1 diagnostic C2 PASS
+# Current operation — stable P520 serving STOPPED BY USER (2026-11-11 KST)
+
+The user selected **S10-D4** for the fixed operating containers/API model IDs
+`p520-llm-a` and `p520-llm-b`. P520 loopback ports remain 8080/8081 and the
+unchanged ThinkPad tunnel remains 18080/18081. OpenCode is migrated once to
+`p520-a/p520-llm-a` (default) and `p520-b/p520-llm-b`.
+See [operating guide](../docs/P520_SERVING.md) for start/stop/status/rollback.
+Both containers are configured from release `s10-d4-20261111T012331`, using native
+API aliases to preserve the Qwen family identification needed by DFlash2.
+Health, exact D4 engine-argument parity, tunnel chat and OpenCode A/B smoke
+requests passed. [Deployment verification](../artifacts/p520-serving-20261111/summary.md)
+is separate from benchmark results. The initial name-detection startup attempt
+is stopped/preserved under separate archive names. No archived C2 was rerun.
+After these checks, the user stopped `p520-llm-a` and `p520-llm-b`; live
+inspection confirmed both are `exited`. Keep them stopped during commit/push
+and checkout synchronization. Starting serving is a separate operating action.
+
+## Archived Stage 10 completion — 2026-11-10 KST, 27 scored + 1 diagnostic C2 PASS
 
 **Status: Stage 10 optimization completed. All 27 scored batches and 1 diagnostic batch completed 100% PASS with 0 retries across 10 arms. All evidence backed up to ThinkPad and verified with SHA256.**
 

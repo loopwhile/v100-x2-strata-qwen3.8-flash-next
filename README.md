@@ -1,12 +1,17 @@
 # Qwen3.8-Flash-Next on Dual Tesla V100 GPUs with Strata
 
+> **Current serving (2026-11-11):** user-selected S10-D4 uses fixed operating
+> container/API model IDs `p520-llm-a` and `p520-llm-b`, retaining P520 8080/8081
+> and ThinkPad 18080/18081. Deployment checks passed; both containers were then
+> stopped by the user and remain preserved. [Start/stop/status and upgrade/rollback guide](docs/P520_SERVING.md).
+
 A reproducible deployment and benchmarking project for running **Qwen3.8-Flash-Next** on a Lenovo ThinkStation P520 equipped with two NVIDIA Tesla V100 16 GB GPUs.
 
 The project explores how far legacy Volta hardware can be pushed using [Strata](https://github.com/Niko1221/Strata), GGUF quantization, memory-mapped experts, and independent GPU inference servers. The primary goal is to operate **two independent coding agents**, each supporting a **131,072-token context window**.
 
 This repository documents the experimental progression from initial Volta compatibility through dual-agent deployment, quantization comparisons, upstream engine upgrades, optional V100 tuning, and mixed-quantization co-residency.
 
-> **Stage 10 (PLANNED — 2026-11-10; no experiments run):** [S10-D1-derived optimization plan](docs/STAGE10_PLAN.md) proposes isolated DFlash2 confidence/spec, adaptive-scheduling and Prefill allocation/chunk tests on the pinned Stage 9 D1 (upstream 0.1.59 + IQ3_XXS + DFlash2). Goals: both agents >=1100 Prefill and >=30 Decode tok/s, stretch 1200 Prefill, with TTFT/thermal/power/quality gates. **Plan-only Git commit; no P520 run, new result or production promotion is authorized or claimed.**
+> **Stage 10 (COMPLETED — 2026-11-10):** 27 scored and one diagnostic C2 batch passed. S10-D4 (IQ3_XXS + DFlash2, spec 8/confidence 0.7) reached Decode medians A/B **30.4/30.3 tok/s**; both warm batches exceeded 30 tok/s on both agents. The 1100 tok/s Prefill target was not met. [Results](docs/STAGE10_PROGRESS.md) · [Receipts](artifacts/stage10-results-20261110/summary.md) · [Archived plan based on S9-D1](docs/STAGE10_PLAN.md). The 2026-11-11 serving migration is a separate user-directed operation.
 
 > **Stage 9 (CLOSED — 2026-11-10):** U1 (upstream 0.1.59 + MTP), D1 (same image + verified DFlash2) and F1 (pinned V100 fork + MTP) each completed **3/3 concurrent 128K C2, 9/9 total PASS**. Decode medians A/B: **U1 26.1/28.8, D1 28.2/29.4, F1 26.3/26.0 tok/s**. Dual-agent 30 tok/s goal NOT MET; no all-metric upgrade, semantic-quality validation or promotion. Tests used the user-approved 1245 MHz envelope; the host journal records a separate change to 135–1245 before scoring, not an agent-issued clock command. Configured 150 W caps, original assets, historical containers/images and tunnel remain preserved. [Final review](docs/STAGE9_REVIEW.md) · [Full metrics](artifacts/stage9-results-20261110/summary.md) · [Source audit](docs/STAGE9_SOURCE_AUDIT.md).
 
