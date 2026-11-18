@@ -1,6 +1,6 @@
 # Consolidated Dual-V100 128K C2 Benchmark Database
 
-This document aggregates all formal benchmark evaluations, candidate screenings, and hardware telemetry records across **Stages 2 through 10** on the Lenovo ThinkStation P520 (dual Tesla V100 SXM2 16GB, 150W configured power cap, dual independent 131,072-context agents).
+This document aggregates all formal benchmark evaluations, candidate screenings, and hardware telemetry records across **Stages 2 through 11** on the Lenovo ThinkStation P520 (dual Tesla V100 SXM2 16GB, 150W configured power cap, dual independent 131,072-context agents).
 
 - **Repository master CSV dataset:** [`docs/consolidated-benchmarks.csv`](consolidated-benchmarks.csv)
 - **Frozen C2 Workload Manifest:** `e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca`
@@ -9,7 +9,8 @@ This document aggregates all formal benchmark evaluations, candidate screenings,
 - **Stage 8 (`S8-U1`, `S8-C0..C3`, `S8-M1..M2`):** 21/21 scored C2 PASS across 7 arms (three batches each, Strata 0.1.57, source `c3b3f5035506f3e966f1b4b7b188aeaabae92f1d`); all IDs closed. [Continuation review](STAGE8_CONTINUATION_REVIEW.md), [follow-up summary](../artifacts/stage8-followup-results-20261107/summary.md), [U1 report](../artifacts/stage8-results-20261107/stage8-u1-report.md). Unscored instrumented diagnostic `S8-D1` is excluded from scored rows; `S8-M3` (`--kv-resident 40960`) was evaluated analytically without execution; dual-agent 30 tok/s goal not met; page-cache/I-O/swap/output variation prevents causal speedup claims.
 - **Stage 9 (`S9-U1`, `S9-D1`, `S9-F1`):** 9/9 scored C2 PASS, three fresh-process dual-agent batches per arm; 9 batch rows + 3 median rows. U1/D1 share upstream 0.1.59; D1 uses verified DFlash2 spec6/conf0.7 without MTP/fallback. F1 is pinned fork 8b4c09b, engine 0.1.45.7, MTP4 and WMMA2=0 with 13 built-in Volta defaults. All IDs closed; preparation/startup-only failures are excluded. [Final review](STAGE9_REVIEW.md), [full-lifetime standalone metrics](../artifacts/stage9-results-20261110/summary.md), [source audit](STAGE9_SOURCE_AUDIT.md). Scored runs used the user-approved **135–1245 MHz** range, differing from historical 1110 MHz runs. Dual-agent 30 tok/s goal not met; no all-metric upgrade, semantic-quality result or promotion; no causal version/drafter speedup claim.
 - **Stage 10 (`S10-P0`, `D2`, `D3`, `K1`, `K2`, `K3`, `P1`, `P2`, `P3`, `D4`, `C1`):** 27 scored C2 PASS + 1 diagnostic PASS across 10 arms. Major breakthrough on `S10-D4` (`--spec 8`, conf 0.7) meeting the dual-agent Decode >= 30.0 tok/s goal on both agents simultaneously (Agent A 30.4, Agent B 30.3 tok/s). [Progress & review](STAGE10_PROGRESS.md), [summary](../artifacts/stage10-results-20261110/summary.md).
-- **Telemetry convention:** S7-XXS-8..16, Stage 8, Stage 9 and Stage 10 temperature/power rows use 1-second samples across the process lifetime. Stage 8/9/10 standalone reports also record full-process-lifetime means.
+- **Stage 11 (`S11-D4` on `IQ3_S`):** 3/3 scored C2 PASS (`d4-20261119T025044`, upstream 0.1.59, stock DFlash2 `--spec 8 --draft-conf 0.7`, no MTP/fallback, 135–1245 MHz). Medians: Prefill A/B `893.8 / 898.0` tok/s, Decode A/B `23.3 / 23.4` tok/s (+1.0 / +2.2 tok/s over `S6-0` `IQ3_S`, dual-agent 30 tok/s not met). [Plan & closure](STAGE11_PLAN.md), [summary](../artifacts/stage11-results-20261119/summary.md).
+- **Telemetry convention:** S7-XXS-8..16, Stage 8, Stage 9, Stage 10 and Stage 11 temperature/power rows use 1-second samples across the process lifetime. Stage 8/9/10/11 standalone reports also record full-process-lifetime means.
 
 ---
 
@@ -68,10 +69,11 @@ Comparing representative operational baselines, optimization peaks, and version 
 | **Stage 10** | Strata 0.1.59 | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + EMB_REUSE_ACCOUNT=1; DFlash2 spec6/conf0.7 | PASS | 1029.2 / 1034.1 | 123.6 / 123.0 | **27.8 / 28.3** | 58.0 / 67 °C | 92.2 / 205.1 W | 57.6 / 65 °C | 91.2 / 224.1 W |
 | **Stage 10** | Strata 0.1.59 | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1; DFlash2 spec8/conf0.7 | PASS | 1025.1 / 1027.8 | 124.1 / 123.8 | **30.4 / 30.3** | 56.8 / 66 °C | 93.7 / 207.1 W | 58.9 / 66 °C | 99.7 / 237.8 W |
 | **Stage 10** | Strata 0.1.59 | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + ADAPT_LAG=2 + NOWAIT=1; DFlash2 spec8/conf0.7 | PASS | 1025.7 / 1029.1 | 124.0 / 123.6 | **27.5 / 28.9** | 58.1 / 67 °C | 95.3 / 208.3 W | 59.2 / 66 °C | 99.0 / 230.9 W |
+| **Stage 11** | Strata 0.1.59 | IQ3_S | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1; DFlash2 spec8/conf0.7 | PASS | 893.8 / 898.0 | 142.3 / 141.7 | **23.3 / 23.4** | 53.3 / 64 °C | 78.5 / 200.9 W | 54.5 / 64 °C | 79.5 / 217.2 W |
 
 ---
 
-## 2. Hardware Telemetry Comparison (Stages 5, 7, 8 & 9)
+## 2. Hardware Telemetry Comparison (Stages 5, 7, 8, 9, 10 & 11)
 
 Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during full 128K C2 evaluations (150W configured limit); see the >60 W filtering convention and the Stage 9 clock-condition caveat above:
 
@@ -123,6 +125,7 @@ Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during fu
 | **Stage 10** S10-P2 | IQ3_XXS | Strata 0.1.59 | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + EMB_REUSE_ACCOUNT=1; DFlash2 spec6/conf0.7 | 58.0 °C | 67 °C | 92.2 W | 205.1 W | 57.6 °C | 65 °C | 91.2 W | 224.1 W |
 | **Stage 10** S10-D4 | IQ3_XXS | Strata 0.1.59 | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1; DFlash2 spec8/conf0.7 | 56.8 °C | 66 °C | 93.7 W | 207.1 W | 58.9 °C | 66 °C | 99.7 W | 237.8 W |
 | **Stage 10** S10-C1 | IQ3_XXS | Strata 0.1.59 | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + ADAPT_LAG=2 + NOWAIT=1; DFlash2 spec8/conf0.7 | 58.1 °C | 67 °C | 95.3 W | 208.3 W | 59.2 °C | 66 °C | 99.0 W | 230.9 W |
+| **Stage 11** S11-D4 | IQ3_S | Strata 0.1.59 | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1; DFlash2 spec8/conf0.7 | 53.3 °C | 64 °C | 78.5 W | 200.9 W | 54.5 °C | 64 °C | 79.5 W | 217.2 W |
 
 ---
 
@@ -315,6 +318,10 @@ Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during fu
 | Stage 10 | `c1-20261110T230918-batch-2` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + ADAPT_LAG=2 + NOWAIT=1; DFlash2 spec8/conf0.7 | PASS | 1025.3 / 1030.4 | 124.1 / 123.5 | 26.9 / 28.9 | 58.5/66°C | 94.1/208.3W | 59.4/66°C | 98.1/222.5W | Stage 10 scored batch; 135-1245 MHz, 150 W limit; image sha256:dd8913d85f1811af034b66f3817ec392a82abdd28082e98e8a44b1d826bfea3d |
 | Stage 10 | `c1-20261110T230918-batch-3` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1 + ADAPT_LAG=2 + NOWAIT=1; DFlash2 spec8/conf0.7 | PASS | 1025.7 / 1026.5 | 124.0 / 123.9 | 27.5 / 28.4 | 59.0/67°C | 95.7/202.1W | 59.8/66°C | 100.1/230.9W | Stage 10 scored batch; 135-1245 MHz, 150 W limit; image sha256:dd8913d85f1811af034b66f3817ec392a82abdd28082e98e8a44b1d826bfea3d |
 | Stage 10 | `p3-20261110T220610` | IQ3_XXS | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1; prefill auto:16384, DFlash2 spec6/conf0.7 | FAIL_HARDWARE_POWER_TRIP | - / - | - / - | - / - | - | - | - | - | Hardware PSU power trip / reboot on 16384-token prefill chunk saturation; permanently rejected |
+| Stage 11 | `s11-d4-median` | IQ3_S | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1; DFlash2 spec8/conf0.7 | PASS | 893.8 / 898.0 | 142.3 / 141.7 | 23.3 / 23.4 | 53.3/64°C | 78.5/200.9W | 54.5/64°C | 79.5/217.2W | Stage 11 median (3 batches); 135-1245 MHz; configured 150 W; image sha256:dd8913d85f1811af034b66f3817ec392a82abdd28082e98e8a44b1d826bfea3d; +1.0/+2.2 decode vs S6-0 IQ3_S; dual-agent 30 not met |
+| Stage 11 | `d4-20261119T025044-batch-1` | IQ3_S | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1; DFlash2 spec8/conf0.7 | PASS | 462.1 / 463.0 | 275.0 / 274.5 | 23.8 / 23.4 | 49.1/61°C | 68.3/199.8W | 51.4/62°C | 70.6/207.7W | Closed scored batch; expert hit A/B 0.770/0.794; OS read A/B 63072.0/69892.7 MB; DFlash2 acc 80.58/75.77%; 135-1245 MHz, 150 W limit |
+| Stage 11 | `d4-20261119T025044-batch-2` | IQ3_S | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1; DFlash2 spec8/conf0.7 | PASS | 893.8 / 898.0 | 142.3 / 141.7 | 23.3 / 23.2 | 55.2/64°C | 83.2/195.5W | 56.1/63°C | 88.1/217.2W | Closed scored batch; expert hit A/B 0.755/0.788; OS read A/B 3916.1/3030.5 MB; DFlash2 acc 81.69/76.54%; 135-1245 MHz, 150 W limit |
+| Stage 11 | `d4-20261119T025044-batch-3` | IQ3_S | SIMT=1 + SM70_TABLE=1 + PF_WMMA=1; DFlash2 spec8/conf0.7 | PASS | 906.4 / 910.5 | 140.3 / 139.7 | 22.8 / 23.6 | 55.6/64°C | 84.1/200.9W | 56.1/64°C | 79.7/215.8W | Closed scored batch; expert hit A/B 0.751/0.792; OS read A/B 3151.0/2406.2 MB; DFlash2 acc 79.45/77.42%; 135-1245 MHz, 150 W limit |
 
 ---
 
@@ -365,3 +372,7 @@ Continuous 1-second sampled hardware metrics captured via `nvidia-smi` during fu
    - Intel PCM real-time CPU memory controller monitoring (`pcm-memory 1`) showed mean bandwidth of **11.6 GB/s** and peak of **19.3 GB/s**, consuming only **22.6%** of Xeon W-2135 quad-channel DDR4-2666 capacity (85.3 GB/s).
    - Zero major page faults (`pgmajfault=0`) and zero swap activity (`pswpin/pswpout=0`) with 63.0 GiB available memory confirm RAM capacity is not constrained.
    - **Conclusion:** Adding 32 GB RAM (64 GB → 96 GB) has 0% performance effect on 128K dual-agent serving.
+11. **Stage 11 `S10-D4` Recipe Evaluation on `IQ3_S` (`d4-20261119T025044`, 3/3 C2 PASS):**
+   - Applying the `S10-D4` recipe (`0.1.59`, stock DFlash2 `q4_0-selq4.pack`, `--spec 8`, `--draft-conf 0.7`, `--prefill auto`, no MTP) to `IQ3_S` achieved **893.8 / 898.0 tok/s prefill** (warm batches `893.8–906.4 / 898.0–910.5` tok/s), **142.30 / 141.69 s TTFT**, and **23.3 / 23.4 tok/s decode** medians.
+   - Compared to the historical `S6-0` `IQ3_S` 3-batch reference (`908.2 / 923.1` prefill, `22.3 / 21.2` decode), decode improved by **+1.0 / +2.2 tok/s**, while dual-agent `30.0 tok/s` was **not met** (`-7.1 / -6.9 tok/s` vs `S10-D4` `IQ3_XXS`).
+   - Diagnostic telemetry explains the `IQ3_S` gap: 16 GB V100 VRAM held `4607` expert slots (`8.78 GiB`, hit rate `0.751–0.794` vs `0.822–0.855` on `IQ3_XXS`) with larger AVX-2 CPU expert payloads, and `IQ3_S` Shard 1 (`51.05 GiB`) topped out at `47.52–47.83 GiB` resident in 64 GB host page cache, leaving `2.4–3.9 GB` of physical OS NVMe reads per request even in warm batches (`batch-1` cold read `63.1 / 69.9 GB`).

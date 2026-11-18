@@ -1,0 +1,12 @@
+4c1eb2ceb4915e1192f4f386021897bde56a97f40a0bb78bb86465e0f7d2aca3  /srv/models/strata-iq3s/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf
+316b46f3a2dbd68c900f43136ab9449f9dcc3725dfd8c794847c204bc161e113  /srv/models/strata-iq3s/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf
+d2af3d8331e5c7a1985d1d589747230f9d56719a6d33c7cddc9ee6b81cde6b13  /srv/models/strata-iq3s/pack/iq3_s-native/dense.bin
+b2a014878c3b61d6a6f915e194055a5e68ede34f9465dd1cb13249d902f008ac  /srv/models/strata-iq3s/pack/iq3_s-native/index.txt
+51df3cd6ffd0d38c2da8e2d3a95a604b4a96c20b06fc639a9bf477282a42b86a  /srv/models/strata-iq3s/pack/iq3_s-native/conversions.json
+d9ac2dfa3ee63c55c9c6a6db26f72da0cec0ee41733f007e5cbbbba71617aa5d  /srv/models/strata-iq3s/pack/iq3_s-native/native_experts.txt
+12827f24b742ea4e80cdc12dbcf9622227056b9f797252a3149263d4f9aaadce  /srv/models/strata-iq3s/pack/iq3_s-native/tokenizer/chat_template.jinja
+4ba698529766c7a2f5052083ea10cdf2485577f5237a332ee291054eb11e3332  /srv/models/strata-iq3s/pack/iq3_s-native/tokenizer/merges.txt
+c0bd435efbc6c3b28964b47999afe16c4ad268c7c7c4e8cb3af410796a6f30bf  /srv/models/strata-iq3s/pack/iq3_s-native/tokenizer/tokenizer.json
+5088c8c298fc06af8382ddb3b76c888703ac2634e82263b97eedcc2ad202738b  /srv/models/strata-iq3s/pack/iq3_s-native/tokenizer/token_type.json
+4ba64f0332abcfb0b600b7df1537d1e836e68009d5fb7cdb77339738dc6365c4  /srv/models/strata-iq3s/pack/iq3_s-native/tokenizer/vocab.json
+b1e1d3a7a9e4bf862dcd5923ce661fb59bbd07907e594df5cf86a62ac235cb91  /srv/models/strata-data/mtp/rt/draft_vocab.bin

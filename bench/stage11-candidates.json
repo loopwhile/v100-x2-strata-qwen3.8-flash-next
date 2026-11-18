@@ -1,0 +1,71 @@
+{
+  "schema": "stage11-candidate-contract-v1",
+  "date": "2026-11-19",
+  "status": "COMPLETED",
+  "authorized_gpu_execution": false,
+  "recipe_source": {
+    "id": "S10-D4",
+    "quantization": "IQ3_XXS",
+    "engine": "0.1.59",
+    "source": "712fec6b4297c9cfd32ab43daaa2979a9aa01edf",
+    "prefill_tok_s_A_B": [1025.1, 1027.8],
+    "decode_tok_s_A_B": [30.4, 30.3],
+    "ttft_s_A_B": [124.08, 123.79]
+  },
+  "historical_iq3s_reference": {
+    "id": "S6-0",
+    "rerun": false,
+    "quantization": "IQ3_S",
+    "engine": "0.1.47-fork-t7fixed",
+    "prefill_tok_s_A_B": [908.2, 923.1],
+    "decode_tok_s_A_B": [22.3, 21.2],
+    "ttft_s_A_B": [140.09, 137.84]
+  },
+  "execution_progress": {
+    "S11-D4-attempt-1": {
+      "id": "d4-20261119T024740",
+      "kind": "startup_gate_abort",
+      "scored_batches": 0,
+      "status": "INCONCLUSIVE",
+      "notes": "Aborted at startup gate before scoring: drafting.pack_ready() required base qwen3.8-flash-next-dflash2.q4_0.pack alongside selq4 pack."
+    },
+    "S11-D4": {
+      "id": "d4-20261119T025044",
+      "valid_batches": 3,
+      "status": "PASS",
+      "prefill_tok_s_A_B": [893.8, 898.0],
+      "decode_tok_s_A_B": [23.3, 23.4],
+      "ttft_s_A_B": [142.30, 141.69],
+      "notes": "3/3 C2 PASS with verified DFlash2 spec 8 / conf 0.7 (no MTP). Decode improved +1.0/+2.2 tok/s over S6-0 (22.3/21.2), while remaining -7.1/-6.9 tok/s below S10-D4 IQ3_XXS due to lower expert cache hit (0.751-0.794) and ~47.8 GiB/51.05 GiB page-cache ceiling."
+    }
+  },
+  "candidates": {
+    "S11-D4": {
+      "quantization": "IQ3_S",
+      "image": "sha256:dd8913d85f1811af034b66f3817ec392a82abdd28082e98e8a44b1d826bfea3d",
+      "engine_sha256": "ccca488231f12da422be4a80b5c7f165b7593f6388907cac92d3c3f0d4229031",
+      "drafting": "dflash2",
+      "draft_pack": "qwen3.8-flash-next-dflash2.q4_0-selq4.pack",
+      "draft_pack_sha256": "4a42b98220ea7880664002c8edda1563aecbae754b762a2e2f31b2b91ee93ecd",
+      "spec": 8,
+      "draft_conf": 0.7,
+      "prefill": "auto",
+      "max_context": 131072,
+      "kv": "int8",
+      "kv_resident": 32768,
+      "expert_cache": "auto",
+      "mmap_experts": true,
+      "env": {
+        "STRATA_SELECT_SIMT": "1",
+        "STRATA_SM70_TABLE": "1",
+        "STRATA_PF_WMMA": "1"
+      },
+      "ports": {"a": 18088, "b": 18089},
+      "cpus": {"a": "0-2,6-8", "b": "3-5,9-11"},
+      "scored_batches": 3,
+      "status": "COMPLETED"
+    }
+  },
+  "scored_batches_completed": 3,
+  "closure": "S11-D4 (d4-20261119T025044) completed 3/3 valid C2 PASS. All IDs closed and backed up with SHA256."
+}
