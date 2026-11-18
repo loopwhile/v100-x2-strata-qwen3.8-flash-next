@@ -1,0 +1,128 @@
+=== GPU 1 default ===
+IQ3_XXS   1280 x 2560, 1845 rows in 13 experts: max |err| 0.00118 of max |ref| 309, 0 stray ok
+IQ3_XXS   1280 x 2560, 1845 rows in 13 experts (ids): max |err| 0.00158 of max |ref| 277, 0 stray ok
+IQ3_S     1280 x 2560, 1845 rows in 13 experts: max |err| 0.00107 of max |ref| 263, 0 stray ok
+IQ3_S     1280 x 2560, 1845 rows in 13 experts (ids): max |err| 0.00157 of max |ref| 322, 0 stray ok
+IQ2_S     1280 x 2560, 1845 rows in 13 experts: max |err| 0.000575 of max |ref| 106, 0 stray ok
+IQ2_S     1280 x 2560, 1845 rows in 13 experts (ids): max |err| 0.000491 of max |ref| 117, 0 stray ok
+IQ4_XS    1280 x 2560, 1845 rows in 13 experts: max |err| 0.0118 of max |ref| 2.46e+03, 0 stray ok
+IQ4_XS    1280 x 2560, 1845 rows in 13 experts (ids): max |err| 0.0127 of max |ref| 2.64e+03, 0 stray ok
+IQ2_XXS   1280 x 2560, 1845 rows in 13 experts: max |err| 0.000457 of max |ref| 110, 0 stray ok
+IQ2_XXS   1280 x 2560, 1845 rows in 13 experts (ids): max |err| 0.000684 of max |ref| 111, 0 stray ok
+IQ1_M     1280 x 2560, 1845 rows in 13 experts: max |err| 0.000518 of max |ref| 128, 0 stray ok
+IQ1_M     1280 x 2560, 1845 rows in 13 experts (ids): max |err| 0.000628 of max |ref| 104, 0 stray ok
+IQ4_NL    2560 x  640, 1845 rows in 13 experts: max |err| 0.000152 of max |ref| 65.5, 0 stray ok
+IQ4_NL    2560 x  640, 1845 rows in 13 experts (ids): max |err| 0.000126 of max |ref| 62.4, 0 stray ok
+IQ4_NL    2560 x  640, 1845 rows in 13 experts: max |err| 0.000152 of max |ref| 63.1, 0 stray ok
+IQ4_NL    2560 x  640, 1845 rows in 13 experts (ids, down): max |err| 0.000151 of max |ref| 64.9, 0 stray ok
+Q2_0      2560 x  640, 1845 rows in 13 experts: max |err| 2.07e-06 of max |ref| 1.21, 0 stray ok
+Q2_0      2560 x  640, 1845 rows in 13 experts (ids): max |err| 2.27e-06 of max |ref| 1.43, 0 stray ok
+Q2_0      2560 x  640, 1845 rows in 13 experts (ids, down): max |err| 2.69e-06 of max |ref| 1.51, 0 stray ok
+IQ3_XXS   1280 x 2560, 448 rows in 7 experts: max |err| 0.0012 of max |ref| 245, 0 stray ok
+IQ3_XXS   1280 x 2560, 448 rows in 7 experts (ids): max |err| 0.00101 of max |ref| 272, 0 stray ok
+IQ3_S     1280 x 2560, 448 rows in 7 experts: max |err| 0.00131 of max |ref| 266, 0 stray ok
+IQ3_S     1280 x 2560, 448 rows in 7 experts (ids): max |err| 0.00118 of max |ref| 272, 0 stray ok
+IQ2_S     1280 x 2560, 448 rows in 7 experts: max |err| 0.000551 of max |ref| 115, 0 stray ok
+IQ2_S     1280 x 2560, 448 rows in 7 experts (ids): max |err| 0.000588 of max |ref| 108, 0 stray ok
+IQ3_XXS   1280 x 3840, 448 rows in 7 experts: max |err| 0.0019 of max |ref| 320, 0 stray ok
+IQ3_XXS   1280 x 3840, 448 rows in 7 experts (ids): max |err| 0.00152 of max |ref| 274, 0 stray ok
+IQ3_S     1280 x 3840, 448 rows in 7 experts: max |err| 0.00158 of max |ref| 292, 0 stray ok
+IQ3_S     1280 x 3840, 448 rows in 7 experts (ids): max |err| 0.00159 of max |ref| 328, 0 stray ok
+IQ2_S     1280 x 3840, 448 rows in 7 experts: max |err| 0.000764 of max |ref| 117, 0 stray ok
+IQ2_S     1280 x 3840, 448 rows in 7 experts (ids): max |err| 0.000732 of max |ref| 118, 0 stray ok
+IQ4_NL    2560 x  640, 448 rows in 7 experts: max |err| 0.000144 of max |ref| 58.6, 0 stray ok
+IQ4_NL    2560 x  640, 448 rows in 7 experts (ids): max |err| 0.000119 of max |ref| 60, 0 stray ok
+IQ4_NL    2560 x  640, 448 rows in 7 experts (ids, down): max |err| 0.000122 of max |ref| 56.1, 0 stray ok
+pf_wmma_parity: 0 failures
+=== GPU 1 wmma2 N64=0 ===
+IQ3_XXS   1280 x 2560, 1845 rows in 13 experts: max |err| 0.00118 of max |ref| 309, 0 stray ok
+IQ3_XXS   1280 x 2560, 1845 rows in 13 experts (ids): max |err| 0.00158 of max |ref| 277, 0 stray ok
+IQ3_S     1280 x 2560, 1845 rows in 13 experts: max |err| 0.00107 of max |ref| 263, 0 stray ok
+IQ3_S     1280 x 2560, 1845 rows in 13 experts (ids): max |err| 0.00157 of max |ref| 322, 0 stray ok
+IQ2_S     1280 x 2560, 1845 rows in 13 experts: max |err| 0.000575 of max |ref| 106, 0 stray ok
+IQ2_S     1280 x 2560, 1845 rows in 13 experts (ids): max |err| 0.000491 of max |ref| 117, 0 stray ok
+IQ4_NL    2560 x  640, 1845 rows in 13 experts: max |err| 0.000156 of max |ref| 69.5, 0 stray ok
+IQ4_NL    2560 x  640, 1845 rows in 13 experts (ids, down): max |err| 0.000133 of max |ref| 61.2, 0 stray ok
+IQ3_XXS   1280 x 2560, 448 rows in 7 experts: max |err| 0.00105 of max |ref| 260, 0 stray ok
+IQ3_XXS   1280 x 2560, 448 rows in 7 experts (ids): max |err| 0.00108 of max |ref| 311, 0 stray ok
+IQ3_S     1280 x 2560, 448 rows in 7 experts: max |err| 0.00119 of max |ref| 264, 0 stray ok
+IQ3_S     1280 x 2560, 448 rows in 7 experts (ids): max |err| 0.00114 of max |ref| 282, 0 stray ok
+IQ2_S     1280 x 2560, 448 rows in 7 experts: max |err| 0.000498 of max |ref| 111, 0 stray ok
+IQ2_S     1280 x 2560, 448 rows in 7 experts (ids): max |err| 0.000449 of max |ref| 122, 0 stray ok
+IQ3_XXS   1280 x 3840, 448 rows in 7 experts: max |err| 0.00179 of max |ref| 306, 0 stray ok
+IQ3_XXS   1280 x 3840, 448 rows in 7 experts (ids): max |err| 0.00133 of max |ref| 309, 0 stray ok
+IQ3_S     1280 x 3840, 448 rows in 7 experts: max |err| 0.00165 of max |ref| 317, 0 stray ok
+IQ3_S     1280 x 3840, 448 rows in 7 experts (ids): max |err| 0.00171 of max |ref| 352, 0 stray ok
+IQ2_S     1280 x 3840, 448 rows in 7 experts: max |err| 0.000776 of max |ref| 130, 0 stray ok
+IQ2_S     1280 x 3840, 448 rows in 7 experts (ids): max |err| 0.000725 of max |ref| 143, 0 stray ok
+pf_wmma_parity: 0 failures
+=== GPU 1 wmma2 N64=1 ===
+IQ3_XXS   1280 x 2560, 1845 rows in 13 experts: max |err| 0.00118 of max |ref| 309, 0 stray ok
+IQ3_XXS   1280 x 2560, 1845 rows in 13 experts (ids): max |err| 0.00158 of max |ref| 277, 0 stray ok
+IQ3_S     1280 x 2560, 1845 rows in 13 experts: max |err| 0.00107 of max |ref| 263, 0 stray ok
+IQ3_S     1280 x 2560, 1845 rows in 13 experts (ids): max |err| 0.00157 of max |ref| 322, 0 stray ok
+IQ2_S     1280 x 2560, 1845 rows in 13 experts: max |err| 0.000575 of max |ref| 106, 0 stray ok
+IQ2_S     1280 x 2560, 1845 rows in 13 experts (ids): max |err| 0.000491 of max |ref| 117, 0 stray ok
+IQ4_NL    2560 x  640, 1845 rows in 13 experts: max |err| 0.000156 of max |ref| 69.5, 0 stray ok
+IQ4_NL    2560 x  640, 1845 rows in 13 experts (ids, down): max |err| 0.000133 of max |ref| 61.2, 0 stray ok
+IQ3_XXS   1280 x 2560, 448 rows in 7 experts: max |err| 0.00105 of max |ref| 260, 0 stray ok
+IQ3_XXS   1280 x 2560, 448 rows in 7 experts (ids): max |err| 0.00108 of max |ref| 311, 0 stray ok
+IQ3_S     1280 x 2560, 448 rows in 7 experts: max |err| 0.00119 of max |ref| 264, 0 stray ok
+IQ3_S     1280 x 2560, 448 rows in 7 experts (ids): max |err| 0.00114 of max |ref| 282, 0 stray ok
+IQ2_S     1280 x 2560, 448 rows in 7 experts: max |err| 0.000498 of max |ref| 111, 0 stray ok
+IQ2_S     1280 x 2560, 448 rows in 7 experts (ids): max |err| 0.000449 of max |ref| 122, 0 stray ok
+IQ3_XXS   1280 x 3840, 448 rows in 7 experts: max |err| 0.00179 of max |ref| 306, 0 stray ok
+IQ3_XXS   1280 x 3840, 448 rows in 7 experts (ids): max |err| 0.00133 of max |ref| 309, 0 stray ok
+IQ3_S     1280 x 3840, 448 rows in 7 experts: max |err| 0.00165 of max |ref| 317, 0 stray ok
+IQ3_S     1280 x 3840, 448 rows in 7 experts (ids): max |err| 0.00171 of max |ref| 352, 0 stray ok
+IQ2_S     1280 x 3840, 448 rows in 7 experts: max |err| 0.000776 of max |ref| 130, 0 stray ok
+IQ2_S     1280 x 3840, 448 rows in 7 experts (ids): max |err| 0.000725 of max |ref| 143, 0 stray ok
+pf_wmma_parity: 0 failures
+=== GPU 1 skinny ===
+IQ4_NL    2560 x  640, 18 rows in 6 experts: max |err| 7.88e-05 of max |ref| 50.4, 0 stray ok
+IQ4_NL    2560 x  640, 18 rows in 6 experts (ids, down): max |err| 7.89e-05 of max |ref| 45.2, 0 stray ok
+IQ4_NL     384 x  640, 18 rows in 6 experts (ids, down): max |err| 6.71e-05 of max |ref| 38.9, 0 stray ok
+=== GPU 1 bench default vs wmma2 ===
+
+--bench: one grouped launch per shape, everything but the launch outside the timed windows (the
+weights, the dequantization and the double reference); the graph holds 8 launches and the median of
+7 windows is reported per launch; an idle GPU is assumed
+IQ3_XXS gate/up  1280 x 2560, 64 experts x   2 rows =   128 routed:    0.999 ms/launch (median of 7 x 8, max |err| 0.00097 of max |ref| 216)
+IQ3_XXS gate/up  1280 x 2560, 64 experts x  64 rows =  4096 routed:    1.071 ms/launch (median of 7 x 8, max |err| 0.000962 of max |ref| 255)
+IQ3_XXS gate/up  1280 x 2560, 64 experts x 128 rows =  8192 routed:    1.827 ms/launch (median of 7 x 8, max |err| 0.00113 of max |ref| 255)
+IQ3_XXS gate/up  1280 x 2560, 64 experts x 256 rows = 16384 routed:    3.389 ms/launch (median of 7 x 8, max |err| 0.00098 of max |ref| 314)
+IQ3_S gate/up    1280 x 2560, 64 experts x   2 rows =   128 routed:    0.985 ms/launch (median of 7 x 8, max |err| 0.00088 of max |ref| 231)
+IQ3_S gate/up    1280 x 2560, 64 experts x  64 rows =  4096 routed:    1.057 ms/launch (median of 7 x 8, max |err| 0.000983 of max |ref| 234)
+IQ3_S gate/up    1280 x 2560, 64 experts x 128 rows =  8192 routed:    1.816 ms/launch (median of 7 x 8, max |err| 0.000965 of max |ref| 259)
+IQ3_S gate/up    1280 x 2560, 64 experts x 256 rows = 16384 routed:    3.377 ms/launch (median of 7 x 8, max |err| 0.00105 of max |ref| 256)
+IQ2_S gate/up    1280 x 2560, 64 experts x   2 rows =   128 routed:    0.931 ms/launch (median of 7 x 8, max |err| 0.00045 of max |ref| 99.9)
+IQ2_S gate/up    1280 x 2560, 64 experts x  64 rows =  4096 routed:    1.067 ms/launch (median of 7 x 8, max |err| 0.000658 of max |ref| 102)
+IQ2_S gate/up    1280 x 2560, 64 experts x 128 rows =  8192 routed:    1.818 ms/launch (median of 7 x 8, max |err| 0.000373 of max |ref| 90.9)
+IQ2_S gate/up    1280 x 2560, 64 experts x 256 rows = 16384 routed:    3.287 ms/launch (median of 7 x 8, max |err| 0.000641 of max |ref| 116)
+IQ4_NL down      2560 x  640, 64 experts x   2 rows =   128 routed:    0.557 ms/launch (median of 7 x 8, max |err| 0.000103 of max |ref| 54.6)
+IQ4_NL down      2560 x  640, 64 experts x  64 rows =  4096 routed:    0.605 ms/launch (median of 7 x 8, max |err| 0.000122 of max |ref| 50.3)
+IQ4_NL down      2560 x  640, 64 experts x 128 rows =  8192 routed:    0.925 ms/launch (median of 7 x 8, max |err| 0.00011 of max |ref| 52.8)
+IQ4_NL down      2560 x  640, 64 experts x 256 rows = 16384 routed:    1.703 ms/launch (median of 7 x 8, max |err| 0.000169 of max |ref| 62.6)
+pf_wmma_parity --bench: 0 failures
+
+--bench: one grouped launch per shape, everything but the launch outside the timed windows (the
+weights, the dequantization and the double reference); the graph holds 8 launches and the median of
+7 windows is reported per launch; an idle GPU is assumed
+IQ3_XXS gate/up  1280 x 2560, 64 experts x   2 rows =   128 routed:    0.442 ms/launch (median of 7 x 8, max |err| 0.00097 of max |ref| 216)
+IQ3_XXS gate/up  1280 x 2560, 64 experts x  64 rows =  4096 routed:    0.758 ms/launch (median of 7 x 8, max |err| 0.000962 of max |ref| 255)
+IQ3_XXS gate/up  1280 x 2560, 64 experts x 128 rows =  8192 routed:    1.740 ms/launch (median of 7 x 8, max |err| 0.00113 of max |ref| 255)
+IQ3_XXS gate/up  1280 x 2560, 64 experts x 256 rows = 16384 routed:    3.515 ms/launch (median of 7 x 8, max |err| 0.00098 of max |ref| 314)
+IQ3_S gate/up    1280 x 2560, 64 experts x   2 rows =   128 routed:    0.698 ms/launch (median of 7 x 8, max |err| 0.00088 of max |ref| 231)
+IQ3_S gate/up    1280 x 2560, 64 experts x  64 rows =  4096 routed:    0.935 ms/launch (median of 7 x 8, max |err| 0.000983 of max |ref| 234)
+IQ3_S gate/up    1280 x 2560, 64 experts x 128 rows =  8192 routed:    1.868 ms/launch (median of 7 x 8, max |err| 0.000965 of max |ref| 259)
+IQ3_S gate/up    1280 x 2560, 64 experts x 256 rows = 16384 routed:    3.650 ms/launch (median of 7 x 8, max |err| 0.00105 of max |ref| 256)
+IQ2_S gate/up    1280 x 2560, 64 experts x   2 rows =   128 routed:    0.425 ms/launch (median of 7 x 8, max |err| 0.00045 of max |ref| 99.9)
+IQ2_S gate/up    1280 x 2560, 64 experts x  64 rows =  4096 routed:    0.746 ms/launch (median of 7 x 8, max |err| 0.000658 of max |ref| 102)
+IQ2_S gate/up    1280 x 2560, 64 experts x 128 rows =  8192 routed:    1.633 ms/launch (median of 7 x 8, max |err| 0.000373 of max |ref| 90.9)
+IQ2_S gate/up    1280 x 2560, 64 experts x 256 rows = 16384 routed:    3.425 ms/launch (median of 7 x 8, max |err| 0.000641 of max |ref| 116)
+IQ4_NL down      2560 x  640, 64 experts x   2 rows =   128 routed:    0.318 ms/launch (median of 7 x 8, max |err| 0.000103 of max |ref| 54.6)
+IQ4_NL down      2560 x  640, 64 experts x  64 rows =  4096 routed:    0.535 ms/launch (median of 7 x 8, max |err| 0.000122 of max |ref| 50.3)
+IQ4_NL down      2560 x  640, 64 experts x 128 rows =  8192 routed:    0.876 ms/launch (median of 7 x 8, max |err| 0.00011 of max |ref| 52.8)
+IQ4_NL down      2560 x  640, 64 experts x 256 rows = 16384 routed:    2.032 ms/launch (median of 7 x 8, max |err| 0.000169 of max |ref| 62.6)
+pf_wmma_parity --bench: 0 failures
+GPU1_PARITY_ALL_PASS
