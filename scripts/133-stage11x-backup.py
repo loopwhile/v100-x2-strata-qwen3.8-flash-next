@@ -10,7 +10,7 @@ import subprocess as sp
 import tarfile
 import tempfile
 
-CANDIDATES = ("A0", "P0", "C0", "D1", "D2", "D3", "P1", "P2", "C1")
+CANDIDATES = ("A0", "P0", "C0", "D1", "D1W", "D2", "D3", "P1", "P2", "C1")
 
 
 def main():

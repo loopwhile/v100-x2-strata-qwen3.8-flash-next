@@ -1,0 +1,11 @@
+  router multi == single, random logits                bitwise (19 cases)
+  router multi == single, exact ties                   bitwise (19 cases)
+  router multi == single, NaN logits                   bitwise (19 cases)
+  router_top10 on 256 experts (non-512 fallback)       matches the host reference
+  combine k=10 + shared (float4 kernel)                bitwise (9 cases)
+  combine k=10 + shared, output misaligned             bitwise (9 cases)
+  combine k=10 without shared                          bitwise (9 cases)
+  combine k=9 + shared                                 bitwise (9 cases)
+
+native_multi: 0 failures
+native_multi_parity OK

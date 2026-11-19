@@ -1,7 +1,7 @@
 {
   "schema": "stage11x-candidate-contract-v1",
   "date": "2026-11-19",
-  "status": "GATE_C_STEP3_S11X_D1_COMPLETED",
+  "status": "GATE_C_STEP5_S11X_D2_COMPLETED",
   "authorized_gpu_execution": false,
   "model_target": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS",
   "performance_goal": {
@@ -274,8 +274,294 @@
         134.69
       ],
       "notes": "3/3 C2 PASS with 0 ISA violations (check_isa_guard.py 0 not allowed; 0 VNNI/VBMI/VPOPCNT in iq_avx512.cpp.o & expert.cpp.o) and 0 parity failures (native_arithmetic_parity 4866048 passed, q2_bitplane_parity PASS, iq_avx2_parity 0 failures, PathC7 GGUF parity max_abs_diff 2.608e-08). New dual-V100 decode record: 32.6/31.9 tok/s median (+2.2/+1.6 tok/s, +7.2%/+5.3% vs S10-D4; batch-1 A reached 33.9 tok/s). Prefill 943.0/944.4 tok/s reflects partial OS page cache (54.4-55.3% fincore, 5.5-7.0 GB OS read per agent vs 100% cache in S11X-P1); zero prefill code changed. Below 40 tok/s Stage 11X target due to remaining ~39-41 ms/win non-CPU-expert GPU+adapt_join+draft floor."
+    },
+    "S11X-D1W": {
+      "id": "d1w-20261119T081230",
+      "kind": "scored",
+      "valid_batches": 3,
+      "status": "PASS",
+      "image": "strata-v100:stage11x-d1",
+      "image_id": "sha256:f5b82c39058117beb6b9a4bd02f38ad8283f70b62f5ad08116edfb0d0b3fba80",
+      "engine_sha256": "97e8f19921ec7a0e569a48bca14b162f76444b94ede898a6f5c96ddb410e3b72",
+      "patch": "docker/patches/stage11x-d1.patch",
+      "overrides": {
+        "STRATA_SELECT_SIMT": "1",
+        "STRATA_SM70_TABLE": "1",
+        "STRATA_PF_WMMA": "1",
+        "STRATA_AVX512BW_IQ": "22",
+        "STRATA_IQ_MT_MIN": "1",
+        "STRATA_IQ_GATHER": "1",
+        "STRATA_IQ256_GATHER": "1",
+        "STRATA_Q2_BITPLANE": "1"
+      },
+      "prefill_tok_s_A_B": [
+        1010.8,
+        1016.6
+      ],
+      "decode_tok_s_A_B": [
+        33.8,
+        32.2
+      ],
+      "ttft_s_A_B": [
+        125.86,
+        125.14
+      ],
+      "notes": "Warm-cache re-validation of S11X-D1 (shard 1 pre-warmed to 100.00% fincore before startup). 3/3 C2 PASS: Decode medians rose to 33.8/32.2 tok/s (+3.4/+1.9 tok/s vs S10-D4; batch-3 reached 34.6/32.2 tok/s), while Prefill recovered from 943.0/944.4 to 1010.8/1016.6 tok/s median and 1023.2/1028.8 tok/s in batch-3 (100% in page cache, 981.0/519.3 MB OS read, matching S10-D4 1025.1/1027.8 tok/s)."
+    },
+    "S11X-C1-diag": {
+      "id": "c1-20261119T084920",
+      "kind": "diagnostic",
+      "scored_batches": 0,
+      "diagnostic_batches": 1,
+      "status": "PASS",
+      "image": "strata-v100:stage11x-c1",
+      "image_id": "sha256:5a0c5d4923ae89987fbb140c0e95a40f23b7223498f57c7f32876772ee89cb3b",
+      "engine_sha256": "6c8f0ca8885284def29a7d8320c25d87364cc3fa9d56dfb2b3a57656586e4675",
+      "patch": "docker/patches/stage11x-c1.patch",
+      "overrides": {
+        "STRATA_SELECT_SIMT": "1",
+        "STRATA_SM70_TABLE": "1",
+        "STRATA_PF_WMMA": "1",
+        "STRATA_PF_WMMA2": "1",
+        "STRATA_PF_WMMA_LEAN": "1",
+        "STRATA_PF_WMMA_SKINNY": "1",
+        "STRATA_AVX512BW_IQ": "22",
+        "STRATA_IQ_MT_MIN": "1",
+        "STRATA_IQ_GATHER": "1",
+        "STRATA_IQ256_GATHER": "1",
+        "STRATA_Q2_BITPLANE": "1",
+        "STRATA_PREFILL_TIMING": "1",
+        "STRATA_DECODE_TIMING": "1"
+      },
+      "prefill_tok_s_A_B_diagnostic": [
+        1035.1,
+        1038.1
+      ],
+      "decode_tok_s_A_B_diagnostic": [
+        32.8,
+        32.3
+      ],
+      "ttft_s_A_B_diagnostic": [
+        122.88,
+        122.56
+      ],
+      "notes": "Non-scored combined P1+D1 diagnostic with STRATA_PREFILL_TIMING=1 and STRATA_DECODE_TIMING=1 (99% in page cache). Verified S11X_WMMA_LEAN eligible (2179 borrowed slots, gather 9/8 ms, gemm gate/up+down 29.94/30.68 s) AND PathC7 AVX-2 + AVX-512BW (CPU pool 261/259 us/exp, 6.7 GB/s, pcie_frac 0.70)."
+    },
+    "S11X-C1": {
+      "id": "c1-20261119T085422",
+      "kind": "scored",
+      "valid_batches": 3,
+      "status": "PASS",
+      "image": "strata-v100:stage11x-c1",
+      "image_id": "sha256:5a0c5d4923ae89987fbb140c0e95a40f23b7223498f57c7f32876772ee89cb3b",
+      "engine_sha256": "6c8f0ca8885284def29a7d8320c25d87364cc3fa9d56dfb2b3a57656586e4675",
+      "patch": "docker/patches/stage11x-c1.patch",
+      "overrides": {
+        "STRATA_SELECT_SIMT": "1",
+        "STRATA_SM70_TABLE": "1",
+        "STRATA_PF_WMMA": "1",
+        "STRATA_PF_WMMA2": "1",
+        "STRATA_PF_WMMA_LEAN": "1",
+        "STRATA_PF_WMMA_SKINNY": "1",
+        "STRATA_AVX512BW_IQ": "22",
+        "STRATA_IQ_MT_MIN": "1",
+        "STRATA_IQ_GATHER": "1",
+        "STRATA_IQ256_GATHER": "1",
+        "STRATA_Q2_BITPLANE": "1"
+      },
+      "prefill_tok_s_A_B": [
+        1037.6,
+        1044.8
+      ],
+      "decode_tok_s_A_B": [
+        33.0,
+        32.3
+      ],
+      "ttft_s_A_B": [
+        122.6,
+        121.77
+      ],
+      "notes": "3/3 C2 PASS combining S11X-P1 + S11X-D1 with 0 ISA violations (check_isa_guard.py 0 not allowed; 0 VNNI/VBMI/VPOPCNT in iq_avx512.cpp.o & expert.cpp.o), 0 CPU parity failures, and 0 GPU pf_wmma_parity failures on GPU0 & GPU1 across default, wmma2 N64=0, wmma2 N64=1, and skinny. Beat S10-D4 on BOTH metrics simultaneously: Prefill 1037.6/1044.8 tok/s (+12.5/+17.0 tok/s, TTFT -1.48/-2.02 s) and Decode 33.0/32.3 tok/s (+2.6/+2.0 tok/s). Stage 11X 1200/40 stretch goal NOT MET."
+    },
+    "S11X-D2-tier1-diag-A": {
+      "id": "d2-20261119T001214",
+      "kind": "diagnostic",
+      "scored_batches": 0,
+      "diagnostic_batches": 1,
+      "status": "PASS",
+      "image": "strata-v100:stage11x-c1",
+      "engine_sha256": "6c8f0ca8885284def29a7d8320c25d87364cc3fa9d56dfb2b3a57656586e4675",
+      "overrides": {
+        "STRATA_SELECT_SIMT": "1",
+        "STRATA_SM70_TABLE": "1",
+        "STRATA_PF_WMMA": "1",
+        "STRATA_PF_WMMA2": "1",
+        "STRATA_PF_WMMA_LEAN": "1",
+        "STRATA_PF_WMMA_SKINNY": "1",
+        "STRATA_AVX512BW_IQ": "22",
+        "STRATA_IQ_MT_MIN": "1",
+        "STRATA_IQ_GATHER": "1",
+        "STRATA_IQ256_GATHER": "1",
+        "STRATA_Q2_BITPLANE": "1",
+        "STRATA_SIDE_MIXER": "2",
+        "STRATA_ATTN_DAILY": "1",
+        "STRATA_GR_UP75": "1",
+        "STRATA_GU_SWIGLU": "1",
+        "STRATA_QSA_ROWS": "1",
+        "STRATA_FUSE_WAIT": "2",
+        "STRATA_AUX_CPUS": "auto",
+        "STRATA_PREFILL_TIMING": "1",
+        "STRATA_DECODE_TIMING": "1"
+      },
+      "prefill_tok_s_A_B_diagnostic": [
+        705.5,
+        715.7
+      ],
+      "decode_tok_s_A_B_diagnostic": [
+        32.8,
+        32.1
+      ],
+      "ttft_s_A_B_diagnostic": [
+        180.21,
+        177.66
+      ],
+      "notes": "Zero-compile Tier 1 diagnostic with 6 bitwise-identical nv_defaults GPU flags + STRATA_AUX_CPUS=auto. Caught critical bottleneck: STRATA_AUX_CPUS=auto crammed all 29 aux threads (including prefill stagers) onto CPU 6/9 (host core SMT sibling), slowing prefill host staging from 104.7s to 150.0s (705.5/715.7 tok/s) and offsetting the -0.83 ms/win GPU-reach wait gain with +0.97 ms/win host/SMT contention. Dropped STRATA_AUX_CPUS=auto."
+    },
+    "S11X-D2-tier1-diag-B": {
+      "id": "d2-20261119T001808",
+      "kind": "diagnostic",
+      "scored_batches": 0,
+      "diagnostic_batches": 1,
+      "status": "PASS",
+      "image": "strata-v100:stage11x-c1",
+      "engine_sha256": "6c8f0ca8885284def29a7d8320c25d87364cc3fa9d56dfb2b3a57656586e4675",
+      "overrides": {
+        "STRATA_SELECT_SIMT": "1",
+        "STRATA_SM70_TABLE": "1",
+        "STRATA_PF_WMMA": "1",
+        "STRATA_PF_WMMA2": "1",
+        "STRATA_PF_WMMA_LEAN": "1",
+        "STRATA_PF_WMMA_SKINNY": "1",
+        "STRATA_AVX512BW_IQ": "22",
+        "STRATA_IQ_MT_MIN": "1",
+        "STRATA_IQ_GATHER": "1",
+        "STRATA_IQ256_GATHER": "1",
+        "STRATA_Q2_BITPLANE": "1",
+        "STRATA_SIDE_MIXER": "2",
+        "STRATA_ATTN_DAILY": "1",
+        "STRATA_GR_UP75": "1",
+        "STRATA_GU_SWIGLU": "1",
+        "STRATA_QSA_ROWS": "1",
+        "STRATA_FUSE_WAIT": "2",
+        "STRATA_PREFILL_TIMING": "1",
+        "STRATA_DECODE_TIMING": "1"
+      },
+      "prefill_tok_s_A_B_diagnostic": [
+        1032.4,
+        1037.8
+      ],
+      "decode_tok_s_A_B_diagnostic": [
+        32.7,
+        32.7
+      ],
+      "ttft_s_A_B_diagnostic": [
+        123.23,
+        122.59
+      ],
+      "notes": "Clean Tier 1 diagnostic without STRATA_AUX_CPUS=auto: Prefill recovered to 1032.4/1037.8 tok/s, GPU-reach wait dropped from 20.49 to 19.67 ms/win (-0.82 ms/win) on Agent B (bit-exact 1883-token trajectory bb5373dd...), lifting Agent B decode from 32.3 to 32.7 tok/s."
+    },
+    "S11X-D2-tier2-diag": {
+      "id": "d2-20261119T003229",
+      "kind": "diagnostic",
+      "scored_batches": 0,
+      "diagnostic_batches": 1,
+      "status": "PASS",
+      "image": "strata-v100:stage11x-d2",
+      "image_id": "sha256:26d2bbfe67bc7cb4e489e6f9283e22bb4cd59c6e9659abf3396caa4f1a4f7f38",
+      "engine_sha256": "7f6fc8f7858739d18b177911d32d0d832393274b4ba7797dfd3cf29e634e76a9",
+      "patch": "docker/patches/stage11x-d2.patch",
+      "overrides": {
+        "STRATA_SELECT_SIMT": "1",
+        "STRATA_SM70_TABLE": "1",
+        "STRATA_PF_WMMA": "1",
+        "STRATA_PF_WMMA2": "1",
+        "STRATA_PF_WMMA_LEAN": "1",
+        "STRATA_PF_WMMA_SKINNY": "1",
+        "STRATA_AVX512BW_IQ": "22",
+        "STRATA_IQ_MT_MIN": "1",
+        "STRATA_IQ_GATHER": "1",
+        "STRATA_IQ256_GATHER": "1",
+        "STRATA_Q2_BITPLANE": "1",
+        "STRATA_SIDE_MIXER": "2",
+        "STRATA_ATTN_DAILY": "1",
+        "STRATA_GR_UP75": "1",
+        "STRATA_GU_SWIGLU": "1",
+        "STRATA_QSA_ROWS": "1",
+        "STRATA_FUSE_WAIT": "2",
+        "STRATA_MMAP_ADAPT_ASYNC": "1",
+        "STRATA_COLD_OVERLAP": "5",
+        "STRATA_PREFILL_TIMING": "1",
+        "STRATA_DECODE_TIMING": "1"
+      },
+      "prefill_tok_s_A_B_diagnostic": [
+        883.3,
+        862.4
+      ],
+      "decode_tok_s_A_B_diagnostic": [
+        34.9,
+        38.3
+      ],
+      "ttft_s_A_B_diagnostic": [
+        143.99,
+        147.67
+      ],
+      "notes": "Tier 2 source-patched diagnostic (90.6% initial page cache after docker commit). adapt join dropped from 9.50/9.00 ms/win to 0.00/0.00 ms/win (adapt wait 0.10/0.09 ms/win), d.ms_jobs dropped from 1.83/1.36 ms/win to 0.11/0.08 ms/win (-94%), GPU-reach wait 19.85/19.33 ms/win, total window time 69.42/52.89 ms/win, pushing Decode to 34.9/38.3 tok/s."
+    },
+    "S11X-D2": {
+      "id": "d2-20261119T003753",
+      "kind": "scored",
+      "valid_batches": 3,
+      "status": "PASS",
+      "image": "strata-v100:stage11x-d2",
+      "image_id": "sha256:26d2bbfe67bc7cb4e489e6f9283e22bb4cd59c6e9659abf3396caa4f1a4f7f38",
+      "engine_sha256": "7f6fc8f7858739d18b177911d32d0d832393274b4ba7797dfd3cf29e634e76a9",
+      "patch": "docker/patches/stage11x-d2.patch",
+      "overrides": {
+        "STRATA_SELECT_SIMT": "1",
+        "STRATA_SM70_TABLE": "1",
+        "STRATA_PF_WMMA": "1",
+        "STRATA_PF_WMMA2": "1",
+        "STRATA_PF_WMMA_LEAN": "1",
+        "STRATA_PF_WMMA_SKINNY": "1",
+        "STRATA_AVX512BW_IQ": "22",
+        "STRATA_IQ_MT_MIN": "1",
+        "STRATA_IQ_GATHER": "1",
+        "STRATA_IQ256_GATHER": "1",
+        "STRATA_Q2_BITPLANE": "1",
+        "STRATA_SIDE_MIXER": "2",
+        "STRATA_ATTN_DAILY": "1",
+        "STRATA_GR_UP75": "1",
+        "STRATA_GU_SWIGLU": "1",
+        "STRATA_QSA_ROWS": "1",
+        "STRATA_FUSE_WAIT": "2",
+        "STRATA_MMAP_ADAPT_ASYNC": "1",
+        "STRATA_COLD_OVERLAP": "5"
+      },
+      "prefill_tok_s_A_B": [
+        1032.6,
+        1037.0
+      ],
+      "decode_tok_s_A_B": [
+        37.1,
+        41.0
+      ],
+      "ttft_s_A_B": [
+        123.21,
+        122.69
+      ],
+      "notes": "3/3 C2 PASS with 0 ISA violations (check_isa_guard.py 0 not allowed; objdump forbidden=0 on iq_avx512.cpp.o & expert.cpp.o) and 0 parity failures (file_expert_source_test PASS, iq_avx2_parity 0 failures, native_multi_parity 0 failures, native_arithmetic_parity 4866048 passed, q2_bitplane_parity PASS). New all-time dual-V100 decode record: 37.1/41.0 tok/s median (+6.7/+10.7 tok/s, +22.0%/+35.3% vs S10-D4; +4.1/+8.7 tok/s vs S11X-C1; Agent B crossed >= 40.0 tok/s at 41.0 tok/s median), with Prefill 1032.6/1037.0 tok/s (1037.4/1045.2 tok/s in batch-3), TTFT 123.21/122.69 s, Peak VRAM 15577/15577 MiB, and deterministic finish_reason='stop'. Agent A >= 40.0 tok/s and Prefill >= 1200.0 tok/s remain bounded by CPU expert compute + GPU-reach wait and PCIe Gen3 x16 prefill staging."
     }
   },
-  "scored_batches_completed": 9,
-  "diagnostic_batches_completed": 5
+  "scored_batches_completed": 18,
+  "diagnostic_batches_completed": 9
 }

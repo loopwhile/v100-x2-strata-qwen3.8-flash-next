@@ -1,0 +1,1 @@
+check_isa_guard: /opt/strata/build-stage9/libstrata_kernels_cpu.a: 853 functions, 180 hold wide-ISA instructions, 0 not allowed

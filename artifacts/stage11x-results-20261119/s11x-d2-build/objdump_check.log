@@ -1,0 +1,4 @@
+=== objdump check: /opt/strata/build-stage9/CMakeFiles/strata_kernels_cpu.dir/src/kernels/cpu/iq_avx512.cpp.o ===
+forbidden=0 zmm=28177
+=== objdump check: /opt/strata/build-stage9/CMakeFiles/strata_kernels_cpu.dir/src/kernels/cpu/expert.cpp.o ===
+forbidden=0 zmm=7831

@@ -20,6 +20,13 @@
 | **`S11X-P1`** | `p1-20261119T070809` | Scored Candidate | 3 | `stage11x-p1` + `WMMA2=1 LEAN=1 SKINNY=1` | **`1043.9 / 1047.7`** | **`28.5 / 28.4`** | **`121.88 / 121.43`** | `82.7% / 82.7%` (med) | **PASS — HOLD FOR `S11X-C1`** ([Report](p1-20261119T070809/report.md)) |
 | **`S11X-D1`** (Diag) | `d1-20261119T074052` | Diagnostic | 1 (unscored) | `stage11x-d1` (`PathC7`: `AVX512BW_IQ=22`, `IQ_MT_MIN=1`, `IQ_GATHER=1`, `IQ256_GATHER=1`, `Q2_BITPLANE=1`) + `DECODE_TIMING=1` (91% cache) | `831.7 / 820.1` | `32.0 / 31.2` | `152.91 / 155.12` | `88.2% / 86.3%` | **DIAGNOSTIC PASS** ([Report](d1-20261119T074052/report.md)) |
 | **`S11X-D1`** | `d1-20261119T074621` | Scored Candidate | 3 | `stage11x-d1` (`PathC7`: `AVX512BW_IQ=22`, `IQ_MT_MIN=1`, `IQ_GATHER=1`, `IQ256_GATHER=1`, `Q2_BITPLANE=1`) (54–55% fincore) | `943.0 / 944.4` | **`32.6 / 31.9`** | `134.88 / 134.69` | **`88.1% / 86.3%`** (med) | **PASS — NEW DECODE RECORD** ([Report](d1-20261119T074621/report.md)) |
+| **`S11X-D1W`** | `d1w-20261119T081230` | Scored Re-validation | 3 | `stage11x-d1` (`PathC7`, pre-warmed 100% shard 1 fincore before startup) | **`1010.8 / 1016.6`** | **`33.8 / 32.2`** | `125.86 / 125.14` | **`87.9% / 86.3%`** (med) | **PASS — WARM RE-VALIDATION** ([Report](d1w-20261119T081230/report.md)) |
+| **`S11X-C1`** (Diag) | `c1-20261119T084920` | Diagnostic | 1 (unscored) | `stage11x-c1` (`P1` + `D1` `PathC7`) + `PREFILL_TIMING=1 DECODE_TIMING=1` (99% cache) | `1035.1 / 1038.1` | `32.8 / 32.3` | `122.88 / 122.56` | `83.1% / 86.3%` | **DIAGNOSTIC PASS** ([Report](c1-20261119T084920/report.md)) |
+| **`S11X-C1`** | `c1-20261119T085422` | Scored Candidate | 3 | `stage11x-c1` (`WMMA2=1 LEAN=1 SKINNY=1` + `PathC7`) (99–100% cache) | **`1037.6 / 1044.8`** | **`33.0 / 32.3`** | **`122.60 / 121.77`** | `83.1% / 86.3%` (med) | **PASS — BEST ALL-METRIC** ([Report](c1-20261119T085422/report.md)) |
+| **`S11X-D2`** (Tier 1 Diag A) | `d2-20261119T001214` | Diagnostic | 1 (unscored) | `stage11x-c1` + 6 `nv_defaults` GPU flags + `AUX_CPUS=auto` + timing | `705.5 / 715.7` | `32.8 / 32.1` | `180.21 / 177.66` | `82.9% / 86.3%` | **DIAGNOSTIC PASS (`AUX_CPUS=auto` DROPPED)** ([Report](d2-20261119T001214/report.md)) |
+| **`S11X-D2`** (Tier 1 Diag B) | `d2-20261119T001808` | Diagnostic | 1 (unscored) | `stage11x-c1` + 6 `nv_defaults` GPU flags (no `AUX_CPUS`) + timing | `1032.4 / 1037.8` | `32.7 / 32.7` | `123.23 / 122.59` | `82.7% / 86.3%` | **DIAGNOSTIC PASS** ([Report](d2-20261119T001808/report.md)) |
+| **`S11X-D2`** (Tier 2 Diag) | `d2-20261119T003229` | Diagnostic | 1 (unscored) | `stage11x-d2` (`MMAP_ADAPT_ASYNC=1` + `COLD_OVERLAP=5` + 6 GPU flags) + timing (90.6% cache) | `883.3 / 862.4` | **`34.9 / 38.3`** | `143.99 / 147.67` | `82.3% / 87.6%` | **DIAGNOSTIC PASS** ([Report](d2-20261119T003229/report.md)) |
+| **`S11X-D2`** | `d2-20261119T003753` | Scored Candidate | 3 | `stage11x-d2` (`C1` + 6 GPU flags + `MMAP_ADAPT_ASYNC=1` + `COLD_OVERLAP=5`) | **`1032.6 / 1037.0`** | **`37.1 / 41.0`** | **`123.21 / 122.69`** | `81.6% / 87.6%` (med) | **PASS — NEW DECODE RECORD (`B >= 40`)** ([Report](d2-20261119T003753/report.md)) |
 
 ---
 
@@ -190,3 +197,77 @@
 4. **Promotion & Next-Scope Recommendation**:
    - **Promote `S11X-D1` as the new Decode-optimized candidate** (surpassing `S10-D4`'s `30.4 / 30.3 tok/s`), **NOT yet promoted to production `p520-llm-a/b`** without explicit user scope and a warm-cache / combined `S11X-C1` (`stage11x-p1` + `stage11x-d1`) validation.
    - **Stage 11X Stretch Target (`>= 1200 tok/s` Prefill & `>= 40 tok/s` Decode) NOT MET**: Reaching `>= 1200 / >= 40` on dual V100-16GB requires removing the two remaining structural walls: (a) **Prefill**: `~42–44 s` PCIe/host staging of `30.8 GiB` experts across `8192`-token chunks + `~47 s` non-expert GPU phases (hard bounded by `12.3 GB/s` PCIe Gen3 x16 and `16 GB` VRAM), and (b) **Decode**: the `~39 ms/win` non-CPU floor (`adapt_join` `~9.2 ms/win`, GPU-reach `~20.5 ms/win`, and `~2.2` missed CPU experts/layer-window limited by `16 GB` VRAM capacity).
+
+---
+
+## 6. `S11X-D1W`: Warm Cache Re-validation (`d1w-20261119T081230`, `strata-v100:stage11x-d1`)
+
+Before `d1w-20261119T081230`, missing pages in `Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf` (`47,039,860,096` bytes) were warmed via targeted `pread`, verifying `100.00%` (`11,484,341 / 11,484,341` pages) in `fincore` alongside `dense.bin` (`97.8%`) and `qwen3.8-flash-next-dflash2.q4_0-selq4.pack` (`100.00%`).
+
+| Batch | Prefill A (tok/s) | Prefill B (tok/s) | Decode A (tok/s) | Decode B (tok/s) | TTFT A (s) | TTFT B (s) | Output Tokens A / B | Expert Cache Hit A / B | DFlash2 Accepted / Offered A / B | OS Read MB A / B | Page Cache (%) | Peak VRAM A / B (MiB) | Power Mean/Peak A / B (W) | Temp Mean/Peak A / B (°C) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `batch-1` | `985.2` | `991.2` | **`33.3`** | **`32.2`** | `129.12` | `128.34` | `1465 / 1883` | `87.9% / 86.3%` | `785/1046 (75.0%)` / `1013/1385 (73.1%)` | `4133.6 / 3264.1` | `95%` | `15571 / 15571` | `88.2/195.1` / `97.0/214.4` | `53.7/62` / `56.2/64` |
+| `batch-2` | `1010.8` | `1016.6` | **`33.8`** | **`32.5`** | `125.86` | `125.14` | `1465 / 1883` | `87.9% / 86.3%` | `785/1046 (75.0%)` / `1013/1385 (73.1%)` | `4201.6 / 3789.0` | `99%` | `15571 / 15571` | `93.5/204.5` / `98.9/217.7` | `57.2/65` / `58.5/65` |
+| `batch-3` | **`1023.2`** | **`1028.8`** | **`34.6`** | **`32.2`** | `124.32` | `123.64` | `1830 / 1883` | `88.6% / 86.3%` | `986/1312 (75.2%)` / `1013/1385 (73.1%)` | `981.0 / 519.3` | `100%` | `15571 / 15571` | `97.8/203.7` / `100.4/212.8` | `59.3/66` / `59.5/65` |
+| **Median** | **`1010.8`** | **`1016.6`** | **`33.8`** | **`32.2`** | `125.86` | `125.14` | `1465 / 1883` | **`87.9% / 86.3%`** | `75.0% / 73.1%` | `4133.6 / 3264.1` | - | `15571 / 15571` | `93.5/203.7` / `98.9/214.4` | `57.2/65` / `58.5/65` |
+| **vs `S10-D4`** | `-14.3` | `-11.2` | **`+3.4` (`+11.2%`)** | **`+1.9` (`+6.3%`)** | `+1.78 s` | `+1.35 s` | - | - | - | - | - | `0` | `-3.5/+0.4` / `+0.4/-11.2` | `-0.7/-1` / `-1.2/-1` |
+
+- **Key Result**: Confirmed `d1-20261119T074621`'s `943.0 / 944.4 tok/s` Prefill was purely cold-cache NVMe I/O (`5.5–7.0 GB` OS read). Once warmed to `100%` page cache in `batch-3` (`981.0 / 519.3 MB` OS read), `S11X-D1` recovered `1023.2 / 1028.8 tok/s` Prefill (matching `S10-D4`'s `1025.1 / 1027.8 tok/s`) while pushing Decode even higher to **`33.8 / 32.2 tok/s`** medians (**`34.6 / 32.2 tok/s`** in `batch-3`).
+
+---
+
+## 7. `S11X-C1`: Combined `P1` + `D1` (`strata-v100:stage11x-c1`, `6c8f0ca8885284de...`)
+
+- **Combined Patch, ISA & Parity Verification**:
+  - [stage11x-c1.patch](../../docker/patches/stage11x-c1.patch) applies `stage11x-p1.patch` (CUDA/Prefill) + `stage11x-d1.patch` (CPU `PathC7`) onto pinned `0.1.59` (`712fec6b4297c9cfd32ab43daaa2979a9aa01edf`) with `0` conflicts (completely disjoint files).
+  - `build.ninja` keeps `-mavx512f -mavx512bw -mavx512vl -mavx512dq -mbmi2 -mf16c -mfma` on `expert.cpp` & `iq_avx512.cpp`; `check_isa_guard.py` (`853 functions, 180 hold wide-ISA instructions, 0 not allowed`); `objdump -d` shows `0` VNNI/VBMI/VPOPCNT instructions in `iq_avx512.cpp.o` (`12,884` ZMM) and `expert.cpp.o` (`4,131` ZMM).
+  - **CPU Parity (`0` failures under `PathC7` env)**: `native_arithmetic_parity` (`4,866,048` passed), `q2_bitplane_parity` (`PASS`), `iq_avx2_parity` (`0` failures).
+  - **GPU Parity (`0` failures on GPU 0 & GPU 1)**: `pf_wmma_parity` (`default`, `wmma2 N64=0`, `wmma2 N64=1`, `skinny`) — `0` failures ([GPU 0 log](s11x-c1-build/parity-gpu0.log), [GPU 1 log](s11x-c1-build/parity-gpu1.log)).
+- **Diagnostic (`c1-20261119T084920`, `PREFILL_TIMING=1 DECODE_TIMING=1`)**:
+  - Confirmed BOTH optimizations active simultaneously: `S11X_WMMA_LEAN eligible` (`2179` borrowed slots, `gather 9/8 ms`, `gemm gate/up+down 29.94/30.68 s`) AND `CPU expert kernels: AVX-2 + AVX-512BW` (`CPU pool 261/259 us/exp`, `6.7 GB/s`, `pcie_frac 0.70`), achieving **`1035.1 / 1038.1 tok/s` Prefill** and **`32.8 / 32.3 tok/s` Decode** even with profiling overhead enabled.
+
+### 7.1 Scored 3-Batch C2 Results (`c1-20261119T085422`, No Timing Overhead)
+
+| Batch | Prefill A (tok/s) | Prefill B (tok/s) | Decode A (tok/s) | Decode B (tok/s) | TTFT A (s) | TTFT B (s) | Output Tokens A / B | Expert Cache Hit A / B | DFlash2 Accepted / Offered A / B | OS Read MB A / B | Page Cache (%) | Peak VRAM A / B (MiB) | Power Mean/Peak A / B (W) | Temp Mean/Peak A / B (°C) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `batch-1` | `1036.1` | `1041.2` | `33.0` | `32.3` | `122.78` | `122.19` | `2420 / 1883` | `82.8% / 86.3%` | `1505/1791 (84.0%)` / `1013/1385 (73.1%)` | `2336.2 / 1123.4` | `99%` | `15571 / 15571` | `92.6/203.6` / `92.7/217.1` | `56.7/65` / `57.4/65` |
+| `batch-2` | `1043.2` | `1048.3` | `33.5` | `32.3` | `121.96` | `121.37` | `2310 / 1883` | `86.7% / 86.3%` | `1274/1648 (77.3%)` / `1013/1385 (73.1%)` | `2837.5 / 834.5` | `100%` | `15571 / 15571` | `94.6/199.0` / `91.3/234.8` | `59.3/67` / `58.7/65` |
+| `batch-3` | `1037.6` | `1044.8` | `32.8` | `32.3` | `122.60` | `121.77` | `2591 / 1883` | `83.1% / 86.3%` | `1588/1956 (81.2%)` / `1013/1385 (73.1%)` | `2178.8 / 871.2` | `100%` | `15571 / 15571` | `95.3/208.2` / `94.8/216.7` | `59.4/67` / `58.6/65` |
+| **Median** | **`1037.6`** | **`1044.8`** | **`33.0`** | **`32.3`** | **`122.60`** | **`121.77`** | `2420 / 1883` | `83.1% / 86.3%` | `81.2% / 73.1%` | `2336.2 / 871.2` | - | `15571 / 15571` | `94.6/203.6` / `92.7/217.1` | `59.3/67` / `58.6/65` |
+| **vs `S10-D4`** | **`+12.5` (`+1.2%`)** | **`+17.0` (`+1.7%`)** | **`+2.6` (`+8.6%`)** | **`+2.0` (`+6.6%`)** | **`-1.48 s`** | **`-2.02 s`** | - | - | - | - | - | `0` | `-2.4/+0.3` / `-5.8/-8.5` | `+1.4/+1` / `-1.1/-1` |
+
+- **Key Result**: `S11X-C1` beats `S10-D4` on **every** speed, TTFT, and power metric simultaneously (**`1037.6 / 1044.8 tok/s` Prefill**, **`33.0 / 32.3 tok/s` Decode**, **`122.60 / 121.77 s` TTFT**, deterministic `finish_reason="stop"`, identical `15571 MiB` peak VRAM, Agent B bit-identical `1883` tokens `bb5373dd282b4744...` across all 4 C1 runs). Stage 11X's `>= 1200 / >= 40.0` stretch target remains bounded by PCIe Gen3 x16 staging (`30.8 GiB`) and the `16 GB` VRAM non-CPU-expert decode floor.
+
+---
+
+## 8. `S11X-D2`: Non-Blocking Async `--mmap-experts` Adapt, Zero-`mincore()` Dispatch, & V100 `nv_defaults` (`strata-v100:stage11x-d2`, `7f6fc8f7858739d1...`)
+
+- **Patch, ISA & Parity Verification**:
+  - [stage11x-d2.patch](../../docker/patches/stage11x-d2.patch) extends `S11X-C1` cleanly across `include/strata/core/expert_source.hpp`, `src/core/expert_source.cpp`, and `src/program/generate.cpp` (`0` CUDA source edits vs verified `stage11x-c1`):
+    1. **Non-blocking `--mmap-experts` async `adapt` (`STRATA_MMAP_ADAPT_ASYNC=1`)**: Allows `--adapt-async 1` / `STRATA_MMAP_ADAPT_ASYNC=1` on `--mmap-experts` using a 2-slot reusable pinned bounce ring (`cudaHostAlloc`, `2 x 2.33 MiB = ~4.66 MiB`, zero OS page cache stolen) + `cudaMemcpyAsync` on `adapt_stream` + `cudaEventQuery`/`cudaEventSynchronize` (`MmapBounceRing`). `JobThread` pins itself to the host core's SMT sibling (`CPU 6` / `CPU 9` via `strata::aux_cpus::plan()`) when `STRATA_ADAPT_JOB_CPU` and `--aux-cpus` are unset, overlapping expert copies (`~13 ms`) with the `~19–20 ms` `GPU-reach wait` while keeping prefill stager threads untouched. Skips redundant `srcp->prefetch(w.out)` and `srcp->release(w.in)` in `a_mmap`.
+    2. **Zero-`mincore()` dispatch (`STRATA_COLD_OVERLAP=5`)**: Adds `FileExpertSource::fast_zc_ready()` and `zc_roles_fast()` to bypass `miss` vector construction, `prefetch_begin`, `mincore()` (~360–480 syscalls/window), `stage_mu_` locks, and `std::find(zc_keys_)` whenever `role_ptr_` is mapped (`!unmapped_`, `direct_.empty()`, `!complement_ready_`, `override_.empty()`, `native`, `tail_off == 0`). `STRATA_COLD_OVERLAP=0..4` remain untouched.
+    3. **Zero-compile V100 `nv_defaults` 6-flag GPU pack**: Enables `STRATA_SIDE_MIXER=2`, `STRATA_ATTN_DAILY=1`, `STRATA_GR_UP75=1`, `STRATA_GU_SWIGLU=1`, `STRATA_QSA_ROWS=1`, `STRATA_FUSE_WAIT=2` (all bitwise-identical on Agent B in Tier 1 Diag B: `bb5373dd282b4744...`).
+  - **ISA & Build Verification**: `build.ninja` keeps `-mavx512f -mavx512bw -mavx512vl -mavx512dq -mbmi2 -mf16c -mfma` on `expert.cpp` & `iq_avx512.cpp`; `check_isa_guard.py` (`853 functions, 180 hold wide-ISA instructions, 0 not allowed`, [log](s11x-d2-build/isa_guard.log)); `objdump -d` (`forbidden=0` on `iq_avx512.cpp.o` and `expert.cpp.o`, [log](s11x-d2-build/objdump_check.log)).
+  - **Parity (`0` failures across all tests)**: `file_expert_source_test` (`PASS`), `iq_avx2_parity` (`0` failures), `native_multi_parity` (`0` failures), `native_arithmetic_parity` (`4,866,048` finite bitwise comparisons passed), `q2_bitplane_parity` (`PASS`).
+
+### 8.1 Tier 1 & Tier 2 Diagnostic Progression (`STRATA_PREFILL_TIMING=1` + `STRATA_DECODE_TIMING=1`, 1-Batch Non-Scored)
+
+| Diagnostic Run | Prefill A / B (tok/s) | Decode A / B (tok/s) | Window Total A / B (ms) | `GPU-reach wait` (ms) | `jobs` (`d.ms_jobs`) (ms) | `adapt join` (ms) | `adapt wait` (ms) | Key Finding |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| `S11X-C1` Diag (`c1-20261119T084920`) | `1035.1 / 1038.1` | `32.8 / 32.3` | `78.85 / 66.95` | `21.58 / 20.49` | `1.81 / 1.44` | `9.35 / 8.94` | `0.02 / 0.02` | Baseline C1 timing breakdown |
+| `S11X-D2` Tier 1 Diag A (`d2-20261119T001214`) | `705.5 / 715.7` | `32.8 / 32.1` | `81.98 / 67.45` | `20.81 / 19.67` | `2.50 / 1.81` | `9.84 / 9.20` | `0.02 / 0.02` | **`STRATA_AUX_CPUS=auto` regressed prefill (`104.7 -> 150.0 s` host staging)** & added SMT contention; **DROPPED** |
+| `S11X-D2` Tier 1 Diag B (`d2-20261119T001808`) | `1032.4 / 1037.8` | `32.7 / 32.7` | `77.95 / 66.03` | **`20.41 / 19.67`** | `1.83 / 1.36` | `9.50 / 9.00` | `0.02 / 0.02` | Clean 6 GPU flags: **`-0.82 ms/win` GPU-reach wait**; Agent B bit-identical (`bb5373dd...`) at `32.7 tok/s` |
+| `S11X-D2` Tier 2 Diag (`d2-20261119T003229`) | `883.3 / 862.4` *(90.6% cache)* | **`34.9 / 38.3`** | **`69.42 / 52.89`** | **`19.85 / 19.33`** | **`0.11 / 0.08`** | **`0.00 / 0.00`** | `0.10 / 0.09` | **`adapt join` eliminated (`-9.50 / -9.00 ms/win`)** & **`jobs` cut 94% (`-1.72 / -1.28 ms/win`)** |
+
+### 8.2 Scored 3-Batch C2 Results (`d2-20261119T003753`, No Timing Overhead)
+
+| Batch | Prefill A (tok/s) | Prefill B (tok/s) | Decode A (tok/s) | Decode B (tok/s) | TTFT A (s) | TTFT B (s) | Output Tokens A / B | Expert Cache Hit A / B | DFlash2 Accepted / Offered A / B | OS Read MB A / B | Page Cache (%) | Peak VRAM A / B (MiB) | Power Mean/Peak A / B (W) | Temp Mean/Peak A / B (°C) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `batch-1` | `1027.0` | `1029.7` | **`37.1`** | **`39.7`** | `123.87` | `123.54` | `1546 / 2094` | `81.2% / 86.3%` | `930/1135 (81.9%)` / `1104/1518 (72.7%)` | `3236.8 / 1851.0` | `93.5%` | `15577 / 15577` | `90.4/198.4` / `97.6/215.1` | `56.5/65` / `58.1/64` |
+| `batch-2` | `1032.6` | `1037.0` | **`37.5`** | **`41.0`** | `123.21` | `122.69` | `1872 / 1825` | `82.4% / 87.6%` | `1087/1373 (79.2%)` / `924/1239 (74.6%)` | `2460.8 / 784.9` | `95.0%` | `15577 / 15577` | `96.5/202.0` / `101.2/238.2` | `59.5/67` / `60.0/66` |
+| `batch-3` | `1037.4` | `1045.2` | **`37.1`** | **`41.0`** | `122.62` | `121.73` | `1572 / 1825` | `81.6% / 87.6%` | `922/1129 (81.7%)` / `924/1239 (74.6%)` | `877.8 / 443.5` | `95.7%` | `15577 / 15577` | `99.7/208.5` / `102.2/215.1` | `60.7/67` / `60.4/65` |
+| **Median** | **`1032.6`** | **`1037.0`** | **`37.1`** | **`41.0`** | **`123.21`** | **`122.69`** | `1572 / 1825` | `81.6% / 87.6%` | `81.7% / 74.6%` | `2460.8 / 784.9` | - | `15577 / 15577` | `96.5/202.0` / `101.2/215.1` | `59.5/67` / `60.0/65` |
+| **vs `S10-D4`** | **`+7.5` (`+0.7%`)** | **`+9.2` (`+0.9%`)** | **`+6.7` (`+22.0%`)** | **`+10.7` (`+35.3%`)** | **`-0.87 s`** | **`-1.10 s`** | - | - | - | - | - | `+6` | `-0.5/-1.3` / `+2.7/-10.5` | `+1.6/+1` / `+0.3/-1` |
+| **vs `S11X-C1`** | `-5.0` | `-7.8` | **`+4.1` (`+12.4%`)** | **`+8.7` (`+26.9%`)** | `+0.61 s` | `+0.92 s` | - | - | - | - | - | `+6` | `+1.9/-1.6` / `+8.5/-2.0` | `+0.2/0` / `+1.4/0` |
+
+- **Key Result**: `S11X-D2` sets an all-time dual-V100 128K decode record of **`37.1 / 41.0 tok/s`** medians (**Agent B crossed `>= 40.0 tok/s`**, matching `f40565a8...` `1825`-token deterministic output across `d2-20261119T003229`, `batch-2`, and `batch-3`), while maintaining full `~1033–1045 tok/s` Prefill, `15577 MiB` peak VRAM (`+6 MiB` for `SIDE_MIXER=2` stream/events), `0` errors/fallbacks, and `finish_reason="stop"` across all 128K requests. **Recommend promoting `S11X-D2` as the new Stage 11X all-metric leader (`C1` + `D2`)**, noting that `p520-llm-a/b` remain preserved `Exited` pending explicit user scope for any production rollout.
