@@ -1,9 +1,13 @@
 # Qwen3.8-Flash-Next on Dual Tesla V100 GPUs with Strata
 
-> **Current serving (2026-11-11):** user-selected S10-D4 uses fixed operating
-> container/API model IDs `p520-llm-a` and `p520-llm-b`, retaining P520 8080/8081
-> and ThinkPad 18080/18081. Deployment checks passed; both containers were then
-> stopped by the user and remain preserved. [Start/stop/status and upgrade/rollback guide](docs/P520_SERVING.md).
+> **Current serving (2026-11-19):** user-promoted **`S11X-D2`** (`strata-v100:stage11x-d2`,
+> release `s11x-d2-20261119T095616`) runs live on fixed container/API model IDs `p520-llm-a`
+> and `p520-llm-b`, retaining P520 8080/8081 and ThinkPad 18080/18081. Concurrent 128K C2
+> medians: **Prefill `1032.6 / 1037.0 tok/s`, Decode `37.1 / 41.0 tok/s`**. Prior `S10-D4`
+> containers (`s10-d4-20261111T012331`) remain preserved stopped for rollback.
+> [Start/stop/status and upgrade/rollback guide](docs/P520_SERVING.md) ·
+> [2026-11-19 deployment receipt](artifacts/p520-serving-20261119/summary.md) ·
+> [Stage 11X summary](artifacts/stage11x-results-20261119/summary.md).
 
 A reproducible deployment and benchmarking project for running **Qwen3.8-Flash-Next** on a Lenovo ThinkStation P520 equipped with two NVIDIA Tesla V100 16 GB GPUs.
 

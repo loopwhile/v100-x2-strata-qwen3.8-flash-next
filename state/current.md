@@ -1,19 +1,28 @@
-# Current operation — stable P520 serving STOPPED BY USER (2026-11-11 KST)
+# Current operation — S11X-D2 promoted & LIVE on P520 (2026-11-19 KST)
 
-The user selected **S10-D4** for the fixed operating containers/API model IDs
-`p520-llm-a` and `p520-llm-b`. P520 loopback ports remain 8080/8081 and the
-unchanged ThinkPad tunnel remains 18080/18081. OpenCode is migrated once to
-`p520-a/p520-llm-a` (default) and `p520-b/p520-llm-b`.
-See [operating guide](../docs/P520_SERVING.md) for start/stop/status/rollback.
-Both containers are configured from release `s10-d4-20261111T012331`, using native
-API aliases to preserve the Qwen family identification needed by DFlash2.
-Health, exact D4 engine-argument parity, tunnel chat and OpenCode A/B smoke
-requests passed. [Deployment verification](../artifacts/p520-serving-20261111/summary.md)
-is separate from benchmark results. The initial name-detection startup attempt
-is stopped/preserved under separate archive names. No archived C2 was rerun.
-After these checks, the user stopped `p520-llm-a` and `p520-llm-b`; live
-inspection confirmed both are `exited`. Keep them stopped during commit/push
-and checkout synchronization. Starting serving is a separate operating action.
+The user promoted **`S11X-D2`** (`d2-20261119T003753`: Prefill `1032.6 / 1037.0 tok/s`,
+Decode `37.1 / 41.0 tok/s`) to the fixed operating containers/API model IDs `p520-llm-a`
+and `p520-llm-b` under release `s11x-d2-20261119T095616` (`strata-v100:stage11x-d2`,
+`sha256:26d2bbfe67bc...`). P520 loopback ports remain 8080/8081 and the unchanged
+ThinkPad tunnel remains 18080/18081; OpenCode selections stay `p520-a/p520-llm-a`
+and `p520-b/p520-llm-b`. Both containers are running (`Up`), verified via
+`scripts/127-p520-serving.py check` (engine SHA256 `7f6fc8f7...`, 19 `STRATA_*` env
+overrides, DFlash2 `--draft-fallback none`), and concurrent `P520_OK` tunnel smoke
+requests. See [deployment summary](../artifacts/p520-serving-20261119/summary.md),
+[operating guide](../docs/P520_SERVING.md), and [Stage 11X summary](../artifacts/stage11x-results-20261119/summary.md).
+The prior `S10-D4` containers (`s10-d4-20261111T012331`, `sha256:dd8913d85f18...`) are
+preserved in `exited` state under `p520-llm-{a,b}-archive-s10-d4-20261111T012331` for rollback.
+
+## Stage 11X Follow-up Summary — 2026-11-19 KST (`S11X-D2` Promoted)
+
+| Arm | Run ID | Prefill A / B (tok/s) | Decode A / B (tok/s) | TTFT A / B (s) | Verdict |
+|---|---|---:|---:|---:|---|
+| `S10-D4` (Prior Ref) | `d4-20261110T225518` | `1025.1 / 1027.8` | `30.4 / 30.3` | `124.08 / 123.79` | Archived for rollback |
+| `S11X-C0` | `c0-20261119T040328` | `1033.7 / 1037.6` | `29.7 / 28.4` | `123.07 / 122.60` | Not promoted |
+| `S11X-P1` | `p1-20261119T070809` | **`1043.9 / 1047.7`** | `28.5 / 28.4` | **`121.88 / 121.43`** | Combined into `C1`/`D2` |
+| `S11X-D1W` | `d1w-20261119T081230` | `1010.8 / 1016.6` | `33.8 / 32.2` | `125.86 / 125.14` | Combined into `C1`/`D2` |
+| `S11X-C1` | `c1-20261119T085422` | `1037.6 / 1044.8` | `33.0 / 32.3` | `122.60 / 121.77` | Base for `D2` |
+| **`S11X-D2`** | `d2-20261119T003753` | **`1032.6 / 1037.0`** *(B3: `1037.4/1045.2`)* | **`37.1 / 41.0`** | **`123.21 / 122.69`** | **PROMOTED LIVE** |
 
 ## Archived Stage 10 completion — 2026-11-10 KST, 27 scored + 1 diagnostic C2 PASS
 

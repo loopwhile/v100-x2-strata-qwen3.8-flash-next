@@ -1,27 +1,34 @@
 # Repository agent instructions
 
-## Current serving contract — 2026-11-11 user scope
+## Current serving contract — 2026-11-19 user-approved S11X-D2 promotion
 
-- After successful deployment checks, the user stopped both operating
-  containers. Preserve that stopped state during Git synchronization; do not
-  start serving or rerun inference merely to commit/push or update a checkout.
-- The user selected **S10-D4** (not S9-D1) for a new stable operating pair:
-  containers and API model IDs **`p520-llm-a` / `p520-llm-b`**. See
-  [operating guide](docs/P520_SERVING.md) and `scripts/127-p520-serving.py`.
+- The user promoted **`S11X-D2`** (`d2-20261119T003753`, `Prefill 1032.6 / 1037.0 tok/s`,
+  `Decode 37.1 / 41.0 tok/s`) on 2026-11-19 to the live operating pair: containers
+  and API model IDs **`p520-llm-a` / `p520-llm-b`** (release `s11x-d2-20261119T095616`,
+  deployed and verified running). See [operating guide](docs/P520_SERVING.md),
+  [deployment verification](artifacts/p520-serving-20261119/summary.md), and
+  `scripts/127-p520-serving.py`.
 - Keep P520 loopback 8080/8081 and ThinkPad 18080/18081 unchanged. OpenCode's
-  stable selections are `p520-a/p520-llm-a` and `p520-b/p520-llm-b`.
+  stable selections remain `p520-a/p520-llm-a` and `p520-b/p520-llm-b`.
 - Use native API `aliases` for those IDs. Keep canonical model names Qwen-shaped
-  (`qwen3.8-flash-next-iq3_xxs_p520_a/b`): the unmodified server detects DFlash2
-  compatibility from that name. Bare canonical `p520-llm-a/b` selected MTP in the
-  preserved startup-only attempt. Require actual DFlash2/fallback/argv checks.
-- Recipe: pinned upstream 0.1.59 image, IQ3_XXS + stock DFlash2, spec 8,
-  confidence 0.7, prefill auto; independent GPU/CPU assignments and INT8 128K
-  settings retained. No new combination or archived C2 rerun is authorized.
-- Preserve historical containers and versioned serving releases. Future image
-  upgrades require their own scope; retain old images/configs/containers for
-  rollback and keep the client-facing IDs/ports fixed. Do not mutate engine
-  binaries inside existing containers. Do not stop active serving for experiments
-  without explicit approval. Power/clock/tunnel settings remain protected.
+  (`qwen3.8-flash-next-iq3_xxs_p520_a/b`): the server detects DFlash2 compatibility
+  from that name. Require actual DFlash2/fallback/argv checks.
+- Promoted recipe: image `strata-v100:stage11x-d2` (`sha256:26d2bbfe67bc7cb4e489e6f9283e22bb4cd59c6e9659abf3396caa4f1a4f7f38`,
+  [stage11x-d2.patch](docker/patches/stage11x-d2.patch) on pinned `0.1.59`, engine SHA256
+  `7f6fc8f7858739d18b177911d32d0d832393274b4ba7797dfd3cf29e634e76a9`), IQ3_XXS + stock
+  DFlash2 (`--spec 8 --draft-conf 0.7 --prefill auto --draft-fallback none`), independent
+  GPU/CPU assignments, INT8 128K (`--kv-resident 32768`), and the 19 verified
+  `S11X-D2` env overrides (`STRATA_SELECT_SIMT=1`, `STRATA_SM70_TABLE=1`, `STRATA_PF_WMMA=1`,
+  `STRATA_PF_WMMA2=1`, `STRATA_PF_WMMA_LEAN=1`, `STRATA_PF_WMMA_SKINNY=1`,
+  `STRATA_AVX512BW_IQ=22`, `STRATA_IQ_MT_MIN=1`, `STRATA_IQ_GATHER=1`, `STRATA_IQ256_GATHER=1`,
+  `STRATA_Q2_BITPLANE=1`, `STRATA_SIDE_MIXER=2`, `STRATA_ATTN_DAILY=1`, `STRATA_GR_UP75=1`,
+  `STRATA_GU_SWIGLU=1`, `STRATA_QSA_ROWS=1`, `STRATA_FUSE_WAIT=2`, `STRATA_MMAP_ADAPT_ASYNC=1`,
+  `STRATA_COLD_OVERLAP=5`).
+- Preserve historical containers and versioned serving releases, including the prior
+  `S10-D4` pair (`p520-llm-{a,b}-archive-s10-d4-20261111T012331`, `sha256:dd8913d85f18...`,
+  release `s10-d4-20261111T012331`) retained for rollback. Keep client-facing IDs/ports
+  fixed. Do not mutate engine binaries inside existing containers. Do not stop active
+  serving for experiments without explicit approval. Power/clock/tunnel settings remain protected.
 
 This repository is a live dual-V100 inference deployment and benchmark harness.
 Before changing code or running P520 commands, read [Stage 4 plan](docs/STAGE4_PLAN.md)
