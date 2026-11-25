@@ -37,13 +37,16 @@ class PreservationTests(unittest.TestCase):
                 serving.install(Path("/tmp/foreign-release"))
             call.assert_not_called()
 
-    def test_s11x_d2_promoted_contract(self):
-        self.assertEqual(serving.RECIPE, "S11X-D2")
+    def test_s12_c1t_promoted_contract(self):
+        self.assertEqual(serving.RECIPE, "S12-C1T")
+        self.assertEqual(serving.ENV["STRATA_OOMD_ROOM"], "0")
         self.assertEqual(serving.ENV["STRATA_MMAP_ADAPT_ASYNC"], "1")
         self.assertEqual(serving.ENV["STRATA_COLD_OVERLAP"], "5")
         self.assertEqual(serving.ENV["STRATA_AVX512BW_IQ"], "22")
-        self.assertEqual(serving.ENV["STRATA_PF_WMMA2"], "1")
-        self.assertNotIn("STRATA_AUX_CPUS", serving.ENV)
+        self.assertEqual(serving.ENV["STRATA_HC_V100"], "1")
+        self.assertEqual(serving.ENV["STRATA_ROUTE_TAIL_SKIP"], "7")
+        for forbidden in ("STRATA_AUX_CPUS", "STRATA_ADAPT_LAG", "STRATA_PF_WMMA2"):
+            self.assertNotIn(forbidden, serving.ENV)
 
 
 if __name__ == "__main__":

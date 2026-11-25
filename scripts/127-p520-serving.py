@@ -10,31 +10,26 @@ import subprocess as sp
 import time
 import urllib.request
 
-RECIPE = "S11X-D2"
-IMAGE = "sha256:26d2bbfe67bc7cb4e489e6f9283e22bb4cd59c6e9659abf3396caa4f1a4f7f38"
-ENGINE_SHA = "7f6fc8f7858739d18b177911d32d0d832393274b4ba7797dfd3cf29e634e76a9"
+RECIPE = "S12-C1T"
+IMAGE = "sha256:33b61b0432e81c44a6d212ca38be46b4191a989a65c4a0141e2cbc9b116f10ec"
+ENGINE_SHA = "c01770d00bd49985f008e39d722b996f0ad476545c8bd50bb96ad8a66ed52dda"
 PACK_NAME = "qwen3.8-flash-next-dflash2.q4_0-selq4.pack"
 PACK_SHA = "4a42b98220ea7880664002c8edda1563aecbae754b762a2e2f31b2b91ee93ecd"
 ENV = {
-    "STRATA_SELECT_SIMT": "1",
-    "STRATA_SM70_TABLE": "1",
-    "STRATA_PF_WMMA": "1",
-    "STRATA_PF_WMMA2": "1",
-    "STRATA_PF_WMMA_LEAN": "1",
-    "STRATA_PF_WMMA_SKINNY": "1",
+    "STRATA_OOMD_ROOM": "0",
     "STRATA_AVX512BW_IQ": "22",
     "STRATA_IQ_MT_MIN": "1",
     "STRATA_IQ_GATHER": "1",
     "STRATA_IQ256_GATHER": "1",
     "STRATA_Q2_BITPLANE": "1",
-    "STRATA_SIDE_MIXER": "2",
-    "STRATA_ATTN_DAILY": "1",
-    "STRATA_GR_UP75": "1",
-    "STRATA_GU_SWIGLU": "1",
-    "STRATA_QSA_ROWS": "1",
-    "STRATA_FUSE_WAIT": "2",
     "STRATA_MMAP_ADAPT_ASYNC": "1",
     "STRATA_COLD_OVERLAP": "5",
+    "STRATA_HC_V100": "1",
+    "STRATA_SELECT_SIMT": "1",
+    "STRATA_ATTN_DAILY": "1",
+    "STRATA_GR_UP75": "1",
+    "STRATA_FUSE_WAIT": "2",
+    "STRATA_ROUTE_TAIL_SKIP": "7",
 }
 CPUS = {"a": "0-2,6-8", "b": "3-5,9-11"}
 PORTS = {"a": 8080, "b": 8081}
@@ -111,7 +106,7 @@ def prepare():
     assert run("docker", "image", "inspect", IMAGE, "--format", "{{.Id}}") == IMAGE
     draft_dir = ROOT / "results/stage10-preparation/draft-data/dflash2"
     assert sha(draft_dir / PACK_NAME) == PACK_SHA
-    release = SERVING_ROOT / "releases" / ("s11x-d2-" + dt.datetime.now().strftime("%Y%m%dT%H%M%S"))
+    release = SERVING_ROOT / "releases" / ("s12-c1t-" + dt.datetime.now().strftime("%Y%m%dT%H%M%S"))
     release.mkdir(parents=True, exist_ok=False)
     (release / "logs").mkdir()
     save(release / "preflight.json", before)
@@ -125,6 +120,9 @@ def prepare():
             assert cfg["args"].count(flag) == 1 and cfg["args"][cfg["args"].index(flag) + 1] == value
         assert cfg["drafting"] == "dflash2" and "--mmap-experts" in cfg["args"]
         assert cfg["gpu"] == 0 and cfg["gpus_asked"]
+        # Stage 12 safety contract: enforce --prefill auto:8192 explicitly (never bare auto)
+        cfg["args"][cfg["args"].index("--prefill") + 1] = "auto:8192"
+        cfg["user_args"][cfg["user_args"].index("--prefill") + 1] = "auto:8192"
         cfg["model_name"] = canonical(s)
         cfg["aliases"] = [name(s)]
         cfg["port"] = PORTS[s]
@@ -146,7 +144,7 @@ def prepare():
         for key, value in ENV.items():
             cmd.extend(["-e", f"{key}={value}"])
         cmd.extend(["--entrypoint", "/opt/strata/.venv/bin/python", IMAGE,
-                    "/opt/strata/serve/server.py", "--engine", "strata", "--config", "/opt/strata/config.json",
+                    "/opt/strata/terminal/serve/server.py", "--engine", "strata", "--config", "/opt/strata/config.json",
                     "--host", "127.0.0.1", "--port", str(PORTS[s])])
         commands[s] = cmd
     save(release / "commands.json", commands)
@@ -154,14 +152,14 @@ def prepare():
          "engine_sha256": ENGINE_SHA, "draft_sha256": PACK_SHA,
          "configs": {s: sha(release / f"agent-{s}.json") for s in "ab"}})
     (release / "rollback.txt").write_text(
-        "Stop S11X-D2 serving:\n"
+        "Stop S12-C1T serving:\n"
         "docker stop -t 30 p520-llm-a p520-llm-b\n"
-        "To roll back to preserved S10-D4 (s10-d4-20261111T012331):\n"
+        "To roll back to preserved S11X-D2 (s11x-d2-20261119T095616):\n"
         "docker stop -t 30 p520-llm-a p520-llm-b\n"
-        "docker rename p520-llm-a p520-llm-a-rollback-s11x-d2 && docker rename p520-llm-b p520-llm-b-rollback-s11x-d2\n"
-        "docker rename p520-llm-a-archive-s10-d4-20261111T012331 p520-llm-a\n"
-        "docker rename p520-llm-b-archive-s10-d4-20261111T012331 p520-llm-b\n"
-        "Preserve all releases and historical containers.\n")
+        "docker rename p520-llm-a p520-llm-a-rollback-s12-c1t && docker rename p520-llm-b p520-llm-b-rollback-s12-c1t\n"
+        "docker rename p520-llm-a-archive-s11x-d2-20261119T095616 p520-llm-a\n"
+        "docker rename p520-llm-b-archive-s11x-d2-20261119T095616 p520-llm-b\n"
+        "Preserve all releases and historical containers (including S10-D4 s10-d4-20261111T012331).\n")
     print(release)
 
 
@@ -213,7 +211,7 @@ print(json.dumps(out))
         processes = json.loads(run("docker", "exec", name(s), "/opt/strata/.venv/bin/python", "-c", probe))
         assert len(processes) == 1
         effective = processes[0]["args"]
-        for flag, value in {"--spec": "8", "--draft-conf": "0.7", "--prefill": "auto",
+        for flag, value in {"--spec": "8", "--draft-conf": "0.7", "--prefill": "auto:8192",
                             "--draft": "dflash2", "--draft-fallback": "none",
                             "--draft-model": "/stage10-data/dflash2/" + PACK_NAME,
                             "--max-context": "131072", "--kv": "int8", "--kv-resident": "32768",
@@ -223,8 +221,8 @@ print(json.dumps(out))
         assert "--mmap-experts" in effective
         for key, value in ENV.items():
             assert processes[0]["env"].get(key) == value
-        for key in ("STRATA_ADAPT_LAG", "STRATA_ADAPT_NOWAIT", "STRATA_PF_HC_REGION", "STRATA_AUX_CPUS"):
-            assert key not in processes[0]["env"], f"Unapproved D2 override: {key}"
+        for key in ("STRATA_ADAPT_LAG", "STRATA_ADAPT_NOWAIT", "STRATA_PF_HC_REGION", "STRATA_AUX_CPUS", "STRATA_PF_WMMA", "STRATA_PF_WMMA2"):
+            assert key not in processes[0]["env"], f"Disallowed override: {key}"
         output[s] = {"health": health, "models": models, "engine": processes[0]}
     print(json.dumps(output, indent=2))
 
