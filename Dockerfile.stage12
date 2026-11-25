@@ -1,0 +1,31 @@
+# Isolated Stage 12 CUDA12/sm_70 build for Strata 0.1.66 / 0.1.67 + verified patches.
+FROM nvidia/cuda:12.9.1-devel-ubuntu24.04
+ARG STRATA_REPO=Niko1221/Strata
+ARG STRATA_REF
+ARG STRATA_VERSION
+ARG STAGE12_PATCH=""
+ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 LANG=C.UTF-8 STRATA_EXECV=1 PYTHONPATH=/opt/strata/terminal
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    binutils build-essential ca-certificates curl git libatomic1 libgomp1 \
+    python3 python3-pip python3-venv unzip \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/strata
+RUN git init . && git remote add origin "https://github.com/${STRATA_REPO}.git" \
+    && git fetch --depth 1 origin "${STRATA_REF}" && git checkout --detach FETCH_HEAD \
+    && test "$(git rev-parse HEAD)" = "${STRATA_REF}" && git remote remove origin
+COPY docker/patches /opt/strata-patches
+RUN if [ -n "${STAGE12_PATCH}" ]; then \
+      git apply --check "/opt/strata-patches/${STAGE12_PATCH}" && \
+      git apply "/opt/strata-patches/${STAGE12_PATCH}"; \
+    fi
+RUN python3 -m venv .venv && .venv/bin/pip install --no-cache-dir \
+    -r terminal/requirements.txt -r terminal/requirements-build.txt
+RUN ln -sfn /opt/strata/terminal/data /opt/strata/data
+COPY docker/build_stage12_v100_engine.py /opt/strata/stage12-build.py
+RUN STRATA_EXPECTED_REF="${STRATA_REF}" STRATA_EXPECTED_VERSION="${STRATA_VERSION}" \
+    STRATA_STAGE12_PATCH="${STAGE12_PATCH}" .venv/bin/python stage12-build.py
+LABEL org.opencontainers.image.revision="${STRATA_REF}" \
+      org.opencontainers.image.version="${STRATA_VERSION}" \
+      lab.stage="12" \
+      lab.stage12.patch="${STAGE12_PATCH}"
+ENTRYPOINT ["/opt/strata/.venv/bin/python"]

@@ -1,0 +1,99 @@
+{
+  "schema": "stage12-candidate-contract-v1",
+  "date": "2026-11-25",
+  "status": "GATE_A_IN_PROGRESS",
+  "approval": "sequential_gate_a_to_d_user_approved_keep_serving_stopped",
+  "model_target": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS",
+  "pinned_sources": {
+    "0.1.59": {
+      "repo": "Niko1221/Strata",
+      "ref": "712fec6b4297c9cfd32ab43daaa2979a9aa01edf",
+      "tag": "v0.2.13"
+    },
+    "0.1.66": {
+      "repo": "Niko1221/Strata",
+      "ref": "a34979fc94f3d126b9bb8210f4ad311345688b52",
+      "tag": "v0.2.20"
+    },
+    "0.1.67": {
+      "repo": "Niko1221/Strata",
+      "ref": "d46f5f268f8ed797e83a5c63a69bffbd7a581cf6",
+      "tag": "v0.2.21"
+    },
+    "fork_v100": {
+      "repo": "jmnargi/Strata-V100",
+      "ref": "49c6cc6fd11291c128a7a62287b50e79d59e247b",
+      "tag": "v0.1.45.13"
+    }
+  },
+  "archived_reference": {
+    "id": "S11X-D2",
+    "raw_id": "d2-20261119T003753",
+    "rerun_historical_id": false,
+    "engine": "0.1.59+stage11x-d2.patch",
+    "image": "strata-v100:stage11x-d2",
+    "image_id": "sha256:26d2bbfe67bc7cb4e489e6f9283e22bb4cd59c6e9659abf3396caa4f1a4f7f38",
+    "engine_sha256": "7f6fc8f7858739d18b177911d32d0d832393274b4ba7797dfd3cf29e634e76a9",
+    "prefill_tok_s_A_B": [1032.6, 1037.0],
+    "decode_tok_s_A_B": [37.1, 41.0],
+    "ttft_s_A_B": [123.21, 122.69]
+  },
+  "safety_contract": {
+    "prefill_flag": "--prefill auto:8192",
+    "max_prefill_chunk": 8192,
+    "prompt_cache": 0,
+    "context": 131072,
+    "kv": "int8",
+    "kv_resident": 32768,
+    "draft": "dflash2",
+    "draft_fallback": "none",
+    "spec": 8,
+    "draft_conf": 0.7,
+    "sm_clock_lock_mhz": [135, 1245],
+    "power_limit_w": 150,
+    "forbidden_flags_or_env": [
+      "--prefill auto:16384",
+      "--prefill auto:32768",
+      "STRATA_NV_CHUNK",
+      "STRATA_ADAPT_LAG",
+      "STRATA_ADAPT_NOWAIT",
+      "STRATA_PF_HC_REGION",
+      "STRATA_AUX_CPUS"
+    ]
+  },
+  "candidates": {
+    "S12-A0": {
+      "gate": "A",
+      "status": "PASS",
+      "receipt": "docs/STAGE12_SOURCE_AUDIT.md"
+    },
+    "S12-A2": {
+      "gate": "A",
+      "status": "PASS",
+      "receipt": "docs/STAGE12_SOURCE_AUDIT.md"
+    },
+    "S12-A1": {
+      "gate": "A",
+      "status": "PENDING"
+    },
+    "S12-U0": {
+      "gate": "B",
+      "engine": "0.1.66",
+      "status": "PENDING"
+    },
+    "S12-U1": {
+      "gate": "B",
+      "engine": "0.1.67",
+      "status": "PENDING"
+    },
+    "S12-R0": {
+      "gate": "B",
+      "condition": "optional_conditional_on_margin",
+      "status": "DEFERRED"
+    },
+    "S12-P0": {
+      "gate": "B",
+      "status": "PENDING"
+    }
+  }
+}
