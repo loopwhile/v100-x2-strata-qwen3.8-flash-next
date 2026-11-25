@@ -209,8 +209,13 @@
       "gate": "C",
       "engine": "0.1.67",
       "patch": "docker/patches/stage12-p1.patch",
+      "patch_sha256": "725065d3b52a68f78783a5c63a69bffbd7a581cf6" ,
+      "tag": "strata-v100:stage12-0.1.67-p1",
+      "image_id": "sha256:0cbf5d14914b0dc2ca7b62686f976937395cc56ee5ffb17eb35a8bcb13927b51",
+      "engine_sha256": "ec05dafc29e93dffaaa97ffdb97ae21c7be6477793492b5db504af26a2b45221",
       "feature": "Volta WMMA2 (ty 18,20,21,22) + half2 dequant + LEAN + SKINNY + GroupedWeightTable",
-      "status": "BUILDING"
+      "build_parity": "22/22 CPU + 15/15 GPU + pf_wmma_parity matrix 4/4 PASS",
+      "status": "BENCHMARKING"
     },
     "S12-D3": {
       "gate": "C",
