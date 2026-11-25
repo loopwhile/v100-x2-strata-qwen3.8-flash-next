@@ -171,8 +171,13 @@
       "gate": "C",
       "engine": "0.1.67",
       "patch": "docker/patches/stage12-d1.patch",
+      "patch_sha256": "b1720aab7268735ed7d6201ee6ef4d4f3289119c02157756500f81d97def2318",
+      "tag": "strata-v100:stage12-0.1.67-d1",
+      "image_id": "sha256:9d5f636459eecd28a846d88fbed7870e9d281194de4d55794623185d203b7a05",
+      "engine_sha256": "d1010753103c9f895bb5797c5c2d2ab519c5de10077ea0ccd7116f5d0e26c078",
       "feature": "PathC7 non-VNNI AVX512BW CPU expert port",
-      "status": "BUILDING"
+      "build_parity": "22/22 CPU + 15/15 GPU + PathC7 W-2135 PASS",
+      "status": "BENCHMARKING"
     },
     "S12-D2": {
       "gate": "C",

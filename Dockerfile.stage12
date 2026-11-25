@@ -15,8 +15,14 @@ RUN git init . && git remote add origin "https://github.com/${STRATA_REPO}.git" 
     && test "$(git rev-parse HEAD)" = "${STRATA_REF}" && git remote remove origin
 COPY docker/patches /opt/strata-patches
 RUN if [ -n "${STAGE12_PATCH}" ]; then \
-      git apply --check "/opt/strata-patches/${STAGE12_PATCH}" && \
-      git apply "/opt/strata-patches/${STAGE12_PATCH}"; \
+      IFS=',' read -ra PATCHES <<< "${STAGE12_PATCH}"; \
+      for p in "${PATCHES[@]}"; do \
+        p="${p// /}"; \
+        if [ -n "$p" ]; then \
+          git apply --check "/opt/strata-patches/$p" && \
+          git apply "/opt/strata-patches/$p"; \
+        fi; \
+      done; \
     fi
 RUN python3 -m venv .venv && .venv/bin/pip install --no-cache-dir \
     -r terminal/requirements.txt -r terminal/requirements-build.txt

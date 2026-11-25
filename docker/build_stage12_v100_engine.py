@@ -120,11 +120,14 @@ def main():
     binary.chmod(0o755)
     assert not (runtime_dir / "libstrata_kq.so").exists(), "MMQ library must not exist"
 
-    patch_name = os.environ.get("STRATA_STAGE12_PATCH", "")
+    patch_name = os.environ.get("STRATA_STAGE12_PATCH", "").strip()
     patch_sha = None
     if patch_name:
-        p = Path("/opt/strata-patches") / patch_name
-        patch_sha = hashlib.sha256(p.read_bytes()).hexdigest()
+        h = hashlib.sha256()
+        for item in [x.strip() for x in patch_name.split(",") if x.strip()]:
+            p = Path("/opt/strata-patches") / item
+            h.update(p.read_bytes())
+        patch_sha = h.hexdigest()
 
     metadata = {
         "source": "local",
