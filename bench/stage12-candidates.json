@@ -177,7 +177,15 @@
       "engine_sha256": "d1010753103c9f895bb5797c5c2d2ab519c5de10077ea0ccd7116f5d0e26c078",
       "feature": "PathC7 non-VNNI AVX512BW CPU expert port",
       "build_parity": "22/22 CPU + 15/15 GPU + PathC7 W-2135 PASS",
-      "status": "BENCHMARKING"
+      "status": "PASS",
+      "smoke_id": "d1smoke-20261125T174823",
+      "raw_id": "d1-20261125T174920",
+      "prefill_tok_s_A_B": [865.0, 879.7],
+      "decode_tok_s_A_B": [23.0, 27.0],
+      "ttft_s_A_B": [147.16, 144.66],
+      "batch3_warm_prefill_decode_A_B": [953.4, 952.8, 24.6, 28.3],
+      "report": "artifacts/stage12-results-20261125/d1-20261125T174920/report.md",
+      "note": "Post-docker-build cold page cache evicted shard 1 in b1/b2 (16/47 GB OS read); b3 reached 24.6/28.3 decode"
     },
     "S12-D2": {
       "gate": "C",
