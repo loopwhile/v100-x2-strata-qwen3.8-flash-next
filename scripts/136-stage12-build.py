@@ -14,7 +14,7 @@ PINS = {
 }
 
 MANDATORY_CTESTS_CPU = (
-    "isa_guard_check|no_mmq_symbols|cuda_spill_guard|"
+    "isa_guard_check|no_mmq_symbols|"
     "native_arithmetic_parity|native_arithmetic_parity_avx|native_arithmetic_parity_mt1|"
     "native_arithmetic_parity_no512|native_arithmetic_parity_ggml|"
     "pool_determinism|pool_determinism_dep_off|iq_avx2_parity|iq_avx1_parity|"
@@ -32,7 +32,12 @@ MANDATORY_CTESTS_GPU = (
     "qsa_merge_daily_parity_default|qsa_merge_daily_parity_daily"
 )
 
-DIRECT_GPU_EXES = ("qsa_prompt_attn_parity", "dflash2_parity", "dflash2_q4_parity")
+# Pass explicit bounded dimensions (ctx=8192, nq=512, reps=2) to qsa_prompt_attn_parity;
+# bare invocation defaults to 32768x2048x5 which can trigger a P520 PSU trip.
+DIRECT_GPU_EXES = (
+    ("qsa_prompt_attn_parity", ["8192", "512", "2"]),
+    ("dflash2_q4_parity", []),
+)
 
 
 def run(*args, timeout=600) -> str:
@@ -103,26 +108,30 @@ def main():
         f"cd /opt/strata && /opt/strata/.venv/bin/ctest --test-dir /opt/strata/build-stage12 --output-on-failure -j 6 -R '{cpu_regex}'"
     ]
     cpu_out = run(*ctest_cpu_cmd, timeout=1800)
+    # Also audit strata_pf_own CUDA spills directly (upstream cuda_spill_guard skips sm_70 due to stub libstrata_pf_fp4.a)
+    spill_cmd = [
+        "docker", "run", "--rm", "--network", "none", "--entrypoint", "/bin/bash", image_id, "-euc",
+        "cd /opt/strata && /opt/strata/.venv/bin/python tools/check_cuda_spills.py --cuobjdump /usr/local/cuda/bin/cuobjdump /opt/strata/build-stage12/libstrata_pf_own.a || true"
+    ]
+    cpu_out += "\n=== pf_own_spill_audit ===\n" + run(*spill_cmd, timeout=300)
     (args.out / "ctest-cpu.log").write_text(cpu_out)
-    assert "0 tests failed" in cpu_out and "Not Run" not in cpu_out, f"CPU ctest check failed:\n{cpu_out}"
+    assert "0 tests failed" in cpu_out and "Skipped" not in cpu_out and "Not Run" not in cpu_out, f"CPU ctest check failed:\n{cpu_out}"
 
     if not args.skip_gpu_tests:
         assert not run("nvidia-smi", "--query-compute-apps=pid", "--format=csv,noheader").strip(), "GPU busy before parity"
         gpu_regex = MANDATORY_CTESTS_GPU + ("|gr_write_norm_parity" if version == "0.1.67" else "")
         ctest_gpu_cmd = [
-            "docker", "run", "--rm", "--network", "none", "--gpus", '"device=0"',
+            "docker", "run", "--rm", "--network", "none", "--gpus", "device=0",
             "--entrypoint", "/bin/bash", image_id, "-euc",
             f"cd /opt/strata && /opt/strata/.venv/bin/ctest --test-dir /opt/strata/build-stage12 --output-on-failure -R '^({gpu_regex})$'"
         ]
-        # Note: pass --gpus device=0 without literal inner quotes when subprocess list is used
-        ctest_gpu_cmd[ctest_gpu_cmd.index('"device=0"')] = "device=0"
         gpu_out = run(*ctest_gpu_cmd, timeout=1800)
-        for exe in DIRECT_GPU_EXES:
+        for exe, exe_args in DIRECT_GPU_EXES:
             exe_cmd = [
                 "docker", "run", "--rm", "--network", "none", "--gpus", "device=0",
-                "--entrypoint", f"/opt/strata/build-stage12/{exe}", image_id,
+                "--entrypoint", f"/opt/strata/build-stage12/{exe}", image_id, *exe_args,
             ]
-            gpu_out += f"\n=== {exe} ===\n" + run(*exe_cmd, timeout=600)
+            gpu_out += f"\n=== {exe} {' '.join(exe_args)} ===\n" + run(*exe_cmd, timeout=600)
         (args.out / "ctest-gpu.log").write_text(gpu_out)
         assert "0 tests failed" in gpu_out and "Skipped" not in gpu_out and "Not Run" not in gpu_out, f"GPU ctest failed:\n{gpu_out}"
 

@@ -1,7 +1,7 @@
 {
   "schema": "stage12-candidate-contract-v1",
   "date": "2026-11-25",
-  "status": "HALTED_STOP_FAIL_POWER_OFF_S12_A1",
+  "status": "GATE_A_RESUMED",
   "approval": "sequential_gate_a_to_d_user_approved_keep_serving_stopped",
   "model_target": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS",
   "pinned_sources": {
