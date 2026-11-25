@@ -229,8 +229,13 @@
       "gate": "C",
       "engine": "0.1.67",
       "patch": "docker/patches/stage12-d3.patch",
+      "patch_sha256": "151b96081634c2bd5aded8dea4a518f36d42adc4661f385a7260c4f0ac32bc54",
+      "tag": "strata-v100:stage12-0.1.67-d3",
+      "image_id": "sha256:5693cd7d5fb460a2d164a8f22f4a0a5b9fd2c2063cdd028e88a1439bd3e3a2ea",
+      "engine_sha256": "b29f813299b91a179716f15e73b71c5b1e4cfd1fa9060014b2aa09596795dba0",
       "feature": "STRATA_HC_V100=1 (sm_70 K-split down + fused HC read T<=6)",
-      "status": "BUILDING"
+      "build_parity": "22/22 CPU + 15/15 GPU + gr_parity/gr_multi_parity PASS + hc_graph_bench 1.98x-2.13x",
+      "status": "BENCHMARKING"
     }
   }
 }
