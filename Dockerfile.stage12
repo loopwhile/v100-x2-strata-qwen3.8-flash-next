@@ -15,9 +15,7 @@ RUN git init . && git remote add origin "https://github.com/${STRATA_REPO}.git" 
     && test "$(git rev-parse HEAD)" = "${STRATA_REF}" && git remote remove origin
 COPY docker/patches /opt/strata-patches
 RUN if [ -n "${STAGE12_PATCH}" ]; then \
-      IFS=',' read -ra PATCHES <<< "${STAGE12_PATCH}"; \
-      for p in "${PATCHES[@]}"; do \
-        p="${p// /}"; \
+      for p in $(printf '%s' "${STAGE12_PATCH}" | tr ',' ' '); do \
         if [ -n "$p" ]; then \
           git apply --check "/opt/strata-patches/$p" && \
           git apply "/opt/strata-patches/$p"; \
