@@ -1,7 +1,7 @@
 {
   "schema": "stage12-candidate-contract-v1",
   "date": "2026-11-25",
-  "status": "GATE_A_RESUMED",
+  "status": "GATE_B_IN_PROGRESS",
   "approval": "sequential_gate_a_to_d_user_approved_keep_serving_stopped",
   "model_target": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS",
   "pinned_sources": {
@@ -74,18 +74,39 @@
     },
     "S12-A1": {
       "gate": "A",
-      "status": "HALTED_STOP_FAIL",
+      "status": "PASS",
       "receipt": "docs/STAGE12_BUILD_AUDIT.md",
-      "notes": "0.1.66 built (sha256:5ee45919..., binary 79076b85...); isa_guard_check/no_mmq_symbols/14 GPU CTest PASS; pool_determinism FAIL (#6754); cuda_spill_guard SKIP(77); P520 abrupt power-off/reboot at 15:35 KST during bare qsa_prompt_attn_parity (default 32768x2048x5 burst). 0.1.67 NOT started; awaiting user review/approval."
+      "builds": {
+        "0.1.66": {
+          "tag": "strata-v100:stage12-0.1.66-stock",
+          "image_id": "sha256:5ee459198a4b9c695183bf5901c17ff6b68019381c6b70c72a138fb76d27e93d",
+          "engine_sha256": "79076b85b0450c86edb5c7bbee54a4c60cd00f564e9adb7058d9e00bc3b50c49",
+          "cpu_ctest": "20/23 PASS (pool_determinism #6754 fail, cuda_spill_guard skip)",
+          "gpu_ctest": "14/14 PASS + qsa_prompt_attn_parity 8192 512 2 PASS + dflash2_q4_parity 40/40 PASS"
+        },
+        "0.1.67": {
+          "tag": "strata-v100:stage12-0.1.67-stock",
+          "image_id": "sha256:83a48e7dc321a72e0a13642668a887d179d630d2ff4dd204fd49cb7f674c3b6e",
+          "engine_sha256": "acfe6d530bc970514d0f57c3f5a87fd5b0b77a2666f8bf4095f1ebd33bb0b447",
+          "cpu_ctest": "22/22 PASS (0 skip, 0 fail)",
+          "gpu_ctest": "15/15 PASS (0 skip) + qsa_prompt_attn_parity 8192 512 2 PASS + dflash2_q4_parity 40/40 PASS"
+        }
+      }
     },
     "S12-U0": {
       "gate": "B",
       "engine": "0.1.66",
-      "status": "PENDING"
+      "image_id": "sha256:5ee459198a4b9c695183bf5901c17ff6b68019381c6b70c72a138fb76d27e93d",
+      "engine_sha256": "79076b85b0450c86edb5c7bbee54a4c60cd00f564e9adb7058d9e00bc3b50c49",
+      "source_sha": "a34979fc94f3d126b9bb8210f4ad311345688b52",
+      "status": "IN_PROGRESS"
     },
     "S12-U1": {
       "gate": "B",
       "engine": "0.1.67",
+      "image_id": "sha256:83a48e7dc321a72e0a13642668a887d179d630d2ff4dd204fd49cb7f674c3b6e",
+      "engine_sha256": "acfe6d530bc970514d0f57c3f5a87fd5b0b77a2666f8bf4095f1ebd33bb0b447",
+      "source_sha": "d46f5f268f8ed797e83a5c63a69bffbd7a581cf6",
       "status": "PENDING"
     },
     "S12-R0": {

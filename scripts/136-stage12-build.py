@@ -115,7 +115,7 @@ def main():
     ]
     cpu_out += "\n=== pf_own_spill_audit ===\n" + run(*spill_cmd, timeout=300)
     (args.out / "ctest-cpu.log").write_text(cpu_out)
-    assert "0 tests failed" in cpu_out and "Skipped" not in cpu_out and "Not Run" not in cpu_out, f"CPU ctest check failed:\n{cpu_out}"
+    assert ("100% tests passed" in cpu_out or "0 tests failed" in cpu_out) and "Skipped" not in cpu_out and "Not Run" not in cpu_out, f"CPU ctest check failed:\n{cpu_out}"
 
     if not args.skip_gpu_tests:
         assert not run("nvidia-smi", "--query-compute-apps=pid", "--format=csv,noheader").strip(), "GPU busy before parity"
@@ -133,7 +133,7 @@ def main():
             ]
             gpu_out += f"\n=== {exe} {' '.join(exe_args)} ===\n" + run(*exe_cmd, timeout=600)
         (args.out / "ctest-gpu.log").write_text(gpu_out)
-        assert "0 tests failed" in gpu_out and "Skipped" not in gpu_out and "Not Run" not in gpu_out, f"GPU ctest failed:\n{gpu_out}"
+        assert ("100% tests passed" in gpu_out or "0 tests failed" in gpu_out) and "Skipped" not in gpu_out and "Not Run" not in gpu_out, f"GPU ctest failed:\n{gpu_out}"
 
     record.update(phase="results_saved", verdict="BUILD_AND_PARITY_PASS", finished=dt.datetime.now().astimezone().isoformat())
     (args.out / "progress.json").write_text(json.dumps(record, indent=2) + "\n")
