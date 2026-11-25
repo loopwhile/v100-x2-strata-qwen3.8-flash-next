@@ -249,8 +249,13 @@
       "gate": "D",
       "engine": "0.1.67",
       "patch": "docker/patches/stage12-d1.patch,docker/patches/stage12-d2.patch,docker/patches/stage12-d3.patch",
+      "patch_sha256": "20860adc0faacaeacd58387fd5fca3154bad84a6278a31142b75cef7a7a3f96a",
+      "tag": "strata-v100:stage12-0.1.67-c1",
+      "image_id": "sha256:33b61b0432e81c44a6d212ca38be46b4191a989a65c4a0141e2cbc9b116f10ec",
+      "engine_sha256": "c01770d00bd49985f008e39d722b996f0ad476545c8bd50bb96ad8a66ed52dda",
       "feature": "Combined Gate C winners: PathC7 + MmapBounceRing + COLD_OVERLAP=5 + HC_V100=1 + OOMD_ROOM=0 + SELECT_SIMT/ATTN_DAILY/GR_UP75/FUSE_WAIT",
-      "status": "BUILDING"
+      "build_parity": "22/22 CPU + 15/15 GPU + PathC7 + gr_parity PASS",
+      "status": "BENCHMARKING"
     }
   }
 }
