@@ -255,7 +255,25 @@
       "engine_sha256": "c01770d00bd49985f008e39d722b996f0ad476545c8bd50bb96ad8a66ed52dda",
       "feature": "Combined Gate C winners: PathC7 + MmapBounceRing + COLD_OVERLAP=5 + HC_V100=1 + OOMD_ROOM=0 + SELECT_SIMT/ATTN_DAILY/GR_UP75/FUSE_WAIT",
       "build_parity": "22/22 CPU + 15/15 GPU + PathC7 + gr_parity PASS",
-      "status": "BENCHMARKING"
+      "status": "PASS",
+      "smoke_id": "c1smoke-20261125T202644",
+      "raw_id": "c1-20261125T202739",
+      "prefill_tok_s_A_B": [965.9, 970.6],
+      "decode_tok_s_A_B": [30.8, 34.7],
+      "ttft_s_A_B": [131.73, 131.09],
+      "batch3_warm_prefill_decode_A_B": [1021.1, 1029.3, 31.7, 34.7],
+      "report": "artifacts/stage12-results-20261125/c1-20261125T202739/report.md",
+      "note": "Both agents crossed 30 tok/s simultaneously with exact routing (ROUTE_TAIL_SKIP=0); page cache still warming from b1->b3 (10.8->6.1 GB OS read)"
+    },
+    "S12-F1": {
+      "gate": "D",
+      "engine": "0.1.67",
+      "patch": "docker/patches/stage12-d1.patch,docker/patches/stage12-d2.patch,docker/patches/stage12-d3.patch",
+      "tag": "strata-v100:stage12-0.1.67-c1",
+      "image_id": "sha256:33b61b0432e81c44a6d212ca38be46b4191a989a65c4a0141e2cbc9b116f10ec",
+      "engine_sha256": "c01770d00bd49985f008e39d722b996f0ad476545c8bd50bb96ad8a66ed52dda",
+      "feature": "Final validation on warm S12-C1 image (ROUTE_TAIL_SKIP=0 exact routing) + semantic quality suite",
+      "status": "IN_PROGRESS"
     }
   }
 }
