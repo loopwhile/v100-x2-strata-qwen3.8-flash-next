@@ -1,0 +1,177 @@
+{
+  "id": "p1smoke-20261125T190817",
+  "arm": "S12-P1",
+  "progress": {
+    "id": "p1smoke-20261125T190817",
+    "arm": "S12-P1",
+    "mode": "smoke1",
+    "phase": "results_saved",
+    "verdict": "PASS",
+    "host": "p520-llm",
+    "boot_id": "a182c39f-45df-4915-8688-fa33ff83eb03",
+    "started": "2026-11-25T19:08:18.742673+09:00",
+    "image_id": "sha256:0cbf5d14914b0dc2ca7b62686f976937395cc56ee5ffb17eb35a8bcb13927b51",
+    "source_sha": "d46f5f268f8ed797e83a5c63a69bffbd7a581cf6",
+    "engine_sha256": "ec05dafc29e93dffaaa97ffdb97ae21c7be6477793492b5db504af26a2b45221",
+    "runner_sha256": "1053fbdad5ffae2df9e34b6747138cad8fa0040e19b59e199e8a81c5530fdc26",
+    "overrides": {
+      "STRATA_OOMD_ROOM": "0",
+      "STRATA_PF_WMMA": "1",
+      "STRATA_PF_WMMA2": "1",
+      "STRATA_PF_WMMA_LEAN": "1",
+      "STRATA_PF_WMMA_SKINNY": "1"
+    },
+    "extra_args": [],
+    "spec": 8,
+    "draft_conf": 0.7,
+    "prefill": "auto:8192",
+    "sm_clock_ceiling_mhz": 1245,
+    "batches": [
+      {
+        "id": "p1smoke-20261125T190817-smoke1",
+        "phase": "validated",
+        "started": "2026-11-25T19:08:18.948708+09:00",
+        "scored": false,
+        "verdict": "SMOKE_PASS_NOT_C2",
+        "finished": "2026-11-25T19:08:44.006307+09:00"
+      }
+    ],
+    "finished": "2026-11-25T19:08:47.353751+09:00"
+  },
+  "medians": {},
+  "rows": [
+    {
+      "phase": {
+        "id": "p1smoke-20261125T190817-smoke1",
+        "phase": "validated",
+        "started": "2026-11-25T19:08:18.948708+09:00",
+        "scored": false,
+        "verdict": "SMOKE_PASS_NOT_C2",
+        "finished": "2026-11-25T19:08:44.006307+09:00"
+      },
+      "gpu_full_lifetime": {
+        "a": {
+          "temperature_c": {
+            "mean": 37.629629629629626,
+            "min": 35.0,
+            "peak": 39.0
+          },
+          "power_w": {
+            "mean": 40.504074074074076,
+            "min": 26.02,
+            "peak": 49.84
+          },
+          "util_pct": {
+            "mean": 44.148148148148145,
+            "min": 0.0,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 10346.185185185184,
+            "min": 0.0,
+            "peak": 15379.0
+          },
+          "sm_mhz": {
+            "mean": 1080.5555555555557,
+            "min": 135.0,
+            "peak": 1245.0
+          }
+        },
+        "b": {
+          "temperature_c": {
+            "mean": 38.0,
+            "min": 38.0,
+            "peak": 38.0
+          },
+          "power_w": {
+            "mean": 25.488518518518518,
+            "min": 25.06,
+            "peak": 25.56
+          },
+          "util_pct": {
+            "mean": 0.0,
+            "min": 0.0,
+            "peak": 0.0
+          },
+          "vram_mib": {
+            "mean": 0.0,
+            "min": 0.0,
+            "peak": 0.0
+          },
+          "sm_mhz": {
+            "mean": 135.0,
+            "min": 135.0,
+            "peak": 135.0
+          }
+        }
+      },
+      "request_metrics": {
+        "a": {
+          "id": "4be6983ff6e3",
+          "projection": null,
+          "time": 1795601314.877874,
+          "duration_s": 9.1,
+          "finish": "stop",
+          "gen": 1,
+          "prompt_tokens": 26,
+          "reused": 0,
+          "output_tokens": 111,
+          "first_engine_token_s": 2.282,
+          "prompt_total": 26,
+          "prompt_read": 26,
+          "reasoning_recoveries": 0,
+          "reasoning_repeat_coverage": 0.0,
+          "engine_generated": 111,
+          "prompt_ms": 2204.4,
+          "decode_ms": 6865.2,
+          "decode_tok_s": 16.2,
+          "hit_rate": 0.491,
+          "pcie_share": 0.0,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "file_mb": 30085.6,
+          "drafts_offered": 97,
+          "drafts_accepted": 96
+        }
+      },
+      "engine_request_records": {
+        "a": [
+          {
+            "prompt_tokens": 26,
+            "reused": 0,
+            "read_tokens": 26,
+            "prompt_ms": 2204.0,
+            "generated": 111,
+            "decode_ms": 6865.0,
+            "physical_read_mb": 5454.7,
+            "kv_vram_hit_pct": 98.55
+          }
+        ],
+        "b": []
+      },
+      "timing": {
+        "a": [
+          "strata prefill: warmed the BF16 and FP16 GEMM libraries on GPU 0 in 890 ms (STRATA_PREFILL_WARM=0 skips)",
+          "strata verify: window up to 8 tokens, 81.8 MiB of device buffers",
+          "strata verify: capturing the 1-token window (915 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 15.3 ms",
+          "strata verify: capturing the 2-token window (897 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 30.3 ms",
+          "strata verify: capturing the 3-token window (879 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 23.3 ms",
+          "strata verify: capturing the 4-token window (857 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 19.0 ms",
+          "strata verify: capturing the 5-token window (839 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 19.0 ms",
+          "strata verify: capturing the 6-token window (821 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 19.2 ms",
+          "strata verify: capturing the 7-token window (803 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 21.4 ms",
+          "strata verify: capturing the 8-token window (783 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 19.3 ms"
+        ],
+        "b": []
+      }
+    }
+  ]
+}
