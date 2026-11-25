@@ -5,7 +5,8 @@
 - The user promoted **`S12-C1T`** (`c1t-20261125T205904`, `Prefill 1039.4 / 1046.8 tok/s`,
   `Decode 41.3 / 45.2 tok/s`, semantic quality `4/4 A & 4/4 B`) on 2026-11-25 to the live
   operating pair: containers and API model IDs **`p520-llm-a` / `p520-llm-b`** (release
-  `s12-c1t-20261125T221034`, deployed and verified running). See
+  `s12-c1t-20261125T230758`, verified live with DFlash2 bind-mounted directly from
+  `/srv/models/strata-data/dflash2` -> `/stage10-data/dflash2`, and stopped cleanly at rest). See
   [operating guide](docs/P520_SERVING.md),
   [deployment verification](artifacts/p520-serving-20261125/summary.md),
   [Stage 12 final review](docs/STAGE12_FINAL_REVIEW.md), and `scripts/127-p520-serving.py`.

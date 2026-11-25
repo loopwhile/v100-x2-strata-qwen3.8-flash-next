@@ -2,14 +2,15 @@
 
 The user initially selected **S10-D4** on 2026-11-11 (`s10-d4-20261111T012331`),
 promoted `S11X-D2` on 2026-11-19 (`s11x-d2-20261119T095616`), and promoted
-**`S12-C1T`** on 2026-11-25 (`s12-c1t-20261125T221034`): pinned Strata `0.1.67`
+**`S12-C1T`** on 2026-11-25 (`s12-c1t-20261125T230758`, migrating DFlash2 bind-mount
+to `/srv/models/strata-data/dflash2`): pinned Strata `0.1.67`
 patched with [stage12-d1.patch](../docker/patches/stage12-d1.patch),
 [stage12-d2.patch](../docker/patches/stage12-d2.patch), and
 [stage12-d3.patch](../docker/patches/stage12-d3.patch), IQ3_XXS, stock DFlash2,
 `--spec 8 --draft-conf 0.7 --prefill auto:8192`.
 The operating names and API model IDs are independent of the engine version.
-Both promoted servers are deployed, verified live, and running from release
-`s12-c1t-20261125T221034`; see
+Both promoted servers are deployed, verified live from release
+`s12-c1t-20261125T230758`, and stopped cleanly (`Exited (0)`) at rest per user request; see
 [2026-11-25 deployment verification](../artifacts/p520-serving-20261125/summary.md)
 (prior 2026-11-19 `S11X-D2` and 2026-11-11 `S10-D4` deployment notes are preserved in
 [2026-11-19 summary](../artifacts/p520-serving-20261119/summary.md) and
@@ -97,7 +98,7 @@ The 14 verified `S12-C1T` environment overrides are:
 - Mmap bounce ring & overlap: `STRATA_MMAP_ADAPT_ASYNC=1`, `STRATA_COLD_OVERLAP=5`
 - Volta GPU & sync/routing parity: `STRATA_HC_V100=1`, `STRATA_SELECT_SIMT=1`, `STRATA_ATTN_DAILY=1`, `STRATA_GR_UP75=1`, `STRATA_FUSE_WAIT=2`, `STRATA_ROUTE_TAIL_SKIP=7`
 
-Disallowed / rejected overrides (`STRATA_ADAPT_LAG`, `STRATA_ADAPT_NOWAIT`, `STRATA_PF_HC_REGION`, `STRATA_AUX_CPUS`, `STRATA_PF_WMMA`, `STRATA_PF_WMMA2`) remain absent. DFlash2 is active without an MTP drafter or fallback; the original shared MTP mount remains available for the draft vocabulary.
+Disallowed / rejected overrides (`STRATA_ADAPT_LAG`, `STRATA_ADAPT_NOWAIT`, `STRATA_PF_HC_REGION`, `STRATA_AUX_CPUS`, `STRATA_PF_WMMA`, `STRATA_PF_WMMA2`) remain absent. DFlash2 is active without an MTP drafter or fallback and is bind-mounted read-only directly from `/srv/models/strata-data/dflash2` to `/stage10-data/dflash2`; the original shared MTP mount (`/srv/models/strata-data/mtp`) remains available for the draft vocabulary, and the historical `results/stage10-preparation/draft-data/dflash2` directory remains untouched for the preserved `S11X-D2` and `S10-D4` rollback archives.
 
 Preserved rollback releases:
 - Prior `S11X-D2` (`s11x-d2-20261119T095616`, containers `p520-llm-{a,b}-archive-s11x-d2-20261119T095616`):

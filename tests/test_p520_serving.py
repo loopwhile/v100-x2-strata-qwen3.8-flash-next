@@ -2,6 +2,7 @@
 import importlib.util
 import json
 from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -39,6 +40,8 @@ class PreservationTests(unittest.TestCase):
 
     def test_s12_c1t_promoted_contract(self):
         self.assertEqual(serving.RECIPE, "S12-C1T")
+        self.assertEqual(serving.DRAFT_DIR, Path("/srv/models/strata-data/dflash2"))
+        self.assertNotIn("results/stage10-preparation", str(serving.DRAFT_DIR))
         self.assertEqual(serving.ENV["STRATA_OOMD_ROOM"], "0")
         self.assertEqual(serving.ENV["STRATA_MMAP_ADAPT_ASYNC"], "1")
         self.assertEqual(serving.ENV["STRATA_COLD_OVERLAP"], "5")
@@ -47,6 +50,36 @@ class PreservationTests(unittest.TestCase):
         self.assertEqual(serving.ENV["STRATA_ROUTE_TAIL_SKIP"], "7")
         for forbidden in ("STRATA_AUX_CPUS", "STRATA_ADAPT_LAG", "STRATA_PF_WMMA2"):
             self.assertNotIn(forbidden, serving.ENV)
+
+    def test_non_canonical_draft_dir_in_manifest_blocks_install(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            rel = root / "releases/s12-c1t-test"
+            rel.mkdir(parents=True)
+            (rel / "release.json").write_text(json.dumps({
+                "image": serving.IMAGE,
+                "draft_dir": "/home/loopwhile/v100-x2-strata-qwen3.8-flash-next/results/stage10-preparation/draft-data/dflash2",
+                "configs": {},
+            }))
+            (rel / "commands.json").write_text(json.dumps({}))
+            with patch.object(serving, "SERVING_ROOT", root), \
+                 patch.object(serving, "preflight"), \
+                 patch.object(serving, "run", return_value=""):
+                with self.assertRaisesRegex(AssertionError, "Unexpected draft_dir"):
+                    serving.install(rel)
+
+    def test_check_rejects_legacy_dflash2_mount(self):
+        legacy_item = {
+            "State": {"Running": True},
+            "Mounts": [{
+                "Destination": "/stage10-data/dflash2",
+                "Source": "/home/loopwhile/v100-x2-strata-qwen3.8-flash-next/results/stage10-preparation/draft-data/dflash2",
+                "RW": False,
+            }],
+        }
+        with patch.object(serving, "identity", return_value=legacy_item):
+            with self.assertRaisesRegex(AssertionError, "Unexpected DFlash2 mount"):
+                serving.check()
 
 
 if __name__ == "__main__":

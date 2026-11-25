@@ -15,6 +15,7 @@ IMAGE = "sha256:33b61b0432e81c44a6d212ca38be46b4191a989a65c4a0141e2cbc9b116f10ec
 ENGINE_SHA = "c01770d00bd49985f008e39d722b996f0ad476545c8bd50bb96ad8a66ed52dda"
 PACK_NAME = "qwen3.8-flash-next-dflash2.q4_0-selq4.pack"
 PACK_SHA = "4a42b98220ea7880664002c8edda1563aecbae754b762a2e2f31b2b91ee93ecd"
+DRAFT_DIR = Path("/srv/models/strata-data/dflash2")
 ENV = {
     "STRATA_OOMD_ROOM": "0",
     "STRATA_AVX512BW_IQ": "22",
@@ -104,8 +105,7 @@ def preflight(allow_owned=False):
 def prepare():
     before = preflight()
     assert run("docker", "image", "inspect", IMAGE, "--format", "{{.Id}}") == IMAGE
-    draft_dir = ROOT / "results/stage10-preparation/draft-data/dflash2"
-    assert sha(draft_dir / PACK_NAME) == PACK_SHA
+    assert sha(DRAFT_DIR / PACK_NAME) == PACK_SHA
     release = SERVING_ROOT / "releases" / ("s12-c1t-" + dt.datetime.now().strftime("%Y%m%dT%H%M%S"))
     release.mkdir(parents=True, exist_ok=False)
     (release / "logs").mkdir()
@@ -134,7 +134,7 @@ def prepare():
         for source, target, mode in [
             ("/srv/models/strata-iq3xxs", "/iq3xxs", "ro"),
             ("/srv/models/strata-data/mtp", "/shared-mtp", "ro"),
-            (draft_dir, "/stage10-data/dflash2", "ro"),
+            (DRAFT_DIR, "/stage10-data/dflash2", "ro"),
             ("/srv/models/strata-iq3xxs/pack/iq3_xxs-native", "/stage10-data/packs/iq3_xxs-native", "ro"),
             (release / "logs", "/trial-logs", "rw"),
             (release / f"agent-{s}.json", "/opt/strata/config.json", "ro")
@@ -149,7 +149,8 @@ def prepare():
         commands[s] = cmd
     save(release / "commands.json", commands)
     save(release / "release.json", {"recipe": RECIPE, "image": IMAGE,
-         "engine_sha256": ENGINE_SHA, "draft_sha256": PACK_SHA,
+         "engine_sha256": ENGINE_SHA, "draft_dir": str(DRAFT_DIR),
+         "draft_sha256": PACK_SHA,
          "configs": {s: sha(release / f"agent-{s}.json") for s in "ab"}})
     (release / "rollback.txt").write_text(
         "Stop S12-C1T serving:\n"
@@ -172,6 +173,7 @@ def install(release):
     manifest = json.loads((release / "release.json").read_text())
     commands = json.loads((release / "commands.json").read_text())
     assert manifest["image"] == IMAGE
+    assert manifest.get("draft_dir") == str(DRAFT_DIR), f"Unexpected draft_dir: {manifest.get('draft_dir')}"
     for s in "ab":
         assert sha(release / f"agent-{s}.json") == manifest["configs"][s]
         assert commands[s][:6] == ["docker", "create", "--pull", "never", "--name", name(s)]
@@ -191,6 +193,11 @@ def check():
     for s in "ab":
         item = identity(s)
         assert item["State"]["Running"], f"{name(s)} is stopped"
+        mounts = {m["Destination"]: m for m in item.get("Mounts", [])}
+        draft_mount = mounts.get("/stage10-data/dflash2", {})
+        assert draft_mount.get("Source") == str(DRAFT_DIR) and draft_mount.get("RW") is False, (
+            f"Unexpected DFlash2 mount: {draft_mount}"
+        )
         health, models = api(s, "health"), api(s, "v1/models")
         assert health.get("status") == "ok" and health.get("loaded")
         assert health.get("model") == canonical(s) and health.get("max_context") == 131072
