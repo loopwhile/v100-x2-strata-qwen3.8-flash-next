@@ -1,0 +1,71 @@
+{
+  "agent_a": {
+    "url": "http://127.0.0.1:18086",
+    "model": "qwen3.8_flash_next_iq3_xxs_s12_f1_20261125T204131_batch_3_a",
+    "passed": 4,
+    "total": 4,
+    "all_pass": true,
+    "checks": [
+      {
+        "test": "long_context_anchor_recall",
+        "pass": true,
+        "garble": "ok",
+        "output": "VOLTA-7913, TITAN-4428, STRATA-9051"
+      },
+      {
+        "test": "coding_exec_merge_intervals",
+        "pass": true,
+        "garble": "ok",
+        "err": ""
+      },
+      {
+        "test": "json_schema_parse",
+        "pass": true,
+        "detail": "ok",
+        "output": "{\"gpu_count\": 2, \"arch\": \"sm_70\", \"kv_type\": \"int8\", \"tags\": [\"v100\", \"dflash2\"]}"
+      },
+      {
+        "test": "determinism_and_stop",
+        "pass": true,
+        "hash_a": "f862070e4723",
+        "hash_b": "f862070e4723",
+        "finish_reason": "stop"
+      }
+    ]
+  },
+  "agent_b": {
+    "url": "http://127.0.0.1:18087",
+    "model": "qwen3.8_flash_next_iq3_xxs_s12_f1_20261125T204131_batch_3_b",
+    "passed": 4,
+    "total": 4,
+    "all_pass": true,
+    "checks": [
+      {
+        "test": "long_context_anchor_recall",
+        "pass": true,
+        "garble": "ok",
+        "output": "VOLTA-7913, TITAN-4428, STRATA-9051"
+      },
+      {
+        "test": "coding_exec_merge_intervals",
+        "pass": true,
+        "garble": "ok",
+        "err": ""
+      },
+      {
+        "test": "json_schema_parse",
+        "pass": true,
+        "detail": "ok",
+        "output": "{\"gpu_count\": 2, \"arch\": \"sm_70\", \"kv_type\": \"int8\", \"tags\": [\"v100\", \"dflash2\"]}"
+      },
+      {
+        "test": "determinism_and_stop",
+        "pass": true,
+        "hash_a": "f862070e4723",
+        "hash_b": "f862070e4723",
+        "finish_reason": "stop"
+      }
+    ]
+  },
+  "all_pass": true
+}

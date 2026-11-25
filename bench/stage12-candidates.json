@@ -273,6 +273,23 @@
       "image_id": "sha256:33b61b0432e81c44a6d212ca38be46b4191a989a65c4a0141e2cbc9b116f10ec",
       "engine_sha256": "c01770d00bd49985f008e39d722b996f0ad476545c8bd50bb96ad8a66ed52dda",
       "feature": "Final validation on warm S12-C1 image (ROUTE_TAIL_SKIP=0 exact routing) + semantic quality suite",
+      "status": "PASS",
+      "raw_id": "f1-20261125T204131",
+      "prefill_tok_s_A_B": [1032.7, 1043.2],
+      "decode_tok_s_A_B": [31.6, 35.9],
+      "ttft_s_A_B": [123.21, 121.97],
+      "quality_suite": "PASS (4/4 A & 4/4 B)",
+      "restart_check": "PASS",
+      "report": "artifacts/stage12-results-20261125/f1-20261125T204131/report.md"
+    },
+    "S12-C1T": {
+      "gate": "D",
+      "engine": "0.1.67",
+      "patch": "docker/patches/stage12-d1.patch,docker/patches/stage12-d2.patch,docker/patches/stage12-d3.patch",
+      "tag": "strata-v100:stage12-0.1.67-c1",
+      "image_id": "sha256:33b61b0432e81c44a6d212ca38be46b4191a989a65c4a0141e2cbc9b116f10ec",
+      "engine_sha256": "c01770d00bd49985f008e39d722b996f0ad476545c8bd50bb96ad8a66ed52dda",
+      "feature": "Controlled same-route comparison vs S11X-D2 (adds STRATA_ROUTE_TAIL_SKIP=7 to S12-C1; NOT promoted without explicit approval)",
       "status": "IN_PROGRESS"
     }
   }
