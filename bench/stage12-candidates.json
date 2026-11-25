@@ -1,7 +1,7 @@
 {
   "schema": "stage12-candidate-contract-v1",
   "date": "2026-11-25",
-  "status": "GATE_A_IN_PROGRESS",
+  "status": "HALTED_STOP_FAIL_POWER_OFF_S12_A1",
   "approval": "sequential_gate_a_to_d_user_approved_keep_serving_stopped",
   "model_target": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS",
   "pinned_sources": {
@@ -74,7 +74,9 @@
     },
     "S12-A1": {
       "gate": "A",
-      "status": "PENDING"
+      "status": "HALTED_STOP_FAIL",
+      "receipt": "docs/STAGE12_BUILD_AUDIT.md",
+      "notes": "0.1.66 built (sha256:5ee45919..., binary 79076b85...); isa_guard_check/no_mmq_symbols/14 GPU CTest PASS; pool_determinism FAIL (#6754); cuda_spill_guard SKIP(77); P520 abrupt power-off/reboot at 15:35 KST during bare qsa_prompt_attn_parity (default 32768x2048x5 burst). 0.1.67 NOT started; awaiting user review/approval."
     },
     "S12-U0": {
       "gate": "B",
