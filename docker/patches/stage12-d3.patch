@@ -1,0 +1,817 @@
+diff --git a/engine/cmake/strata_gpu_engine.cmake b/engine/cmake/strata_gpu_engine.cmake
+index a379ed0e..1dc6a22b 100644
+--- a/engine/cmake/strata_gpu_engine.cmake
++++ b/engine/cmake/strata_gpu_engine.cmake
+@@ -1024,6 +1024,9 @@ if(STRATA_ENABLE_CUDA OR STRATA_ENABLE_HIP)
+     add_executable(b6_mmvq_bench src/kernels/b6_mmvq_bench.cpp)
+     target_include_directories(b6_mmvq_bench PRIVATE ${_strata_gpu_include_directories})
+     target_link_libraries(b6_mmvq_bench PRIVATE strata_kernels ${_strata_gpu_runtime_target})
++    add_executable(hc_graph_bench src/kernels/hc_graph_bench.cpp)
++    target_include_directories(hc_graph_bench PRIVATE ${_strata_gpu_include_directories})
++    target_link_libraries(hc_graph_bench PRIVATE strata_kernels ${_strata_gpu_runtime_target})
+   endif()
+   add_executable(gr_parity src/kernels/gr_parity.cpp)
+   target_include_directories(gr_parity PRIVATE ${_strata_gpu_include_directories})
+diff --git a/engine/src/kernels/cuda/fused_gr.cu b/engine/src/kernels/cuda/fused_gr.cu
+index dcc14737..d0b06913 100644
+--- a/engine/src/kernels/cuda/fused_gr.cu
++++ b/engine/src/kernels/cuda/fused_gr.cu
+@@ -1773,6 +1773,592 @@ bool launch_v70(const GrMulti& m, cudaStream_t st, unsigned long long* stamp_buf
+         }
+     }
+ }
++
++// ================================ sm_70 opt-in K-split and one-launch HC read (STRATA_HC_V100=1) ================================
++// Ported from jmnargi/Strata-V100 (49c6cc6, PR #129).  Default off (`STRATA_HC_V100=1` opts in on sm_70).
++// Deterministic, not bitwise identical to the plain/staged BF16 read (`rs` applied after dot: rel RMS ~2e-7 on `lo`).
++constexpr int V_SL = 1280;                  // K per slice
++constexpr int V_NS = D / V_SL;              // 8 slices, 2 per stream
++constexpr int V_SPS = N / V_SL;             // slices per stream
++constexpr int V_RPW = 2;                    // down rows per warp
++constexpr int V_RPB = WARPS * V_RPW;        // 16 rows per block
++constexpr int V_NG = LR / V_RPB;            // 20 row groups; group V_NG = the inject rows
++constexpr int V_QL = V_SL / 8 / 32;         // 5 uint4 per lane per row
++constexpr int V_PR = LR + HC;               // partial rows: 320 down + 4 inject
++constexpr int V_SLOTS = 64;                 // distinct scratch buffers (call sites) with their own tickets
++constexpr bool kV100Shape = LR == 320 && HC == 4 && N == 2560;
++static_assert(!kV100Shape || (LR % V_RPB == 0 && V_SL % 256 == 0 && N % V_SL == 0), "v100 down geometry");
++#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ != 700
++#define STRATA_HC_V100_DEVICE 0
++#else
++#define STRATA_HC_V100_DEVICE 1
++#endif
++__device__ unsigned g_v100_cnt[V_SLOTS][V_NG + 1];
++
++template <int T>
++__global__ void __launch_bounds__(THREADS) gr_down_v100_kernel(GrMulti m, unsigned* __restrict__ cnt) {
++#if STRATA_HC_V100_DEVICE
++    if constexpr (kV100Shape) {
++        __shared__ __align__(16) float xs[T][V_SL];
++        __shared__ float red[WARPS][T];
++        __shared__ int v100_last;
++        const int t = threadIdx.x, lane = t & 31, warp = t >> 5;
++        const int g = blockIdx.x, s = blockIdx.y, c = s / V_SPS, h = s - c * V_SPS;
++        const bool inj = g == V_NG;
++        const int nrows = inj ? ((m.a[0].w_inject != nullptr && warp < HC) ? 1 : 0) : V_RPW;
++        const uint16_t* wb = inj ? m.a[0].w_inject : m.a[0].w_down;
++        const int row0 = inj ? warp : g * V_RPB + warp * V_RPW;
++        float* part = m.xn;                                     // [V_NS][T][V_PR]
++        float* ssg = m.xn + (size_t) V_NS * T * V_PR;           // [V_NG + 1][V_NS][T]
++        // 1. this warp's weights, in flight while the activations are staged
++        uint4 w[V_RPW][V_QL];
++#pragma unroll
++        for (int r = 0; r < V_RPW; ++r) {
++            const uint4* w4 = reinterpret_cast<const uint4*>(wb + (size_t) (row0 + (r < nrows ? r : 0)) * D + (size_t) s * V_SL);
++#pragma unroll
++            for (int q = 0; q < V_QL; ++q) w[r][q] = r < nrows ? __ldg(w4 + lane + 32 * q) : make_uint4(0, 0, 0, 0);
++        }
++        // 2. R' * w_norm of the slice for every token, and the slice's sums of squares
++        float ssp[T];
++#pragma unroll
++        for (int k = 0; k < T; ++k) {
++            const FusedGrArgs& a = m.a[k];
++            const float gw = a.apply ? 2.0f * sigmoidf_(a.inj_prev[c] / (float) HC) : 0.0f;
++            const float4* R4 = reinterpret_cast<const float4*>(a.R + (size_t) s * V_SL);
++            const float4* G4 = reinterpret_cast<const float4*>(a.w_norm + (size_t) s * V_SL);
++            const float4* B4 = reinterpret_cast<const float4*>(a.bo_prev + (size_t) h * V_SL);
++            float4* X4 = reinterpret_cast<float4*>(xs[k]);
++            float sp = 0.0f;
++            for (int i = t; i < V_SL / 4; i += THREADS) {
++                float4 r = R4[i];
++                if (a.apply) {
++                    const float4 bq = B4[i];
++                    r.x = fmaf(bq.x, gw, r.x); r.y = fmaf(bq.y, gw, r.y);
++                    r.z = fmaf(bq.z, gw, r.z); r.w = fmaf(bq.w, gw, r.w);
++                }
++                const float4 gg = G4[i];
++                sp += r.x * r.x + r.y * r.y + r.z * r.z + r.w * r.w;
++                X4[i] = make_float4(r.x * gg.x, r.y * gg.y, r.z * gg.z, r.w * gg.w);
++            }
++            ssp[k] = sp;
++        }
++#pragma unroll
++        for (int k = 0; k < T; ++k) {
++            const float v = warp_sum(ssp[k]);
++            if (lane == 0) red[warp][k] = v;
++        }
++        __syncthreads();
++        if (t < T) {
++            float sum = 0.0f;
++#pragma unroll
++            for (int ww = 0; ww < WARPS; ++ww) sum += red[ww][t];
++            ssg[((size_t) g * V_NS + s) * T + t] = sum;
++        }
++        // 3. the dots: lane chunk order lane + 32 q
++        if (nrows > 0) {
++            float acc[V_RPW][T];
++#pragma unroll
++            for (int r = 0; r < V_RPW; ++r)
++#pragma unroll
++                for (int k = 0; k < T; ++k) acc[r][k] = 0.0f;
++#pragma unroll
++            for (int q = 0; q < V_QL; ++q) {
++                const int j = lane + 32 * q;
++#pragma unroll
++                for (int k = 0; k < T; ++k) {
++                    const float4* x4 = reinterpret_cast<const float4*>(xs[k] + j * 8);
++                    const float4 x0 = x4[0], x1 = x4[1];
++#pragma unroll
++                    for (int r = 0; r < V_RPW; ++r) acc[r][k] += dot8u(unpack8(w[r][q]), x0, x1);
++                }
++            }
++#pragma unroll
++            for (int r = 0; r < V_RPW; ++r) {
++                if (r >= nrows) break;
++                const int prow = inj ? LR + warp : row0 + r;
++#pragma unroll
++                for (int k = 0; k < T; ++k) {
++                    const float v = warp_sum(acc[r][k]);
++                    if (lane == 0) part[((size_t) s * T + k) * V_PR + prow] = v;
++                }
++            }
++        }
++        // 4. the last block of this row group finishes it
++        __threadfence();
++        __syncthreads();
++        if (t == 0) {
++            const unsigned v = atomicAdd(&cnt[g], 1u);
++            v100_last = v == (unsigned) (V_NS - 1);
++            if (v100_last) atomicExch(&cnt[g], 0u);
++        }
++        __syncthreads();
++        if (!v100_last) return;
++        __threadfence();
++        const int nr = inj ? (m.a[0].w_inject != nullptr ? HC : 0) : V_RPB;
++        for (int idx = t; idx < T * nr; idx += THREADS) {
++            const int k = idx / nr, rr = idx - k * nr;
++            const int prow = inj ? LR + rr : g * V_RPB + rr;
++            float sum = 0.0f;
++#pragma unroll
++            for (int cc = 0; cc < HC; ++cc) {
++                float ss = 0.0f, p = 0.0f;
++#pragma unroll
++                for (int hh = 0; hh < V_SPS; ++hh) {
++                    const int sl = cc * V_SPS + hh;
++                    ss += __ldcg(ssg + ((size_t) g * V_NS + sl) * T + k);
++                    p += __ldcg(part + ((size_t) sl * T + k) * V_PR + prow);
++                }
++                const float rsc = rsqrtf(ss / (float) N + m.a[k].eps);
++                sum = fmaf(rsc, p, sum);
++                if (g == 0 && rr == 0) m.a[k].rs[cc] = rsc;
++            }
++            if (inj) m.a[k].inject_out[rr] = sum;
++            else {
++                const float x = sum / (float) HC;
++                m.a[k].lo[prow] = x / (1.0f + __expf(-x));
++            }
++        }
++    }
++#else
++    (void) m; (void) cnt;
++#endif
++}
++
++static bool hc_v100_on() {
++    if constexpr (!kV100Shape) return false;
++    static const bool on = [] { const char* v = std::getenv("STRATA_HC_V100"); return v != nullptr && std::atoi(v) != 0; }();
++    return on;
++}
++// the ticket counters of the call site whose scratch is `key` (per device); null when the table is full
++static unsigned* v100_counters(const void* key) {
++    static std::mutex mu;
++    static std::vector<const void*> keys[64];
++    static unsigned* base[64] = {};
++    int dev = 0;
++    if (cudaGetDevice(&dev) != cudaSuccess || dev < 0 || dev >= 64) { cudaGetLastError(); return nullptr; }
++    std::lock_guard<std::mutex> lk(mu);
++    if (base[dev] == nullptr) {
++        void* p = nullptr;
++        if (cudaGetSymbolAddress(&p, g_v100_cnt) != cudaSuccess) { cudaGetLastError(); return nullptr; }
++        base[dev] = (unsigned*) p;
++    }
++    auto& ks = keys[dev];
++    size_t i = 0;
++    while (i < ks.size() && ks[i] != key) ++i;
++    if (i == ks.size()) {
++        if (ks.size() >= (size_t) V_SLOTS) return nullptr;
++        ks.push_back(key);
++    }
++    return base[dev] + i * (V_NG + 1);
++}
++static bool launch_down_v100(const GrMulti& m, cudaStream_t st) {
++    if constexpr (!kV100Shape) {
++        (void) m; (void) st;
++        return false;
++    } else {
++        if (!cur_dev_volta()) return false;
++        unsigned* cnt = v100_counters(m.xn);
++        if (cnt == nullptr) return false;
++        const dim3 grid(m.a[0].w_inject != nullptr ? V_NG + 1 : V_NG, V_NS);
++        switch (m.T) {
++            case 1: gr_down_v100_kernel<1><<<grid, THREADS, 0, st>>>(m, cnt); break;
++            case 2: gr_down_v100_kernel<2><<<grid, THREADS, 0, st>>>(m, cnt); break;
++            case 3: gr_down_v100_kernel<3><<<grid, THREADS, 0, st>>>(m, cnt); break;
++            case 4: gr_down_v100_kernel<4><<<grid, THREADS, 0, st>>>(m, cnt); break;
++            case 5: gr_down_v100_kernel<5><<<grid, THREADS, 0, st>>>(m, cnt); break;
++            case 6: gr_down_v100_kernel<6><<<grid, THREADS, 0, st>>>(m, cnt); break;
++            case 7: gr_down_v100_kernel<7><<<grid, THREADS, 0, st>>>(m, cnt); break;
++            case 8: gr_down_v100_kernel<8><<<grid, THREADS, 0, st>>>(m, cnt); break;
++            default: return false;
++        }
++        return true;
++    }
++}
++
++__device__ __forceinline__ float vxor8(float v) {
++#pragma unroll
++    for (int o = 4; o > 0; o >>= 1) v += __shfl_xor_sync(0xffffffffu, v, o);
++    return v;
++}
++// ================================ the whole sm_70 read in one launch ================================
++constexpr int VF_BLOCKS = V_NG * V_NS;      // 160
++static_assert(!kV100Shape || VF_BLOCKS == UPM_BLOCKS, "fused v100 read: one down tile and one up tile per block");
++constexpr int VF_CNT = V_NG + 2;            // per slot: V_NG group tickets, the done count, the exit count
++__device__ unsigned g_vf_cnt[V_SLOTS][VF_CNT];
++
++template <int T>
++__global__ void __launch_bounds__(THREADS, 2) gr_fused_v100_kernel(GrMulti m, unsigned* __restrict__ cnt, int dbg) {
++#if STRATA_HC_V100_DEVICE
++    if constexpr (kV100Shape) {
++        __shared__ __align__(16) float xs[T][V_SL];
++        __shared__ __align__(16) float lo[T][LR];
++        __shared__ float red[WARPS][T];
++        __shared__ float rsS[T][HC];
++        __shared__ float gsum[T][HC][UPM_COLS];
++        __shared__ int v100_last;
++        const int t = threadIdx.x, lane = t & 31, warp = t >> 5;
++        const int b = blockIdx.x, g = b / V_NS, s = b - g * V_NS, c = s / V_SPS, h = s - c * V_SPS;
++        const int row0 = g * V_RPB + warp * V_RPW;
++        float* part = m.xn;                                     // [V_NS][T][V_PR]
++        float* ssg = m.xn + (size_t) V_NS * T * V_PR;           // [V_NG][V_NS][T]
++        // 0. small loads first (they would otherwise queue behind the 13 MB of weight requests)
++        const int uj = t & 7, ugrp = t >> 3, d0 = b * UPM_COLS;
++        float rv[2] = {0.0f, 0.0f}, wn[2] = {0.0f, 0.0f}, bo[2] = {0.0f, 0.0f}, ip[2] = {0.0f, 0.0f};
++        const bool apply = uj < T && m.a[uj < T ? uj : 0].apply;
++        constexpr bool EARLY_EPI = T <= 3;
++#define VF_EPI_LOAD()                                                                                             \
++        if (uj < T) {                                                                                             \
++            const FusedGrArgs& a = m.a[uj];                                                                       \
++            for (int p = 0; p < 2; ++p) {                                                                         \
++                const int r = ugrp + 32 * p, cc = r / UPM_COLS, dd = r - cc * UPM_COLS, i = cc * N + d0 + dd;     \
++                rv[p] = a.R[i];                                                                                   \
++                wn[p] = a.w_norm[i];                                                                              \
++                if (apply) { bo[p] = a.bo_prev[d0 + dd]; ip[p] = a.inj_prev[cc]; }                                \
++            }                                                                                                     \
++        }
++        if constexpr (EARLY_EPI) { VF_EPI_LOAD() }
++        // 2. R' * w_norm of the slice for every token, and the slice's sums of squares
++        float ssp[T];
++#pragma unroll
++        for (int k = 0; k < T; ++k) {
++            const FusedGrArgs& a = m.a[k];
++            const float gw = a.apply ? 2.0f * sigmoidf_(a.inj_prev[c] / (float) HC) : 0.0f;
++            const float4* R4 = reinterpret_cast<const float4*>(a.R + (size_t) s * V_SL);
++            const float4* G4 = reinterpret_cast<const float4*>(a.w_norm + (size_t) s * V_SL);
++            const float4* B4 = reinterpret_cast<const float4*>(a.bo_prev + (size_t) h * V_SL);
++            float4* X4 = reinterpret_cast<float4*>(xs[k]);
++            float sp = 0.0f;
++            if (dbg & 1) { ssp[k] = 0.f; continue; }
++            for (int i = t; i < V_SL / 4; i += THREADS) {
++                float4 r = R4[i];
++                if (a.apply) {
++                    const float4 bq = B4[i];
++                    r.x = fmaf(bq.x, gw, r.x); r.y = fmaf(bq.y, gw, r.y);
++                    r.z = fmaf(bq.z, gw, r.z); r.w = fmaf(bq.w, gw, r.w);
++                }
++                const float4 gg = G4[i];
++                sp += r.x * r.x + r.y * r.y + r.z * r.z + r.w * r.w;
++                X4[i] = make_float4(r.x * gg.x, r.y * gg.y, r.z * gg.z, r.w * gg.w);
++            }
++            ssp[k] = sp;
++        }
++        // 1. ... then both matrices' loads, in flight while the slice sums are reduced
++        uint4 w[V_RPW][V_QL];
++#pragma unroll
++        for (int r = 0; r < V_RPW; ++r) {
++            const uint4* w4 = reinterpret_cast<const uint4*>(m.a[0].w_down + (size_t) (row0 + r) * D + (size_t) s * V_SL);
++#pragma unroll
++            for (int q = 0; q < V_QL; ++q) w[r][q] = __ldg(w4 + lane + 32 * q);
++        }
++        uint4 wu[2][5];
++#pragma unroll
++        for (int p = 0; p < 2; ++p) {
++            const int r = ugrp + 32 * p, cc = r / UPM_COLS, dd = r - cc * UPM_COLS, i = cc * N + d0 + dd;
++            const uint4* w4 = reinterpret_cast<const uint4*>(m.a[0].w_up + (size_t) i * LR);
++#pragma unroll
++            for (int q = 0; q < 4; ++q) wu[p][q] = __ldg(w4 + uj + 8 * q);
++            wu[p][4] = __ldg(w4 + 32 + uj);
++        }
++#pragma unroll
++        for (int k = 0; k < T; ++k) {
++            const float v = warp_sum(ssp[k]);
++            if (lane == 0) red[warp][k] = v;
++        }
++        __syncthreads();
++        if (t < T) {
++            float sum = 0.0f;
++#pragma unroll
++            for (int ww = 0; ww < WARPS; ++ww) sum += red[ww][t];
++            ssg[((size_t) g * V_NS + s) * T + t] = sum;
++        }
++        // 3. the down dots (lane chunk order lane + 32 q)
++        {
++            float acc[V_RPW][T];
++#pragma unroll
++            for (int r = 0; r < V_RPW; ++r)
++#pragma unroll
++                for (int k = 0; k < T; ++k) acc[r][k] = 0.0f;
++#pragma unroll
++            for (int q = 0; q < V_QL; ++q) {
++                if (dbg & 2) { acc[0][0] += __uint_as_float(w[0][q].x ^ w[1][q].y); continue; }
++                const int j = lane + 32 * q;
++#pragma unroll
++                for (int k = 0; k < T; ++k) {
++                    const float4* x4 = reinterpret_cast<const float4*>(xs[k] + j * 8);
++                    const float4 x0 = x4[0], x1 = x4[1];
++#pragma unroll
++                    for (int r = 0; r < V_RPW; ++r) acc[r][k] += dot8u(unpack8(w[r][q]), x0, x1);
++                }
++            }
++#pragma unroll
++            for (int r = 0; r < V_RPW; ++r)
++#pragma unroll
++                for (int k = 0; k < T; ++k) {
++                    const float v = warp_sum(acc[r][k]);
++                    if (lane == 0) part[((size_t) s * T + k) * V_PR + row0 + r] = v;
++                }
++        }
++        // the inject rows (group 0's blocks, warps 0-3: row LR + warp of this slice)
++        if (g == 0 && warp < HC && m.a[0].w_inject != nullptr) {
++            const uint4* w4 = reinterpret_cast<const uint4*>(m.a[0].w_inject + (size_t) warp * D + (size_t) s * V_SL);
++            uint4 wi[V_QL];
++#pragma unroll
++            for (int q = 0; q < V_QL; ++q) wi[q] = __ldg(w4 + lane + 32 * q);
++            float acc[T];
++#pragma unroll
++            for (int k = 0; k < T; ++k) acc[k] = 0.0f;
++#pragma unroll
++            for (int q = 0; q < V_QL; ++q) {
++                const int j = lane + 32 * q;
++#pragma unroll
++                for (int k = 0; k < T; ++k) acc[k] += dot8u_ptr(unpack8(wi[q]), xs[k] + j * 8);
++            }
++#pragma unroll
++            for (int k = 0; k < T; ++k) {
++                const float v = warp_sum(acc[k]);
++                if (lane == 0) part[((size_t) s * T + k) * V_PR + LR + warp] = v;
++            }
++        }
++        // 4. the last block of the row group finishes it, then counts it done
++        __threadfence();
++        __syncthreads();
++        if (t == 0) {
++            const unsigned v = atomicAdd(&cnt[g], 1u);
++            v100_last = v == (unsigned) (V_NS - 1);
++            if (v100_last) atomicExch(&cnt[g], 0u);
++        }
++        __syncthreads();
++        if (v100_last && (dbg & 4)) { if (t == 0) atomicAdd(&cnt[V_NG], 1u); }
++        else if (v100_last) {
++            __threadfence();
++            const int nr = V_RPB + ((g == 0 && m.a[0].w_inject != nullptr) ? HC : 0);
++            for (int idx = t; idx < T * nr; idx += THREADS) {
++                const int k = idx / nr, rr = idx - k * nr;
++                const bool inj = rr >= V_RPB;
++                const int prow = inj ? LR + (rr - V_RPB) : g * V_RPB + rr;
++                float sum = 0.0f;
++#pragma unroll
++                for (int cc = 0; cc < HC; ++cc) {
++                    float ss = 0.0f, p = 0.0f;
++#pragma unroll
++                    for (int hh = 0; hh < V_SPS; ++hh) {
++                        const int sl = cc * V_SPS + hh;
++                        ss += __ldcg(ssg + ((size_t) g * V_NS + sl) * T + k);
++                        p += __ldcg(part + ((size_t) sl * T + k) * V_PR + prow);
++                    }
++                    const float rsc = rsqrtf(ss / (float) N + m.a[k].eps);
++                    sum = fmaf(rsc, p, sum);
++                    if (g == 0 && rr == 0) m.a[k].rs[cc] = rsc;
++                }
++                if (inj) m.a[k].inject_out[rr - V_RPB] = sum;
++                else {
++                    const float x = sum / (float) HC;
++                    const float l = x / (1.0f + __expf(-x));
++                    m.a[k].lo[prow] = l;
++                    ssg[(size_t) V_NG * V_NS * T + (size_t) k * LR + prow] = l;   // the up part reads lo from here
++                }
++            }
++            __threadfence();
++            __syncthreads();
++            if (t == 0) atomicAdd(&cnt[V_NG], 1u);
++        }
++        // 5. wait for every group (all 160 blocks are resident, so this always finishes)
++        if (t == 0) {
++            while (!(dbg & 8) && *reinterpret_cast<volatile unsigned*>(&cnt[V_NG]) < (unsigned) V_NG) { }
++            __threadfence();
++        }
++        __syncthreads();
++        const float* lo_g = ssg + (size_t) V_NG * V_NS * T;
++        if (t < T * HC) {
++            const int k = t / HC, cc = t - k * HC;
++            float ss = 0.0f;
++#pragma unroll
++            for (int hh = 0; hh < V_SPS; ++hh) ss += __ldcg(ssg + ((size_t) 0 * V_NS + cc * V_SPS + hh) * T + k);
++            rsS[k][cc] = rsqrtf(ss / (float) N + m.a[k].eps);
++        }
++        for (int i = t; i < T * LR; i += THREADS) lo[i / LR][i % LR] = __ldcg(lo_g + i);
++        if constexpr (!EARLY_EPI) { VF_EPI_LOAD() }
++#undef VF_EPI_LOAD
++        __syncthreads();
++        // 6. the up part: gr_up_fast_kernel's sums in the same order
++        float mine[2] = {0.0f, 0.0f};
++        if (dbg & 16) { mine[0] = __uint_as_float(wu[0][0].x ^ wu[1][4].y); mine[1] = mine[0]; } else
++#pragma unroll
++        for (int k = 0; k < T; ++k) {
++            const float4* l4 = reinterpret_cast<const float4*>(lo[k]);
++            const float4 a0 = l4[2 * uj], a1 = l4[2 * uj + 1];
++            const float4 b0 = l4[2 * (uj + 8)], b1 = l4[2 * (uj + 8) + 1];
++            const float4 c0 = l4[2 * (uj + 16)], c1 = l4[2 * (uj + 16) + 1];
++            const float4 e0 = l4[2 * (uj + 24)], e1 = l4[2 * (uj + 24) + 1];
++            const float4 f0 = l4[2 * (32 + uj)], f1 = l4[2 * (32 + uj) + 1];
++#pragma unroll
++            for (int p = 0; p < 2; ++p) {
++                const float p0 = dot8u(unpack8(wu[p][0]), a0, a1) + dot8u(unpack8(wu[p][4]), f0, f1);
++                const float p1 = dot8u(unpack8(wu[p][1]), b0, b1);
++                const float p2 = dot8u(unpack8(wu[p][2]), c0, c1);
++                const float p3 = dot8u(unpack8(wu[p][3]), e0, e1);
++                const float sx = vxor8((p0 + p2) + (p1 + p3));
++                if (uj == k) mine[p] = sx;
++            }
++        }
++#pragma unroll
++        for (int p = 0; p < 2; ++p) {
++            const int r = ugrp + 32 * p, cc = r / UPM_COLS, dd = r - cc * UPM_COLS, i = cc * N + d0 + dd;
++            if (uj < T) {
++                float x0 = rv[p];
++                if (apply) {
++                    x0 = fmaf(bo[p], 2.0f * sigmoidf_(ip[p] / (float) HC), x0);
++                    m.a[uj].R_out[i] = x0;
++                }
++                const float x = x0 * wn[p] * rsS[uj][cc];
++                gsum[uj][cc][dd] = x * sigmoidf_(mine[p]);
++            }
++        }
++        __syncthreads();
++        for (int i = t; i < T * UPM_COLS; i += THREADS) {
++            const int k = i / UPM_COLS, col = i - k * UPM_COLS;
++            float sx = 0.0f;
++#pragma unroll
++            for (int cc = 0; cc < HC; ++cc) sx += gsum[k][cc][col];
++            m.a[k].mixed[d0 + col] = sx / (float) HC;
++        }
++        // 7. the last block out resets the done count before gr_q8_tail (which returns early on half the blocks)
++        __syncthreads();
++        if (t == 0) {
++            const unsigned v = atomicAdd(&cnt[V_NG + 1], 1u);
++            if (v == (unsigned) (VF_BLOCKS - 1)) {
++                atomicExch(&cnt[V_NG], 0u);
++                atomicExch(&cnt[V_NG + 1], 0u);
++            }
++        }
++        if (m.a[0].q8_mixed != nullptr) gr_q8_tail(m, d0);   // STRATA_QFUSE, as gr_up_fast_kernel
++    }
++#else
++    (void) m; (void) cnt; (void) dbg;
++#endif
++}
++
++static bool hc_v100_fused_on() {
++    static const bool on = [] { const char* v = std::getenv("STRATA_HC_V100_FUSED"); return v == nullptr || std::atoi(v) != 0; }();
++    return on;
++}
++static unsigned* vf_counters(const void* key) {
++    static std::mutex mu;
++    static std::vector<const void*> keys[64];
++    static unsigned* base[64] = {};
++    static int resident_ok[64] = {};   // 0 = unchecked, 1 = every fused variant fits, -1 = one does not
++    int dev = 0;
++    if (cudaGetDevice(&dev) != cudaSuccess || dev < 0 || dev >= 64) { cudaGetLastError(); return nullptr; }
++    std::lock_guard<std::mutex> lk(mu);
++    if (resident_ok[dev] == 0) {
++        int sms = 0;
++        cudaDeviceGetAttribute(&sms, cudaDevAttrMultiProcessorCount, dev);
++        int nb = VF_BLOCKS;
++        auto check = [&](auto kernel) {
++            int blocks = 0;
++            if (cudaOccupancyMaxActiveBlocksPerMultiprocessor(&blocks, kernel, THREADS, 0) != cudaSuccess)
++                blocks = 0;
++            if (blocks < nb) nb = blocks;
++        };
++        check(gr_fused_v100_kernel<1>);
++        check(gr_fused_v100_kernel<2>);
++        check(gr_fused_v100_kernel<3>);
++        check(gr_fused_v100_kernel<4>);
++        check(gr_fused_v100_kernel<5>);
++        check(gr_fused_v100_kernel<6>);
++        resident_ok[dev] = (long) nb * sms >= VF_BLOCKS ? 1 : -1;
++        void* p = nullptr;
++        if (resident_ok[dev] > 0 && cudaGetSymbolAddress(&p, g_vf_cnt) == cudaSuccess) base[dev] = (unsigned*) p;
++        else resident_ok[dev] = -1;
++        cudaGetLastError();
++        std::fprintf(stderr, "strata hc: CUDA%d: sm_70 fused hyper-connection read %s (%d x %d resident blocks)\n", dev,
++                     resident_ok[dev] > 0 ? "on" : "off: the 160 blocks do not fit at once", sms, nb);
++    }
++    if (resident_ok[dev] < 0) return nullptr;
++    auto& ks = keys[dev];
++    size_t i = 0;
++    while (i < ks.size() && ks[i] != key) ++i;
++    if (i == ks.size()) {
++        if (ks.size() >= (size_t) V_SLOTS) return nullptr;
++        ks.push_back(key);
++    }
++    return base[dev] + i * VF_CNT;
++}
++static int vf_dbg() { static const int d = [] { const char* v = std::getenv("STRATA_VF_DBG"); return v ? std::atoi(v) : 0; }(); return d; }
++static bool launch_fused_v100(const GrMulti& m, cudaStream_t st) {
++    if constexpr (!kV100Shape) {
++        (void) m; (void) st;
++        return false;
++    } else {
++        if (m.T < 1 || m.T > 6 || !cur_dev_volta()) return false;
++        unsigned* cnt = vf_counters(m.xn);
++        if (cnt == nullptr) return false;
++        switch (m.T) {
++            case 1: gr_fused_v100_kernel<1><<<VF_BLOCKS, THREADS, 0, st>>>(m, cnt, vf_dbg()); break;
++            case 2: gr_fused_v100_kernel<2><<<VF_BLOCKS, THREADS, 0, st>>>(m, cnt, vf_dbg()); break;
++            case 3: gr_fused_v100_kernel<3><<<VF_BLOCKS, THREADS, 0, st>>>(m, cnt, vf_dbg()); break;
++            case 4: gr_fused_v100_kernel<4><<<VF_BLOCKS, THREADS, 0, st>>>(m, cnt, vf_dbg()); break;
++            case 5: gr_fused_v100_kernel<5><<<VF_BLOCKS, THREADS, 0, st>>>(m, cnt, vf_dbg()); break;
++            case 6: gr_fused_v100_kernel<6><<<VF_BLOCKS, THREADS, 0, st>>>(m, cnt, vf_dbg()); break;
++            default: return false;
++        }
++        return true;
++    }
++}
++
++// sm_70: the single-token read (fused_gr_read) through the same K-split/fused path on sm_70, so a token's result does
++// not depend on which entry point read it (gr_parity's contract).
++constexpr int VS_FLOATS = V_NS * V_PR + V_NG * V_NS + LR;   // T = 1: partials, slice sums of squares, lo
++__device__ float g_vf_single[V_SLOTS][VS_FLOATS];
++static bool launch_single_v100(const FusedGrArgs& a, cudaStream_t st) {
++    if constexpr (!kV100Shape) {
++        (void) a; (void) st;
++        return false;
++    } else {
++        if (!hc_v100_on() || a.s_down != nullptr || a.q8_down != nullptr || a.q8_mixed != nullptr || !cur_dev_volta())
++            return false;
++        static std::mutex mu;
++        static std::vector<const void*> keys[64];
++        static float* base[64] = {};
++        static int sym_ok[64] = {};   // 0 = unchecked, 1 = ok, -1 = unavailable
++        int dev = 0;
++        if (cudaGetDevice(&dev) != cudaSuccess || dev < 0 || dev >= 64) { cudaGetLastError(); return false; }
++        float* scratch = nullptr;
++        {
++            std::lock_guard<std::mutex> lk(mu);
++            if (sym_ok[dev] == 0) {
++                void* p = nullptr;
++                if (cudaGetSymbolAddress(&p, g_vf_single) == cudaSuccess) {
++                    base[dev] = (float*) p;
++                    sym_ok[dev] = 1;
++                } else {
++                    sym_ok[dev] = -1;
++                    cudaGetLastError();
++                }
++            }
++            if (sym_ok[dev] < 0) return false;
++            auto& ks = keys[dev];
++            size_t i = 0;
++            while (i < ks.size() && ks[i] != (const void*) a.lo) ++i;
++            if (i == ks.size()) {
++                if (ks.size() >= (size_t) V_SLOTS) return false;
++                ks.push_back((const void*) a.lo);
++            }
++            scratch = base[dev] + i * VS_FLOATS;
++        }
++        GrMulti m;
++        m.a[0] = a;
++        m.xn = scratch;
++        m.T = 1;
++        if (hc_v100_fused_on() && launch_fused_v100(m, st)) return true;
++        if (!launch_down_v100(m, st)) return false;
++#if STRATA_GR_FAST_BUILD
++        if (gr_fast()) { gr_up_fast_kernel<<<UPM_BLOCKS, THREADS, 0, st>>>(m); return true; }
++#endif
++        gr_up_multi_kernel<1, true><<<UPM_BLOCKS, THREADS, 0, st>>>(m);
++        return true;
++    }
++}
+ #endif
+ // v70 = false: never the STRATA_GR_V70 read (fused_gr_selftest's default-read sets)
+ void launch_multi(const GrMulti& m, int variant, cudaStream_t st, unsigned long long* stamp_buf, int stamp_i0,
+@@ -1783,6 +2369,34 @@ void launch_multi(const GrMulti& m, int variant, cudaStream_t st, unsigned long
+     // gfx906: the latency-hidden norm/up (STRATA_GR_FAST=0: off) - the same sums in the same order as the kernels
+     // they replace (gr_parity checks the multi-token read against single-token calls bitwise)
+     const bool fast = gr_fast();
++#endif
++    static const bool no_multi_gr = [] {
++        const char* no = std::getenv("STRATA_NO_MULTI_GR");
++        return no != nullptr && no[0] != '\0' && no[0] != '0';
++    }();
++    bool hc_v100_down_done = false;
++#if !defined(__HIPCC__)
++    if (!q8w && n_tok <= kFusedGrMaxT && hc_v100_on() && cur_dev_volta()) {
++        if (hc_v100_fused_on() && launch_fused_v100(m, st)) {
++            if (stamp_buf) {
++                gpu_stamp(stamp_buf, stamp_i0, (void*) st);
++                gpu_stamp(stamp_buf, stamp_i0 + 1, (void*) st);
++            }
++            strata::dispatch::kernel(strata::dispatch::kHc, 41, 0, N, LR, n_tok);
++            return;
++        }
++        if (launch_down_v100(m, st)) {
++            if (stamp_buf) {
++                gpu_stamp(stamp_buf, stamp_i0, (void*) st);
++                gpu_stamp(stamp_buf, stamp_i0 + 1, (void*) st);
++            }
++            strata::dispatch::kernel(strata::dispatch::kHc, 40, 0, N, LR, n_tok);
++            hc_v100_down_done = true;
++        }
++    }
++#endif
++    if (!hc_v100_down_done) {
++#if STRATA_GR_FAST_BUILD
+     if (variant >= kHcSplit) {
+         if (norm_fast_on()) gr_norm_split_fast_kernel<<<dim3((unsigned) n_tok, HC), THREADS, 0, st>>>(m);
+         else gr_norm_split_kernel<<<dim3((unsigned) n_tok, HC), THREADS, 0, st>>>(m);
+@@ -1813,10 +2427,6 @@ void launch_multi(const GrMulti& m, int variant, cudaStream_t st, unsigned long
+     // n_out = tokens a down launch, ncols = tokens
+     strata::dispatch::kernel(strata::dispatch::kHc, variant, m.a[0].s_down != nullptr ? 1 : 0, tv, chunk_tok, n_tok);
+     const size_t per_tok = (staged ? (size_t) 2 * H_TILE : (size_t) tv) * sizeof(float);
+-    static const bool no_multi_gr = [] {
+-        const char* no = std::getenv("STRATA_NO_MULTI_GR");
+-        return no != nullptr && no[0] != '\0' && no[0] != '0';
+-    }();
+     const bool exact_t = !no_multi_gr;
+     for (int c0 = 0; c0 < n_tok; c0 += chunk_tok) {
+         const int ct = n_tok - c0 < chunk_tok ? n_tok - c0 : chunk_tok;
+@@ -1867,6 +2477,7 @@ void launch_multi(const GrMulti& m, int variant, cudaStream_t st, unsigned long
+         }
+     }
+     if (stamp_buf) gpu_stamp(stamp_buf, stamp_i0 + 1, (void*) st);
++    }
+     // 149-cuda: the wide up read (test arm; STRATA_GR_UP_WIDE=1).  The q8_1 tail of S26 needs the 16-column
+     // blocks, so the wide kernel is only used when no q8_1 image is written.
+     if (!q8w && m.a[0].q8_mixed == nullptr && gr_up_wide_on()) {
+@@ -4533,6 +5144,13 @@ void fused_gr_read(const FusedGrArgs& a, void* stream) {
+         std::exit(1);
+     }
+     cudaStream_t st = (cudaStream_t) stream;
++#if !defined(__HIPCC__)
++    if (launch_single_v100(a, st)) {
++        const cudaError_t e1 = cudaGetLastError();
++        if (e1 != cudaSuccess) { std::fprintf(stderr, "fused_gr_read v100: %s\n", cudaGetErrorString(e1)); std::exit(1); }
++        return;
++    }
++#endif
+     constexpr size_t down_smem = kDownDynXn ? (size_t) D * 4 : 0;
+     if (kDownDynXn) {
+         static bool done[64] = {};   // the attribute belongs to each device, not the process (a layer split runs this on several cards)
+diff --git a/engine/src/kernels/fused_gr_bench.cpp b/engine/src/kernels/fused_gr_bench.cpp
+index 5211e3fb..682f5173 100644
+--- a/engine/src/kernels/fused_gr_bench.cpp
++++ b/engine/src/kernels/fused_gr_bench.cpp
+@@ -133,6 +133,10 @@ int main(int argc, char** argv) {
+                     cudaMemcpy(p, dmix, (size_t) TM * N * 4, cudaMemcpyDeviceToHost);
+                 }
+                 const bool same = std::memcmp(out[0].data(), out[1].data(), out[0].size() * 4) == 0;
++                if (const char* dp = std::getenv("STRATA_BENCH_DUMP")) {   // sm_70: the outputs, for an error check
++                    FILE* f = std::fopen(dp, "ab");
++                    if (f) { std::fwrite(out[0].data(), 4, out[0].size(), f); std::fclose(f); }
++                }
+                 double us[2] = {1e30, 1e30};
+                 for (int round = 0; round < 3; ++round)
+                     for (int f = 0; f < 2; ++f) {
+diff --git a/engine/src/kernels/hc_graph_bench.cpp b/engine/src/kernels/hc_graph_bench.cpp
+new file mode 100644
+index 00000000..4c7cf87c
+--- /dev/null
++++ b/engine/src/kernels/hc_graph_bench.cpp
+@@ -0,0 +1,117 @@
++// sm_70: the hyper-connection read timed as the engine runs it - captured into one CUDA graph, 96 reads (48
++// layers x 2 halves) over 48 cold weight sets, replayed.  Prints us per read for T 1..6 and dumps the outputs of the
++// last read so two builds / env settings can be compared (STRATA_BENCH_DUMP=file).
++#include "strata/kernels/fused_gr.hpp"
++
++#include <cuda_runtime.h>
++
++#include <cstdint>
++#include <cstdio>
++#include <cstdlib>
++#include <cstring>
++#include <random>
++#include <vector>
++
++namespace K = strata::kernels;
++
++static uint16_t bf16(float x) {
++    uint32_t u;
++    std::memcpy(&u, &x, 4);
++    return (uint16_t) ((u + 0x7fff + ((u >> 16) & 1)) >> 16);
++}
++
++int main(int argc, char** argv) {
++    const int t_lo = argc > 1 ? std::atoi(argv[1]) : 1, t_hi = argc > 2 ? std::atoi(argv[2]) : 6;
++    const int N = 2560, HC = 4, D = N * HC, LR = 320, TM = 8, SETS = 48, READS = 96;
++    std::mt19937 rng(7);
++    std::normal_distribution<float> nd(0.f, 1.f);
++    std::vector<float> R((size_t) TM * D), bo((size_t) TM * N), inj((size_t) TM * HC), wn(D);
++    for (auto& x : R) x = nd(rng);
++    for (auto& x : bo) x = 0.5f * nd(rng);
++    for (auto& x : inj) x = nd(rng);
++    for (auto& x : wn) x = 1.0f + 0.3f * nd(rng);
++    std::vector<uint16_t> wd((size_t) LR * D), wu((size_t) D * LR), wi((size_t) HC * D);
++    for (auto& x : wd) x = bf16(0.02f * nd(rng));
++    for (auto& x : wu) x = bf16(0.05f * nd(rng));
++    for (auto& x : wi) x = bf16(0.02f * nd(rng));
++    float *dR, *dR0, *dbo, *dinj, *dxn, *dlo, *drs, *dio, *dmix;
++    cudaMalloc(&dR, R.size() * 4); cudaMalloc(&dR0, R.size() * 4);
++    cudaMalloc(&dbo, bo.size() * 4); cudaMalloc(&dinj, inj.size() * 4);
++    cudaMalloc(&dxn, (size_t) TM * D * 4); cudaMalloc(&dlo, (size_t) TM * LR * 4); cudaMalloc(&drs, (size_t) TM * HC * 4);
++    cudaMalloc(&dio, (size_t) TM * HC * 4); cudaMalloc(&dmix, (size_t) TM * N * 4);
++    cudaMemcpy(dR0, R.data(), R.size() * 4, cudaMemcpyHostToDevice);
++    cudaMemcpy(dbo, bo.data(), bo.size() * 4, cudaMemcpyHostToDevice);
++    cudaMemcpy(dinj, inj.data(), inj.size() * 4, cudaMemcpyHostToDevice);
++    std::vector<uint16_t*> cwd(SETS), cwu(SETS), cwi(SETS);
++    std::vector<float*> cwn(SETS);
++    for (int c = 0; c < SETS; ++c) {
++        cudaMalloc(&cwd[c], wd.size() * 2); cudaMemcpy(cwd[c], wd.data(), wd.size() * 2, cudaMemcpyHostToDevice);
++        cudaMalloc(&cwu[c], wu.size() * 2); cudaMemcpy(cwu[c], wu.data(), wu.size() * 2, cudaMemcpyHostToDevice);
++        cudaMalloc(&cwi[c], wi.size() * 2); cudaMemcpy(cwi[c], wi.data(), wi.size() * 2, cudaMemcpyHostToDevice);
++        cudaMalloc(&cwn[c], wn.size() * 4); cudaMemcpy(cwn[c], wn.data(), wn.size() * 4, cudaMemcpyHostToDevice);
++    }
++    cudaStream_t s;
++    cudaStreamCreateWithFlags(&s, cudaStreamNonBlocking);
++    cudaEvent_t e0, e1;
++    cudaEventCreate(&e0); cudaEventCreate(&e1);
++    const char* dump = std::getenv("STRATA_BENCH_DUMP");
++    if (dump) { FILE* f = std::fopen(dump, "wb"); if (f) std::fclose(f); }
++    for (int T = t_lo; T <= t_hi; ++T) {
++        auto args = [&](int rd, K::FusedGrArgs* a) {
++            const int c = rd % SETS;
++            for (int t = 0; t < T; ++t) {
++                a[t] = K::FusedGrArgs();
++                a[t].R = dR + (size_t) t * D; a[t].R_out = dR + (size_t) t * D; a[t].apply = (rd % 3) != 0;
++                a[t].bo_prev = dbo + (size_t) t * N; a[t].inj_prev = dinj + (size_t) t * HC;
++                a[t].w_norm = cwn[c]; a[t].w_down = cwd[c]; a[t].w_up = cwu[c]; a[t].w_inject = (rd % 2) ? cwi[c] : nullptr;
++                a[t].lo = dlo + (size_t) t * LR; a[t].rs = drs + (size_t) t * HC;
++                a[t].inject_out = dio + (size_t) t * HC; a[t].mixed = dmix + (size_t) t * N;
++            }
++        };
++        // correctness run (direct, no graph), from the same R
++        cudaMemcpy(dR, dR0, R.size() * 4, cudaMemcpyDeviceToDevice);
++        for (int rd = 0; rd < 6; ++rd) { K::FusedGrArgs a[8]; args(rd, a); K::fused_gr_read_multi(a, T, dxn, s); }
++        cudaStreamSynchronize(s);
++        if (dump) {
++            std::vector<float> o((size_t) TM * (D + LR + HC + HC + N));
++            float* p = o.data();
++            cudaMemcpy(p, dR, (size_t) TM * D * 4, cudaMemcpyDeviceToHost); p += (size_t) TM * D;
++            cudaMemcpy(p, dlo, (size_t) TM * LR * 4, cudaMemcpyDeviceToHost); p += (size_t) TM * LR;
++            cudaMemcpy(p, drs, (size_t) TM * HC * 4, cudaMemcpyDeviceToHost); p += (size_t) TM * HC;
++            cudaMemcpy(p, dio, (size_t) TM * HC * 4, cudaMemcpyDeviceToHost); p += (size_t) TM * HC;
++            cudaMemcpy(p, dmix, (size_t) TM * N * 4, cudaMemcpyDeviceToHost);
++            for (int t = T; t < TM; ++t) {   // rows past T are scratch: blank them
++                for (int i = 0; i < D; ++i) o[(size_t) t * D + i] = 0.f;
++            }
++            FILE* f = std::fopen(dump, "ab");
++            if (f) { std::fwrite(o.data(), 4, o.size(), f); std::fclose(f); }
++        }
++        // the graph
++        cudaGraph_t g = nullptr;
++        cudaGraphExec_t ge = nullptr;
++        cudaStreamBeginCapture(s, cudaStreamCaptureModeGlobal);
++        for (int rd = 0; rd < READS; ++rd) { K::FusedGrArgs a[8]; args(rd, a); K::fused_gr_read_multi(a, T, dxn, s); }
++        if (cudaStreamEndCapture(s, &g) != cudaSuccess || cudaGraphInstantiate(&ge, g, 0) != cudaSuccess) {
++            std::printf("capture failed: %s\n", cudaGetErrorString(cudaGetLastError()));
++            return 1;
++        }
++        for (int w = 0; w < 3; ++w) cudaGraphLaunch(ge, s);
++        cudaStreamSynchronize(s);
++        float best = 1e30f;
++        for (int rep = 0; rep < 5; ++rep) {
++            cudaEventRecord(e0, s);
++            for (int i = 0; i < 10; ++i) cudaGraphLaunch(ge, s);
++            cudaEventRecord(e1, s);
++            cudaEventSynchronize(e1);
++            float ms = 0;
++            cudaEventElapsedTime(&ms, e0, e1);
++            if (ms < best) best = ms;
++        }
++        const cudaError_t err = cudaGetLastError();
++        std::printf("T %d | %.2f us per read (graph of %d reads, %d cold sets) %s\n", T, 1e3 * best / (10 * READS), READS, SETS,
++                    err == cudaSuccess ? "" : cudaGetErrorString(err));
++        cudaGraphExecDestroy(ge);
++        cudaGraphDestroy(g);
++    }
++    return 0;
++}
