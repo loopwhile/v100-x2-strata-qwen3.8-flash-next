@@ -1,7 +1,7 @@
 {
   "schema": "stage12-candidate-contract-v1",
   "date": "2026-11-25",
-  "status": "GATE_B_IN_PROGRESS",
+  "status": "GATE_C_IN_PROGRESS",
   "approval": "sequential_gate_a_to_d_user_approved_keep_serving_stopped",
   "model_target": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS",
   "pinned_sources": {
@@ -154,6 +154,18 @@
           "expert_cache_hit_pct": 79.1
         }
       }
+    },
+    "S12-C0": {
+      "gate": "C",
+      "engine": "0.1.67",
+      "env": {"STRATA_OOMD_ROOM": "0"},
+      "status": "IN_PROGRESS"
+    },
+    "S12-D1": {
+      "gate": "C",
+      "engine": "0.1.67",
+      "feature": "PathC7 non-VNNI AVX512BW CPU expert port",
+      "status": "PATCH_PREP"
     }
   }
 }
