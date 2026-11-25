@@ -197,7 +197,27 @@
       "engine_sha256": "6082be376bfd05701a740a1f408858714380c8806c8b3fba0a834ada03049dc9",
       "feature": "MmapBounceRing + JobThread + zero-mincore + COLD_OVERLAP=5",
       "build_parity": "22/22 CPU + 15/15 GPU + file_expert_source_test PASS",
-      "status": "BENCHMARKING"
+      "status": "PASS",
+      "smoke_id": "d2smoke-20261125T182822",
+      "raw_id": "d2-20261125T182918",
+      "prefill_tok_s_A_B": [1012.3, 1017.1],
+      "decode_tok_s_A_B": [27.6, 28.3],
+      "ttft_s_A_B": [125.69, 125.11],
+      "report": "artifacts/stage12-results-20261125/d2-20261125T182918/report.md"
+    },
+    "S12-P1": {
+      "gate": "C",
+      "engine": "0.1.67",
+      "patch": "docker/patches/stage12-p1.patch",
+      "feature": "Volta WMMA2 (ty 18,20,21,22) + half2 dequant + LEAN + SKINNY + GroupedWeightTable",
+      "status": "BUILDING"
+    },
+    "S12-D3": {
+      "gate": "C",
+      "engine": "0.1.67",
+      "patch": "docker/patches/stage12-d3.patch",
+      "feature": "STRATA_HC_V100=1 (sm_70 K-split down + fused HC read T<=6)",
+      "status": "PATCH_READY"
     }
   }
 }
