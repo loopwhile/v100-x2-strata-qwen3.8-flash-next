@@ -99,7 +99,13 @@
       "image_id": "sha256:5ee459198a4b9c695183bf5901c17ff6b68019381c6b70c72a138fb76d27e93d",
       "engine_sha256": "79076b85b0450c86edb5c7bbee54a4c60cd00f564e9adb7058d9e00bc3b50c49",
       "source_sha": "a34979fc94f3d126b9bb8210f4ad311345688b52",
-      "status": "IN_PROGRESS"
+      "status": "PASS",
+      "smoke_id": "u0smoke-20261125T162323",
+      "raw_id": "u0-20261125T162444",
+      "prefill_tok_s_A_B": [876.5, 881.7],
+      "decode_tok_s_A_B": [21.3, 24.2],
+      "ttft_s_A_B": [145.12, 144.28],
+      "report": "artifacts/stage12-results-20261125/u0-20261125T162444/report.md"
     },
     "S12-U1": {
       "gate": "B",
@@ -107,7 +113,7 @@
       "image_id": "sha256:83a48e7dc321a72e0a13642668a887d179d630d2ff4dd204fd49cb7f674c3b6e",
       "engine_sha256": "acfe6d530bc970514d0f57c3f5a87fd5b0b77a2666f8bf4095f1ebd33bb0b447",
       "source_sha": "d46f5f268f8ed797e83a5c63a69bffbd7a581cf6",
-      "status": "PENDING"
+      "status": "IN_PROGRESS"
     },
     "S12-R0": {
       "gate": "B",

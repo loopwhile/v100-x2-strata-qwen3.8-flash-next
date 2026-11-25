@@ -1,0 +1,1220 @@
+{
+  "id": "u0-20261125T162444",
+  "arm": "S12-U0",
+  "progress": {
+    "id": "u0-20261125T162444",
+    "arm": "S12-U0",
+    "mode": "scored",
+    "phase": "results_saved",
+    "verdict": "PASS",
+    "host": "p520-llm",
+    "boot_id": "a182c39f-45df-4915-8688-fa33ff83eb03",
+    "started": "2026-11-25T16:24:45.638693+09:00",
+    "image_id": "sha256:5ee459198a4b9c695183bf5901c17ff6b68019381c6b70c72a138fb76d27e93d",
+    "source_sha": "a34979fc94f3d126b9bb8210f4ad311345688b52",
+    "engine_sha256": "79076b85b0450c86edb5c7bbee54a4c60cd00f564e9adb7058d9e00bc3b50c49",
+    "runner_sha256": "1053fbdad5ffae2df9e34b6747138cad8fa0040e19b59e199e8a81c5530fdc26",
+    "overrides": {},
+    "extra_args": [],
+    "spec": 8,
+    "draft_conf": 0.7,
+    "prefill": "auto:8192",
+    "sm_clock_ceiling_mhz": 1245,
+    "batches": [
+      {
+        "id": "u0-20261125T162444-startup",
+        "phase": "validated",
+        "started": "2026-11-25T16:24:45.877698+09:00",
+        "scored": false,
+        "verdict": "SMOKE_PASS_NOT_C2",
+        "finished": "2026-11-25T16:25:58.620893+09:00"
+      },
+      {
+        "id": "u0-20261125T162444-batch-1",
+        "phase": "validated",
+        "started": "2026-11-25T16:26:03.936049+09:00",
+        "scored": true,
+        "metrics": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "output_tokens": 1931,
+            "prefill_tok_s": 810.1,
+            "decode_tok_s": 21.1,
+            "ttft_s": 157.019018598
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "output_tokens": 1671,
+            "prefill_tok_s": 813.8,
+            "decode_tok_s": 24.0,
+            "ttft_s": 156.30830003600022
+          }
+        ],
+        "verdict": "PASS",
+        "finished": "2026-11-25T16:30:57.474151+09:00"
+      },
+      {
+        "id": "u0-20261125T162444-batch-2",
+        "phase": "validated",
+        "started": "2026-11-25T16:31:04.279910+09:00",
+        "scored": true,
+        "metrics": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "output_tokens": 1862,
+            "prefill_tok_s": 876.5,
+            "decode_tok_s": 21.3,
+            "ttft_s": 145.12458089500024
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "output_tokens": 1546,
+            "prefill_tok_s": 881.7,
+            "decode_tok_s": 24.2,
+            "ttft_s": 144.27791303000004
+          }
+        ],
+        "verdict": "PASS",
+        "finished": "2026-11-25T16:35:41.907410+09:00"
+      },
+      {
+        "id": "u0-20261125T162444-batch-3",
+        "phase": "validated",
+        "started": "2026-11-25T16:35:48.789252+09:00",
+        "scored": true,
+        "metrics": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "output_tokens": 1985,
+            "prefill_tok_s": 882.2,
+            "decode_tok_s": 21.9,
+            "ttft_s": 144.19245981800032
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "output_tokens": 1811,
+            "prefill_tok_s": 886.0,
+            "decode_tok_s": 24.5,
+            "ttft_s": 143.58305191199997
+          }
+        ],
+        "verdict": "PASS",
+        "finished": "2026-11-25T16:40:28.631412+09:00"
+      }
+    ],
+    "finished": "2026-11-25T16:40:35.117671+09:00"
+  },
+  "medians": {
+    "a": {
+      "prefill_tok_s": 876.5,
+      "decode_tok_s": 21.3,
+      "ttft_s": 145.12458089500024
+    },
+    "b": {
+      "prefill_tok_s": 881.7,
+      "decode_tok_s": 24.2,
+      "ttft_s": 144.27791303000004
+    }
+  },
+  "rows": [
+    {
+      "phase": {
+        "id": "u0-20261125T162444-startup",
+        "phase": "validated",
+        "started": "2026-11-25T16:24:45.877698+09:00",
+        "scored": false,
+        "verdict": "SMOKE_PASS_NOT_C2",
+        "finished": "2026-11-25T16:25:58.620893+09:00"
+      },
+      "gpu_full_lifetime": {
+        "a": {
+          "temperature_c": {
+            "mean": 38.96103896103896,
+            "min": 36.0,
+            "peak": 40.0
+          },
+          "power_w": {
+            "mean": 40.336883116883115,
+            "min": 26.02,
+            "peak": 49.26
+          },
+          "util_pct": {
+            "mean": 44.883116883116884,
+            "min": 0.0,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 12118.467532467532,
+            "min": 0.0,
+            "peak": 15379.0
+          },
+          "sm_mhz": {
+            "mean": 1158.5064935064936,
+            "min": 135.0,
+            "peak": 1245.0
+          }
+        },
+        "b": {
+          "temperature_c": {
+            "mean": 41.116883116883116,
+            "min": 38.0,
+            "peak": 43.0
+          },
+          "power_w": {
+            "mean": 41.182857142857145,
+            "min": 25.54,
+            "peak": 50.32
+          },
+          "util_pct": {
+            "mean": 17.844155844155843,
+            "min": 0.0,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 11719.194805194806,
+            "min": 0.0,
+            "peak": 15379.0
+          },
+          "sm_mhz": {
+            "mean": 1158.5064935064936,
+            "min": 135.0,
+            "peak": 1245.0
+          }
+        }
+      },
+      "request_metrics": {
+        "a": {
+          "id": "bc4391d919fb",
+          "projection": null,
+          "time": 1795591523.6767614,
+          "duration_s": 27.3,
+          "finish": "stop",
+          "gen": 1,
+          "prompt_tokens": 26,
+          "reused": 0,
+          "output_tokens": 111,
+          "first_engine_token_s": 9.399,
+          "prompt_total": 26,
+          "prompt_read": 26,
+          "reasoning_recoveries": 0,
+          "reasoning_repeat_coverage": 0.0,
+          "engine_generated": 111,
+          "prompt_ms": 9277.7,
+          "decode_ms": 18007.0,
+          "decode_tok_s": 6.2,
+          "hit_rate": 0.497,
+          "pcie_share": 0.0,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "file_mb": 32562.8,
+          "drafts_offered": 98,
+          "drafts_accepted": 96
+        },
+        "b": {
+          "id": "60a7b9dc7b6d",
+          "projection": null,
+          "time": 1795591550.9699836,
+          "duration_s": 7.6,
+          "finish": "stop",
+          "gen": 1,
+          "prompt_tokens": 26,
+          "reused": 0,
+          "output_tokens": 111,
+          "first_engine_token_s": 1.663,
+          "prompt_total": 26,
+          "prompt_read": 26,
+          "reasoning_recoveries": 0,
+          "reasoning_repeat_coverage": 0.0,
+          "engine_generated": 111,
+          "prompt_ms": 1586.4,
+          "decode_ms": 5981.8,
+          "decode_tok_s": 18.6,
+          "hit_rate": 0.497,
+          "pcie_share": 0.0,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "file_mb": 28776.0,
+          "drafts_offered": 98,
+          "drafts_accepted": 96
+        }
+      },
+      "engine_request_records": {
+        "a": [
+          {
+            "prompt_tokens": 26,
+            "reused": 0,
+            "read_tokens": 26,
+            "prompt_ms": 9278.0,
+            "generated": 111,
+            "decode_ms": 18007.0,
+            "physical_read_mb": 19845.7,
+            "kv_vram_hit_pct": 98.57
+          }
+        ],
+        "b": [
+          {
+            "prompt_tokens": 26,
+            "reused": 0,
+            "read_tokens": 26,
+            "prompt_ms": 1586.0,
+            "generated": 111,
+            "decode_ms": 5982.0,
+            "physical_read_mb": 8950.3,
+            "kv_vram_hit_pct": 98.57
+          }
+        ]
+      },
+      "timing": {
+        "a": [
+          "strata prefill: warmed the BF16 and FP16 GEMM libraries on GPU 0 in 836 ms (STRATA_PREFILL_WARM=0 skips)",
+          "strata verify: window up to 8 tokens, 81.8 MiB of device buffers",
+          "strata verify: capturing the 1-token window (915 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 15.8 ms",
+          "strata verify: capturing the 2-token window (897 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 37.6 ms",
+          "strata verify: capturing the 3-token window (879 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 39.7 ms",
+          "strata verify: capturing the 4-token window (857 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 36.5 ms",
+          "strata verify: capturing the 5-token window (839 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 31.1 ms",
+          "strata verify: capturing the 6-token window (821 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 36.0 ms",
+          "strata verify: capturing the 7-token window (803 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 23.4 ms",
+          "strata verify: capturing the 8-token window (783 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 36.1 ms"
+        ],
+        "b": [
+          "strata prefill: warmed the BF16 and FP16 GEMM libraries on GPU 0 in 841 ms (STRATA_PREFILL_WARM=0 skips)",
+          "strata verify: window up to 8 tokens, 81.8 MiB of device buffers",
+          "strata verify: capturing the 1-token window (915 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 14.8 ms",
+          "strata verify: capturing the 2-token window (897 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 37.5 ms",
+          "strata verify: capturing the 3-token window (879 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 39.8 ms",
+          "strata verify: capturing the 4-token window (857 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 36.7 ms",
+          "strata verify: capturing the 5-token window (839 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 39.2 ms",
+          "strata verify: capturing the 6-token window (821 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 36.0 ms",
+          "strata verify: capturing the 7-token window (803 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 22.7 ms",
+          "strata verify: capturing the 8-token window (783 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 36.0 ms"
+        ]
+      }
+    },
+    {
+      "phase": {
+        "id": "u0-20261125T162444-batch-1",
+        "phase": "validated",
+        "started": "2026-11-25T16:26:03.936049+09:00",
+        "scored": true,
+        "metrics": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "output_tokens": 1931,
+            "prefill_tok_s": 810.1,
+            "decode_tok_s": 21.1,
+            "ttft_s": 157.019018598
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "output_tokens": 1671,
+            "prefill_tok_s": 813.8,
+            "decode_tok_s": 24.0,
+            "ttft_s": 156.30830003600022
+          }
+        ],
+        "verdict": "PASS",
+        "finished": "2026-11-25T16:30:57.474151+09:00"
+      },
+      "gpu_full_lifetime": {
+        "a": {
+          "temperature_c": {
+            "mean": 50.564189189189186,
+            "min": 38.0,
+            "peak": 64.0
+          },
+          "power_w": {
+            "mean": 80.27760135135135,
+            "min": 26.5,
+            "peak": 197.27
+          },
+          "util_pct": {
+            "mean": 63.861486486486484,
+            "min": 0.0,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 14676.077702702703,
+            "min": 0.0,
+            "peak": 15637.0
+          },
+          "sm_mhz": {
+            "mean": 1212.3716216216217,
+            "min": 135.0,
+            "peak": 1245.0
+          }
+        },
+        "b": {
+          "temperature_c": {
+            "mean": 52.88175675675676,
+            "min": 41.0,
+            "peak": 64.0
+          },
+          "power_w": {
+            "mean": 84.00195945945946,
+            "min": 26.02,
+            "peak": 218.17
+          },
+          "util_pct": {
+            "mean": 57.42567567567568,
+            "min": 0.0,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 14518.722972972973,
+            "min": 0.0,
+            "peak": 15637.0
+          },
+          "sm_mhz": {
+            "mean": 1193.8108108108108,
+            "min": 135.0,
+            "peak": 1245.0
+          }
+        }
+      },
+      "request_metrics": {
+        "a": {
+          "id": "ec6e19273f53",
+          "projection": null,
+          "time": 1795591608.8769758,
+          "duration_s": 248.2,
+          "finish": "stop",
+          "gen": 1,
+          "prompt_tokens": 126967,
+          "reused": 0,
+          "output_tokens": 1931,
+          "first_engine_token_s": 156.895,
+          "prompt_total": 126967,
+          "prompt_read": 126967,
+          "reasoning_recoveries": 0,
+          "reasoning_repeat_coverage": 0.0,
+          "engine_generated": 1931,
+          "prompt_ms": 156734.1,
+          "decode_ms": 91437.6,
+          "decode_tok_s": 21.1,
+          "hit_rate": 0.77,
+          "pcie_share": 0.0,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "file_mb": 406097.0,
+          "drafts_offered": 1475,
+          "drafts_accepted": 1228
+        },
+        "b": {
+          "id": "e644c835cb79",
+          "projection": null,
+          "time": 1795591608.8762648,
+          "duration_s": 225.7,
+          "finish": "stop",
+          "gen": 1,
+          "prompt_tokens": 126968,
+          "reused": 0,
+          "output_tokens": 1671,
+          "first_engine_token_s": 156.182,
+          "prompt_total": 126968,
+          "prompt_read": 126968,
+          "reasoning_recoveries": 0,
+          "reasoning_repeat_coverage": 0.0,
+          "engine_generated": 1671,
+          "prompt_ms": 156010.7,
+          "decode_ms": 69654.2,
+          "decode_tok_s": 24.0,
+          "hit_rate": 0.82,
+          "pcie_share": 0.0,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "file_mb": 283120.3,
+          "drafts_offered": 1140,
+          "drafts_accepted": 922
+        }
+      },
+      "engine_request_records": {
+        "a": [
+          {
+            "prompt_tokens": 126967,
+            "reused": 0,
+            "read_tokens": 126967,
+            "prompt_ms": 156734.0,
+            "generated": 1931,
+            "decode_ms": 91438.0,
+            "physical_read_mb": 28810.0,
+            "kv_vram_hit_pct": 97.81
+          }
+        ],
+        "b": [
+          {
+            "prompt_tokens": 126968,
+            "reused": 0,
+            "read_tokens": 126968,
+            "prompt_ms": 156011.0,
+            "generated": 1671,
+            "decode_ms": 69654.0,
+            "physical_read_mb": 30204.3,
+            "kv_vram_hit_pct": 98.38
+          }
+        ]
+      },
+      "timing": {
+        "a": [
+          "strata prefill: warmed the BF16 and FP16 GEMM libraries on GPU 0 in 841 ms (STRATA_PREFILL_WARM=0 skips)",
+          "strata verify: window up to 8 tokens, 81.8 MiB of device buffers",
+          "strata verify: capturing the 1-token window (915 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 16.6 ms",
+          "strata verify: capturing the 2-token window (897 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 37.5 ms",
+          "strata verify: capturing the 3-token window (879 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 39.4 ms",
+          "strata verify: capturing the 4-token window (857 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 36.1 ms",
+          "strata verify: capturing the 5-token window (839 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 34.6 ms",
+          "strata verify: capturing the 6-token window (821 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 35.3 ms",
+          "strata verify: capturing the 7-token window (803 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 22.5 ms",
+          "strata verify: capturing the 8-token window (783 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 33.5 ms",
+          "strata prefill: QSA layers: norm + rope in one pass on, attention gate in the attention epilogue off",
+          "strata verify: capturing the 1-token window (661 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 19.7 ms",
+          "strata verify: capturing the 4-token window (643 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 30.5 ms",
+          "strata verify: capturing the 2-token window (623 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 19.2 ms",
+          "strata verify: capturing the 5-token window (603 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 19.9 ms",
+          "strata verify: capturing the 3-token window (585 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 25.8 ms",
+          "strata verify: capturing the 8-token window (565 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 23.1 ms",
+          "strata verify: capturing the 7-token window (547 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 21.8 ms",
+          "strata verify: capturing the 6-token window (529 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 23.1 ms"
+        ],
+        "b": [
+          "strata prefill: warmed the BF16 and FP16 GEMM libraries on GPU 0 in 837 ms (STRATA_PREFILL_WARM=0 skips)",
+          "strata verify: window up to 8 tokens, 81.8 MiB of device buffers",
+          "strata verify: capturing the 1-token window (915 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 16.3 ms",
+          "strata verify: capturing the 2-token window (897 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 37.2 ms",
+          "strata verify: capturing the 3-token window (879 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 39.1 ms",
+          "strata verify: capturing the 4-token window (857 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 35.5 ms",
+          "strata verify: capturing the 5-token window (839 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 34.3 ms",
+          "strata verify: capturing the 6-token window (821 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 34.9 ms",
+          "strata verify: capturing the 7-token window (803 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 22.2 ms",
+          "strata verify: capturing the 8-token window (783 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 31.2 ms",
+          "strata prefill: QSA layers: norm + rope in one pass on, attention gate in the attention epilogue off",
+          "strata verify: capturing the 1-token window (661 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 26.3 ms",
+          "strata verify: capturing the 3-token window (643 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 35.7 ms",
+          "strata verify: capturing the 2-token window (623 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 23.1 ms",
+          "strata verify: capturing the 4-token window (603 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 20.6 ms",
+          "strata verify: capturing the 6-token window (585 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 24.0 ms",
+          "strata verify: capturing the 5-token window (565 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 19.2 ms",
+          "strata verify: capturing the 7-token window (547 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 19.1 ms",
+          "strata verify: capturing the 8-token window (529 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 23.9 ms"
+        ]
+      },
+      "summary": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.004222445000323205,
+        "batch_wall_s": 248.35961100800023,
+        "decode_overlap_s": 68.82499769499964,
+        "both_busy_samples": 338,
+        "both_answering_samples": 338,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1931,
+            "finish_reason": "stop",
+            "wall_s": 248.34429378599998,
+            "ttft_s": 157.019018598,
+            "prefill_tok_s": 810.1,
+            "decode_tok_s": 21.1,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.77,
+            "file_mb": 406097.0,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "7f162e681a9897023b1760c889128a2614d5cb72eb29e78a3c152eae55f882bf"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 1671,
+            "finish_reason": "stop",
+            "wall_s": 225.84823873799996,
+            "ttft_s": 156.30830003600022,
+            "prefill_tok_s": 813.8,
+            "decode_tok_s": 24.0,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.82,
+            "file_mb": 283120.3,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "f83946ef9bd9180d6bb6c2bad0514ad395767e8a9e8d8093ff42d5ccb1c18147"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "summary_sha256": "703f8b8dd63de11da076386b4dd6d6643e79d184c37c280df1dd1f8e4f99679e"
+    },
+    {
+      "phase": {
+        "id": "u0-20261125T162444-batch-2",
+        "phase": "validated",
+        "started": "2026-11-25T16:31:04.279910+09:00",
+        "scored": true,
+        "metrics": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "output_tokens": 1862,
+            "prefill_tok_s": 876.5,
+            "decode_tok_s": 21.3,
+            "ttft_s": 145.12458089500024
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "output_tokens": 1546,
+            "prefill_tok_s": 881.7,
+            "decode_tok_s": 24.2,
+            "ttft_s": 144.27791303000004
+          }
+        ],
+        "verdict": "PASS",
+        "finished": "2026-11-25T16:35:41.907410+09:00"
+      },
+      "gpu_full_lifetime": {
+        "a": {
+          "temperature_c": {
+            "mean": 53.525,
+            "min": 43.0,
+            "peak": 66.0
+          },
+          "power_w": {
+            "mean": 82.43189285714286,
+            "min": 27.46,
+            "peak": 203.58
+          },
+          "util_pct": {
+            "mean": 66.23214285714286,
+            "min": 0.0,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 14474.396428571428,
+            "min": 0.0,
+            "peak": 15637.0
+          },
+          "sm_mhz": {
+            "mean": 1198.6107142857143,
+            "min": 135.0,
+            "peak": 1245.0
+          }
+        },
+        "b": {
+          "temperature_c": {
+            "mean": 54.68571428571428,
+            "min": 45.0,
+            "peak": 65.0
+          },
+          "power_w": {
+            "mean": 83.59021428571428,
+            "min": 26.98,
+            "peak": 213.95
+          },
+          "util_pct": {
+            "mean": 59.364285714285714,
+            "min": 0.0,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 14375.542857142857,
+            "min": 0.0,
+            "peak": 15637.0
+          },
+          "sm_mhz": {
+            "mean": 1182.9928571428572,
+            "min": 135.0,
+            "peak": 1245.0
+          }
+        }
+      },
+      "request_metrics": {
+        "a": {
+          "id": "665b7472ec1c",
+          "projection": null,
+          "time": 1795591909.0924325,
+          "duration_s": 232.5,
+          "finish": "stop",
+          "gen": 1,
+          "prompt_tokens": 126967,
+          "reused": 0,
+          "output_tokens": 1862,
+          "first_engine_token_s": 145.002,
+          "prompt_total": 126967,
+          "prompt_read": 126967,
+          "reasoning_recoveries": 0,
+          "reasoning_repeat_coverage": 0.0,
+          "engine_generated": 1862,
+          "prompt_ms": 144857.6,
+          "decode_ms": 87598.6,
+          "decode_tok_s": 21.3,
+          "hit_rate": 0.769,
+          "pcie_share": 0.0,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "file_mb": 389734.5,
+          "drafts_offered": 1402,
+          "drafts_accepted": 1185
+        },
+        "b": {
+          "id": "f36046c64837",
+          "projection": null,
+          "time": 1795591909.0911684,
+          "duration_s": 207.8,
+          "finish": "stop",
+          "gen": 1,
+          "prompt_tokens": 126968,
+          "reused": 0,
+          "output_tokens": 1546,
+          "first_engine_token_s": 144.152,
+          "prompt_total": 126968,
+          "prompt_read": 126968,
+          "reasoning_recoveries": 0,
+          "reasoning_repeat_coverage": 0.0,
+          "engine_generated": 1546,
+          "prompt_ms": 144005.2,
+          "decode_ms": 63807.0,
+          "decode_tok_s": 24.2,
+          "hit_rate": 0.827,
+          "pcie_share": 0.0,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "file_mb": 253745.0,
+          "drafts_offered": 1033,
+          "drafts_accepted": 830
+        }
+      },
+      "engine_request_records": {
+        "a": [
+          {
+            "prompt_tokens": 126967,
+            "reused": 0,
+            "read_tokens": 126967,
+            "prompt_ms": 144858.0,
+            "generated": 1862,
+            "decode_ms": 87599.0,
+            "physical_read_mb": 23360.7,
+            "kv_vram_hit_pct": 97.74
+          }
+        ],
+        "b": [
+          {
+            "prompt_tokens": 126968,
+            "reused": 0,
+            "read_tokens": 126968,
+            "prompt_ms": 144005.0,
+            "generated": 1546,
+            "decode_ms": 63807.0,
+            "physical_read_mb": 24825.8,
+            "kv_vram_hit_pct": 98.29
+          }
+        ]
+      },
+      "timing": {
+        "a": [
+          "strata prefill: warmed the BF16 and FP16 GEMM libraries on GPU 0 in 919 ms (STRATA_PREFILL_WARM=0 skips)",
+          "strata verify: window up to 8 tokens, 81.8 MiB of device buffers",
+          "strata verify: capturing the 1-token window (915 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 16.7 ms",
+          "strata verify: capturing the 2-token window (897 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 36.6 ms",
+          "strata verify: capturing the 3-token window (879 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 40.7 ms",
+          "strata verify: capturing the 4-token window (857 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 34.3 ms",
+          "strata verify: capturing the 5-token window (839 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 35.0 ms",
+          "strata verify: capturing the 6-token window (821 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 34.7 ms",
+          "strata verify: capturing the 7-token window (803 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 24.3 ms",
+          "strata verify: capturing the 8-token window (783 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 32.4 ms",
+          "strata prefill: QSA layers: norm + rope in one pass on, attention gate in the attention epilogue off",
+          "strata verify: capturing the 1-token window (661 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 13.8 ms",
+          "strata verify: capturing the 4-token window (643 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 20.9 ms",
+          "strata verify: capturing the 2-token window (623 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 19.4 ms",
+          "strata verify: capturing the 5-token window (603 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 19.9 ms",
+          "strata verify: capturing the 3-token window (585 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 24.1 ms",
+          "strata verify: capturing the 8-token window (565 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 21.7 ms",
+          "strata verify: capturing the 7-token window (547 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 19.9 ms",
+          "strata verify: capturing the 6-token window (529 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 22.0 ms"
+        ],
+        "b": [
+          "strata prefill: warmed the BF16 and FP16 GEMM libraries on GPU 0 in 837 ms (STRATA_PREFILL_WARM=0 skips)",
+          "strata verify: window up to 8 tokens, 81.8 MiB of device buffers",
+          "strata verify: capturing the 1-token window (915 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 16.3 ms",
+          "strata verify: capturing the 2-token window (897 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 36.1 ms",
+          "strata verify: capturing the 3-token window (879 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 40.1 ms",
+          "strata verify: capturing the 4-token window (857 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 34.0 ms",
+          "strata verify: capturing the 5-token window (839 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 34.8 ms",
+          "strata verify: capturing the 6-token window (821 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 34.2 ms",
+          "strata verify: capturing the 7-token window (803 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 24.1 ms",
+          "strata verify: capturing the 8-token window (783 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 30.0 ms",
+          "strata prefill: QSA layers: norm + rope in one pass on, attention gate in the attention epilogue off",
+          "strata verify: capturing the 1-token window (661 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 19.0 ms",
+          "strata verify: capturing the 3-token window (643 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 23.7 ms",
+          "strata verify: capturing the 2-token window (623 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 23.2 ms",
+          "strata verify: capturing the 4-token window (603 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 22.8 ms",
+          "strata verify: capturing the 6-token window (585 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 49.1 ms",
+          "strata verify: capturing the 5-token window (565 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 19.0 ms",
+          "strata verify: capturing the 7-token window (547 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 19.6 ms",
+          "strata verify: capturing the 8-token window (529 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 24.7 ms"
+        ]
+      },
+      "summary": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.004238009999880887,
+        "batch_wall_s": 232.6338047129998,
+        "decode_overlap_s": 62.844563150999875,
+        "both_busy_samples": 310,
+        "both_answering_samples": 310,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1862,
+            "finish_reason": "stop",
+            "wall_s": 232.61994856299998,
+            "ttft_s": 145.12458089500024,
+            "prefill_tok_s": 876.5,
+            "decode_tok_s": 21.3,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.769,
+            "file_mb": 389734.5,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "56fd88dd9cc9ccf2cd4bab2c0847a203956295462e533d8534821c000730990a"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 1546,
+            "finish_reason": "stop",
+            "wall_s": 207.973382056,
+            "ttft_s": 144.27791303000004,
+            "prefill_tok_s": 881.7,
+            "decode_tok_s": 24.2,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.827,
+            "file_mb": 253745.0,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "4aab88280789776ae93ceeee51d5c4e14d4de50a4991acac8d22f0ae38f48290"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "summary_sha256": "4769ca72b4553f0ca4cc9d2c6f66eb64ec3319a795e55d02ce8c28a9b33c0e01"
+    },
+    {
+      "phase": {
+        "id": "u0-20261125T162444-batch-3",
+        "phase": "validated",
+        "started": "2026-11-25T16:35:48.789252+09:00",
+        "scored": true,
+        "metrics": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "output_tokens": 1985,
+            "prefill_tok_s": 882.2,
+            "decode_tok_s": 21.9,
+            "ttft_s": 144.19245981800032
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "output_tokens": 1811,
+            "prefill_tok_s": 886.0,
+            "decode_tok_s": 24.5,
+            "ttft_s": 143.58305191199997
+          }
+        ],
+        "verdict": "PASS",
+        "finished": "2026-11-25T16:40:28.631412+09:00"
+      },
+      "gpu_full_lifetime": {
+        "a": {
+          "temperature_c": {
+            "mean": 54.0531914893617,
+            "min": 44.0,
+            "peak": 66.0
+          },
+          "power_w": {
+            "mean": 83.92659574468085,
+            "min": 27.94,
+            "peak": 198.87
+          },
+          "util_pct": {
+            "mean": 66.30141843971631,
+            "min": 0.0,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 14564.929078014184,
+            "min": 0.0,
+            "peak": 15637.0
+          },
+          "sm_mhz": {
+            "mean": 1200.3120567375886,
+            "min": 135.0,
+            "peak": 1245.0
+          }
+        },
+        "b": {
+          "temperature_c": {
+            "mean": 55.01418439716312,
+            "min": 45.0,
+            "peak": 65.0
+          },
+          "power_w": {
+            "mean": 84.36088652482269,
+            "min": 27.0,
+            "peak": 208.81
+          },
+          "util_pct": {
+            "mean": 61.37234042553192,
+            "min": 0.0,
+            "peak": 100.0
+          },
+          "vram_mib": {
+            "mean": 14399.755319148937,
+            "min": 0.0,
+            "peak": 15637.0
+          },
+          "sm_mhz": {
+            "mean": 1180.7659574468084,
+            "min": 135.0,
+            "peak": 1245.0
+          }
+        }
+      },
+      "request_metrics": {
+        "a": {
+          "id": "ce14c0237264",
+          "projection": null,
+          "time": 1795592193.548188,
+          "duration_s": 234.8,
+          "finish": "stop",
+          "gen": 1,
+          "prompt_tokens": 126967,
+          "reused": 0,
+          "output_tokens": 1985,
+          "first_engine_token_s": 144.069,
+          "prompt_total": 126967,
+          "prompt_read": 126967,
+          "reasoning_recoveries": 0,
+          "reasoning_repeat_coverage": 0.0,
+          "engine_generated": 1985,
+          "prompt_ms": 143917.9,
+          "decode_ms": 90793.5,
+          "decode_tok_s": 21.9,
+          "hit_rate": 0.775,
+          "pcie_share": 0.0,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "file_mb": 403929.5,
+          "drafts_offered": 1478,
+          "drafts_accepted": 1263
+        },
+        "b": {
+          "id": "1ee8fd4e6218",
+          "projection": null,
+          "time": 1795592193.5544698,
+          "duration_s": 217.4,
+          "finish": "stop",
+          "gen": 1,
+          "prompt_tokens": 126968,
+          "reused": 0,
+          "output_tokens": 1811,
+          "first_engine_token_s": 143.449,
+          "prompt_total": 126968,
+          "prompt_read": 126968,
+          "reasoning_recoveries": 0,
+          "reasoning_repeat_coverage": 0.0,
+          "engine_generated": 1811,
+          "prompt_ms": 143303.0,
+          "decode_ms": 74063.3,
+          "decode_tok_s": 24.5,
+          "hit_rate": 0.832,
+          "pcie_share": 0.0,
+          "ram_blobs": 0,
+          "file_blobs": 0,
+          "file_mb": 294318.3,
+          "drafts_offered": 1233,
+          "drafts_accepted": 967
+        }
+      },
+      "engine_request_records": {
+        "a": [
+          {
+            "prompt_tokens": 126967,
+            "reused": 0,
+            "read_tokens": 126967,
+            "prompt_ms": 143918.0,
+            "generated": 1985,
+            "decode_ms": 90793.0,
+            "physical_read_mb": 23436.2,
+            "kv_vram_hit_pct": 97.85
+          }
+        ],
+        "b": [
+          {
+            "prompt_tokens": 126968,
+            "reused": 0,
+            "read_tokens": 126968,
+            "prompt_ms": 143303.0,
+            "generated": 1811,
+            "decode_ms": 74063.0,
+            "physical_read_mb": 24732.9,
+            "kv_vram_hit_pct": 98.56
+          }
+        ]
+      },
+      "timing": {
+        "a": [
+          "strata prefill: warmed the BF16 and FP16 GEMM libraries on GPU 0 in 850 ms (STRATA_PREFILL_WARM=0 skips)",
+          "strata verify: window up to 8 tokens, 81.8 MiB of device buffers",
+          "strata verify: capturing the 1-token window (915 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 16.6 ms",
+          "strata verify: capturing the 2-token window (897 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 37.3 ms",
+          "strata verify: capturing the 3-token window (879 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 39.3 ms",
+          "strata verify: capturing the 4-token window (857 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 36.5 ms",
+          "strata verify: capturing the 5-token window (839 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 36.3 ms",
+          "strata verify: capturing the 6-token window (821 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 33.4 ms",
+          "strata verify: capturing the 7-token window (803 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 25.1 ms",
+          "strata verify: capturing the 8-token window (783 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 36.1 ms",
+          "strata prefill: QSA layers: norm + rope in one pass on, attention gate in the attention epilogue off",
+          "strata verify: capturing the 1-token window (661 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 19.5 ms",
+          "strata verify: capturing the 4-token window (643 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 25.4 ms",
+          "strata verify: capturing the 2-token window (623 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 18.9 ms",
+          "strata verify: capturing the 5-token window (603 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 19.1 ms",
+          "strata verify: capturing the 3-token window (585 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 24.8 ms",
+          "strata verify: capturing the 8-token window (565 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 22.2 ms",
+          "strata verify: capturing the 7-token window (547 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 19.2 ms",
+          "strata verify: capturing the 6-token window (529 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 25.5 ms"
+        ],
+        "b": [
+          "strata prefill: warmed the BF16 and FP16 GEMM libraries on GPU 0 in 858 ms (STRATA_PREFILL_WARM=0 skips)",
+          "strata verify: window up to 8 tokens, 81.8 MiB of device buffers",
+          "strata verify: capturing the 1-token window (915 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 16.7 ms",
+          "strata verify: capturing the 2-token window (897 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 36.9 ms",
+          "strata verify: capturing the 3-token window (879 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 38.9 ms",
+          "strata verify: capturing the 4-token window (857 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 36.3 ms",
+          "strata verify: capturing the 5-token window (839 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 35.8 ms",
+          "strata verify: capturing the 6-token window (821 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 28.9 ms",
+          "strata verify: capturing the 7-token window (803 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 24.1 ms",
+          "strata verify: capturing the 8-token window (783 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 35.7 ms",
+          "strata prefill: QSA layers: norm + rope in one pass on, attention gate in the attention epilogue off",
+          "strata verify: capturing the 1-token window (661 MiB of VRAM free)",
+          "strata verify: captured the 1-token window (upload no error, sync no error) in 19.5 ms",
+          "strata verify: capturing the 3-token window (643 MiB of VRAM free)",
+          "strata verify: captured the 3-token window (upload no error, sync no error) in 23.6 ms",
+          "strata verify: capturing the 2-token window (623 MiB of VRAM free)",
+          "strata verify: captured the 2-token window (upload no error, sync no error) in 23.0 ms",
+          "strata verify: capturing the 4-token window (603 MiB of VRAM free)",
+          "strata verify: captured the 4-token window (upload no error, sync no error) in 24.0 ms",
+          "strata verify: capturing the 6-token window (585 MiB of VRAM free)",
+          "strata verify: captured the 6-token window (upload no error, sync no error) in 24.4 ms",
+          "strata verify: capturing the 5-token window (565 MiB of VRAM free)",
+          "strata verify: captured the 5-token window (upload no error, sync no error) in 19.3 ms",
+          "strata verify: capturing the 7-token window (547 MiB of VRAM free)",
+          "strata verify: captured the 7-token window (upload no error, sync no error) in 19.7 ms",
+          "strata verify: capturing the 8-token window (529 MiB of VRAM free)",
+          "strata verify: captured the 8-token window (upload no error, sync no error) in 23.5 ms"
+        ]
+      },
+      "summary": {
+        "workload_id": "V100-PERFORMANCE-C2-128K-v1",
+        "manifest_sha256": "e413acced27c1991d76ce2b2df195ff73ce2b4f45853b9676e5b9000ef8503ca",
+        "warmup_count": 0,
+        "measured_repetitions": 1,
+        "submission_skew_s": 0.0038733960000172374,
+        "batch_wall_s": 234.8906972740001,
+        "decode_overlap_s": 73.338543974,
+        "both_busy_samples": 361,
+        "both_answering_samples": 361,
+        "requests": [
+          {
+            "label": "A",
+            "prompt_tokens": 126967,
+            "expected_prompt_tokens": 126967,
+            "output_tokens": 1985,
+            "finish_reason": "stop",
+            "wall_s": 234.8765486540001,
+            "ttft_s": 144.19245981800032,
+            "prefill_tok_s": 882.2,
+            "decode_tok_s": 21.9,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.775,
+            "file_mb": 403929.5,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "7cdb47a4327085376d4f491360e2f70dc7c09af84c848d55e09ce8487d625291"
+          },
+          {
+            "label": "B",
+            "prompt_tokens": 126968,
+            "expected_prompt_tokens": 126968,
+            "output_tokens": 1811,
+            "finish_reason": "stop",
+            "wall_s": 217.53487718800034,
+            "ttft_s": 143.58305191199997,
+            "prefill_tok_s": 886.0,
+            "decode_tok_s": 24.5,
+            "cache_n": 0,
+            "cached_tokens": 0,
+            "expert_hit_rate": 0.832,
+            "file_mb": 294318.3,
+            "ram_blobs": 0,
+            "file_blobs": 0,
+            "prompt_count_match": true,
+            "minimum_output_pass": true,
+            "nonempty_output": true,
+            "text_sha256": "c1de806007d1a70657ff865541dfeeb6a8ab615088a24c27c0244cb5d8587d51"
+          }
+        ],
+        "pass_mechanical": true,
+        "active_overlap": true,
+        "post_health": true
+      },
+      "summary_sha256": "c35b97ae8784434e2079b4018089088c554f61bf3945706cf0126a01e1ac8b70"
+    }
+  ]
+}
