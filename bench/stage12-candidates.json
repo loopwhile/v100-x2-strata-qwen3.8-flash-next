@@ -191,8 +191,13 @@
       "gate": "C",
       "engine": "0.1.67",
       "patch": "docker/patches/stage12-d2.patch",
+      "patch_sha256": "b4ac6b4ff10fd79a0ee7d9225005b5e35a5818d7fdce3e6ded60f53bd43faaad",
+      "tag": "strata-v100:stage12-0.1.67-d2",
+      "image_id": "sha256:922ba4eb58eebcd10a5e586de4c030cdc093ed4f1df429bc1d34b56e97cc520c",
+      "engine_sha256": "6082be376bfd05701a740a1f408858714380c8806c8b3fba0a834ada03049dc9",
       "feature": "MmapBounceRing + JobThread + zero-mincore + COLD_OVERLAP=5",
-      "status": "PATCH_READY"
+      "build_parity": "22/22 CPU + 15/15 GPU + file_expert_source_test PASS",
+      "status": "BENCHMARKING"
     }
   }
 }
