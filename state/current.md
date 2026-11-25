@@ -1,17 +1,20 @@
-# Current operation — S11X-D2 promoted & LIVE on P520 (2026-11-19 KST)
+# Current operation — S12-C1T promoted & LIVE on P520 (2026-11-25 KST)
 
-The user promoted **`S11X-D2`** (`d2-20261119T003753`: Prefill `1032.6 / 1037.0 tok/s`,
-Decode `37.1 / 41.0 tok/s`) to the fixed operating containers/API model IDs `p520-llm-a`
-and `p520-llm-b` under release `s11x-d2-20261119T095616` (`strata-v100:stage11x-d2`,
-`sha256:26d2bbfe67bc...`). P520 loopback ports remain 8080/8081 and the unchanged
+The user promoted **`S12-C1T`** (`c1t-20261125T205904`: Prefill `1039.4 / 1046.8 tok/s`,
+Decode `41.3 / 45.2 tok/s`, TTFT `122.40 / 121.54 s`, semantic quality `4/4 A & 4/4 B`)
+to the fixed operating containers/API model IDs `p520-llm-a` and `p520-llm-b` under
+release `s12-c1t-20261125T221034` (`strata-v100:stage12-0.1.67-c1`,
+`sha256:33b61b0432e8...`). P520 loopback ports remain 8080/8081 and the unchanged
 ThinkPad tunnel remains 18080/18081; OpenCode selections stay `p520-a/p520-llm-a`
 and `p520-b/p520-llm-b`. Both containers are running (`Up`), verified via
-`scripts/127-p520-serving.py check` (engine SHA256 `7f6fc8f7...`, 19 `STRATA_*` env
-overrides, DFlash2 `--draft-fallback none`), and concurrent `P520_OK` tunnel smoke
-requests. See [deployment summary](../artifacts/p520-serving-20261119/summary.md),
-[operating guide](../docs/P520_SERVING.md), and [Stage 11X summary](../artifacts/stage11x-results-20261119/summary.md).
-The prior `S10-D4` containers (`s10-d4-20261111T012331`, `sha256:dd8913d85f18...`) are
-preserved in `exited` state under `p520-llm-{a,b}-archive-s10-d4-20261111T012331` for rollback.
+`scripts/127-p520-serving.py check` (engine SHA256 `c01770d0...`, `--prefill auto:8192`,
+14 `STRATA_*` env overrides, DFlash2 `--draft-fallback none`), and concurrent `P520_OK`
+tunnel smoke requests. See [deployment summary](../artifacts/p520-serving-20261125/summary.md),
+[operating guide](../docs/P520_SERVING.md), and [Stage 12 final review](../docs/STAGE12_FINAL_REVIEW.md).
+The prior `S11X-D2` containers (`s11x-d2-20261119T095616`, `sha256:26d2bbfe67bc...`) and
+`S10-D4` containers (`s10-d4-20261111T012331`, `sha256:dd8913d85f18...`) are preserved in
+`exited` state under `p520-llm-{a,b}-archive-s11x-d2-20261119T095616` and
+`p520-llm-{a,b}-archive-s10-d4-20261111T012331` for rollback.
 
 ## Stage 11X Follow-up Summary — 2026-11-19 KST (`S11X-D2` Promoted)
 

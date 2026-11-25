@@ -1,34 +1,38 @@
 # Repository agent instructions
 
-## Current serving contract — 2026-11-19 user-approved S11X-D2 promotion
+## Current serving contract — 2026-11-25 user-approved S12-C1T promotion
 
-- The user promoted **`S11X-D2`** (`d2-20261119T003753`, `Prefill 1032.6 / 1037.0 tok/s`,
-  `Decode 37.1 / 41.0 tok/s`) on 2026-11-19 to the live operating pair: containers
-  and API model IDs **`p520-llm-a` / `p520-llm-b`** (release `s11x-d2-20261119T095616`,
-  deployed and verified running). See [operating guide](docs/P520_SERVING.md),
-  [deployment verification](artifacts/p520-serving-20261119/summary.md), and
-  `scripts/127-p520-serving.py`.
+- The user promoted **`S12-C1T`** (`c1t-20261125T205904`, `Prefill 1039.4 / 1046.8 tok/s`,
+  `Decode 41.3 / 45.2 tok/s`, semantic quality `4/4 A & 4/4 B`) on 2026-11-25 to the live
+  operating pair: containers and API model IDs **`p520-llm-a` / `p520-llm-b`** (release
+  `s12-c1t-20261125T221034`, deployed and verified running). See
+  [operating guide](docs/P520_SERVING.md),
+  [deployment verification](artifacts/p520-serving-20261125/summary.md),
+  [Stage 12 final review](docs/STAGE12_FINAL_REVIEW.md), and `scripts/127-p520-serving.py`.
 - Keep P520 loopback 8080/8081 and ThinkPad 18080/18081 unchanged. OpenCode's
   stable selections remain `p520-a/p520-llm-a` and `p520-b/p520-llm-b`.
 - Use native API `aliases` for those IDs. Keep canonical model names Qwen-shaped
   (`qwen3.8-flash-next-iq3_xxs_p520_a/b`): the server detects DFlash2 compatibility
   from that name. Require actual DFlash2/fallback/argv checks.
-- Promoted recipe: image `strata-v100:stage11x-d2` (`sha256:26d2bbfe67bc7cb4e489e6f9283e22bb4cd59c6e9659abf3396caa4f1a4f7f38`,
-  [stage11x-d2.patch](docker/patches/stage11x-d2.patch) on pinned `0.1.59`, engine SHA256
-  `7f6fc8f7858739d18b177911d32d0d832393274b4ba7797dfd3cf29e634e76a9`), IQ3_XXS + stock
-  DFlash2 (`--spec 8 --draft-conf 0.7 --prefill auto --draft-fallback none`), independent
-  GPU/CPU assignments, INT8 128K (`--kv-resident 32768`), and the 19 verified
-  `S11X-D2` env overrides (`STRATA_SELECT_SIMT=1`, `STRATA_SM70_TABLE=1`, `STRATA_PF_WMMA=1`,
-  `STRATA_PF_WMMA2=1`, `STRATA_PF_WMMA_LEAN=1`, `STRATA_PF_WMMA_SKINNY=1`,
-  `STRATA_AVX512BW_IQ=22`, `STRATA_IQ_MT_MIN=1`, `STRATA_IQ_GATHER=1`, `STRATA_IQ256_GATHER=1`,
-  `STRATA_Q2_BITPLANE=1`, `STRATA_SIDE_MIXER=2`, `STRATA_ATTN_DAILY=1`, `STRATA_GR_UP75=1`,
-  `STRATA_GU_SWIGLU=1`, `STRATA_QSA_ROWS=1`, `STRATA_FUSE_WAIT=2`, `STRATA_MMAP_ADAPT_ASYNC=1`,
-  `STRATA_COLD_OVERLAP=5`).
+- Promoted recipe: image `strata-v100:stage12-0.1.67-c1` (`sha256:33b61b0432e81c44a6d212ca38be46b4191a989a65c4a0141e2cbc9b116f10ec`,
+  [stage12-d1.patch](docker/patches/stage12-d1.patch),
+  [stage12-d2.patch](docker/patches/stage12-d2.patch), and
+  [stage12-d3.patch](docker/patches/stage12-d3.patch) on pinned `0.1.67`
+  `d46f5f268f8ed797e83a5c63a69bffbd7a581cf6`, engine SHA256
+  `c01770d00bd49985f008e39d722b996f0ad476545c8bd50bb96ad8a66ed52dda`), IQ3_XXS + stock
+  DFlash2 (`--spec 8 --draft-conf 0.7 --prefill auto:8192 --draft-fallback none`),
+  independent GPU/CPU assignments, INT8 128K (`--kv-resident 32768`), and the 14 verified
+  `S12-C1T` env overrides (`STRATA_OOMD_ROOM=0`, `STRATA_AVX512BW_IQ=22`, `STRATA_IQ_MT_MIN=1`,
+  `STRATA_IQ_GATHER=1`, `STRATA_IQ256_GATHER=1`, `STRATA_Q2_BITPLANE=1`,
+  `STRATA_MMAP_ADAPT_ASYNC=1`, `STRATA_COLD_OVERLAP=5`, `STRATA_HC_V100=1`,
+  `STRATA_SELECT_SIMT=1`, `STRATA_ATTN_DAILY=1`, `STRATA_GR_UP75=1`, `STRATA_FUSE_WAIT=2`,
+  `STRATA_ROUTE_TAIL_SKIP=7`). Keep `--prefill auto:8192` explicit (never bare `--prefill auto`).
 - Preserve historical containers and versioned serving releases, including the prior
-  `S10-D4` pair (`p520-llm-{a,b}-archive-s10-d4-20261111T012331`, `sha256:dd8913d85f18...`,
-  release `s10-d4-20261111T012331`) retained for rollback. Keep client-facing IDs/ports
-  fixed. Do not mutate engine binaries inside existing containers. Do not stop active
-  serving for experiments without explicit approval. Power/clock/tunnel settings remain protected.
+  `S11X-D2` pair (`p520-llm-{a,b}-archive-s11x-d2-20261119T095616`, `sha256:26d2bbfe67bc...`,
+  release `s11x-d2-20261119T095616`) and `S10-D4` pair (`p520-llm-{a,b}-archive-s10-d4-20261111T012331`,
+  `sha256:dd8913d85f18...`, release `s10-d4-20261111T012331`) retained for rollback.
+  Keep client-facing IDs/ports fixed. Do not mutate engine binaries inside existing containers.
+  Do not stop active serving for experiments without explicit approval. Power/clock/tunnel settings remain protected.
 
 This repository is a live dual-V100 inference deployment and benchmark harness.
 Before changing code or running P520 commands, read [Stage 4 plan](docs/STAGE4_PLAN.md)

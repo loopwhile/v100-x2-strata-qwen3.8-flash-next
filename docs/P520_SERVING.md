@@ -1,14 +1,18 @@
 # P520 stable serving pair
 
-The user initially selected **S10-D4** on 2026-11-11 (`s10-d4-20261111T012331`) and
-promoted **`S11X-D2`** on 2026-11-19 (`s11x-d2-20261119T095616`): pinned Strata `0.1.59`
-patched with [stage11x-d2.patch](../docker/patches/stage11x-d2.patch), IQ3_XXS, stock
-DFlash2, `--spec 8 --draft-conf 0.7 --prefill auto`.
+The user initially selected **S10-D4** on 2026-11-11 (`s10-d4-20261111T012331`),
+promoted `S11X-D2` on 2026-11-19 (`s11x-d2-20261119T095616`), and promoted
+**`S12-C1T`** on 2026-11-25 (`s12-c1t-20261125T221034`): pinned Strata `0.1.67`
+patched with [stage12-d1.patch](../docker/patches/stage12-d1.patch),
+[stage12-d2.patch](../docker/patches/stage12-d2.patch), and
+[stage12-d3.patch](../docker/patches/stage12-d3.patch), IQ3_XXS, stock DFlash2,
+`--spec 8 --draft-conf 0.7 --prefill auto:8192`.
 The operating names and API model IDs are independent of the engine version.
 Both promoted servers are deployed, verified live, and running from release
-`s11x-d2-20261119T095616`; see
-[2026-11-19 deployment verification](../artifacts/p520-serving-20261119/summary.md)
-(initial 2026-11-11 `S10-D4` deployment notes are preserved in
+`s12-c1t-20261125T221034`; see
+[2026-11-25 deployment verification](../artifacts/p520-serving-20261125/summary.md)
+(prior 2026-11-19 `S11X-D2` and 2026-11-11 `S10-D4` deployment notes are preserved in
+[2026-11-19 summary](../artifacts/p520-serving-20261119/summary.md) and
 [2026-11-11 summary](../artifacts/p520-serving-20261111/summary.md)).
 
 | Contract | Agent A | Agent B |
@@ -78,24 +82,32 @@ OpenAI-compatible request example:
 
 ## Versioned implementation and rollback
 
-Active `S11X-D2` image ID (`strata-v100:stage11x-d2`):
-`sha256:26d2bbfe67bc7cb4e489e6f9283e22bb4cd59c6e9659abf3396caa4f1a4f7f38`.
-Base source: `712fec6b4297c9cfd32ab43daaa2979a9aa01edf` + [stage11x-d2.patch](../docker/patches/stage11x-d2.patch).
-Engine SHA256: `7f6fc8f7858739d18b177911d32d0d832393274b4ba7797dfd3cf29e634e76a9`.
-The 19 verified `S11X-D2` environment overrides are:
-- Baseline D4: `STRATA_SELECT_SIMT=1`, `STRATA_SM70_TABLE=1`, `STRATA_PF_WMMA=1`
-- P1 Volta prefill: `STRATA_PF_WMMA2=1`, `STRATA_PF_WMMA_LEAN=1`, `STRATA_PF_WMMA_SKINNY=1`
-- D1 CPU `PathC7`: `STRATA_AVX512BW_IQ=22`, `STRATA_IQ_MT_MIN=1`, `STRATA_IQ_GATHER=1`, `STRATA_IQ256_GATHER=1`, `STRATA_Q2_BITPLANE=1`
-- D2 Sync/Cache & `nv_defaults`: `STRATA_SIDE_MIXER=2`, `STRATA_ATTN_DAILY=1`, `STRATA_GR_UP75=1`, `STRATA_GU_SWIGLU=1`, `STRATA_QSA_ROWS=1`, `STRATA_FUSE_WAIT=2`, `STRATA_MMAP_ADAPT_ASYNC=1`, `STRATA_COLD_OVERLAP=5`
+Active `S12-C1T` image ID (`strata-v100:stage12-0.1.67-c1`):
+`sha256:33b61b0432e81c44a6d212ca38be46b4191a989a65c4a0141e2cbc9b116f10ec`.
+Base source: `d46f5f268f8ed797e83a5c63a69bffbd7a581cf6` (`0.1.67` / `v0.2.21`) +
+[stage12-d1.patch](../docker/patches/stage12-d1.patch),
+[stage12-d2.patch](../docker/patches/stage12-d2.patch), and
+[stage12-d3.patch](../docker/patches/stage12-d3.patch).
+Engine SHA256: `c01770d00bd49985f008e39d722b996f0ad476545c8bd50bb96ad8a66ed52dda`.
+Explicit `--prefill auto:8192` is required (never bare `--prefill auto`, which defaults
+to `16384` in `0.1.60+` and previously tripped P520 PSU power on Stage 10-P3).
+The 14 verified `S12-C1T` environment overrides are:
+- Docker page-cache safety: `STRATA_OOMD_ROOM=0`
+- CPU `PathC7`: `STRATA_AVX512BW_IQ=22`, `STRATA_IQ_MT_MIN=1`, `STRATA_IQ_GATHER=1`, `STRATA_IQ256_GATHER=1`, `STRATA_Q2_BITPLANE=1`
+- Mmap bounce ring & overlap: `STRATA_MMAP_ADAPT_ASYNC=1`, `STRATA_COLD_OVERLAP=5`
+- Volta GPU & sync/routing parity: `STRATA_HC_V100=1`, `STRATA_SELECT_SIMT=1`, `STRATA_ATTN_DAILY=1`, `STRATA_GR_UP75=1`, `STRATA_FUSE_WAIT=2`, `STRATA_ROUTE_TAIL_SKIP=7`
 
-Disallowed / rejected overrides (`STRATA_ADAPT_LAG`, `STRATA_ADAPT_NOWAIT`, `STRATA_PF_HC_REGION`, `STRATA_AUX_CPUS`) remain absent. DFlash2 is active without an MTP drafter or fallback; the original shared MTP mount remains available for the draft vocabulary.
+Disallowed / rejected overrides (`STRATA_ADAPT_LAG`, `STRATA_ADAPT_NOWAIT`, `STRATA_PF_HC_REGION`, `STRATA_AUX_CPUS`, `STRATA_PF_WMMA`, `STRATA_PF_WMMA2`) remain absent. DFlash2 is active without an MTP drafter or fallback; the original shared MTP mount remains available for the draft vocabulary.
 
-Preserved rollback `S10-D4` release (`s10-d4-20261111T012331`, containers `p520-llm-{a,b}-archive-s10-d4-20261111T012331`):
-image `sha256:dd8913d85f1811af034b66f3817ec392a82abdd28082e98e8a44b1d826bfea3d`, engine SHA256 `ccca488231f12da422be4a80b5c7f165b7593f6388907cac92d3c3f0d4229031`.
+Preserved rollback releases:
+- Prior `S11X-D2` (`s11x-d2-20261119T095616`, containers `p520-llm-{a,b}-archive-s11x-d2-20261119T095616`):
+  image `sha256:26d2bbfe67bc7cb4e489e6f9283e22bb4cd59c6e9659abf3396caa4f1a4f7f38`, engine SHA256 `7f6fc8f7858739d18b177911d32d0d832393274b4ba7797dfd3cf29e634e76a9`.
+- Historical `S10-D4` (`s10-d4-20261111T012331`, containers `p520-llm-{a,b}-archive-s10-d4-20261111T012331`):
+  image `sha256:dd8913d85f1811af034b66f3817ec392a82abdd28082e98e8a44b1d826bfea3d`, engine SHA256 `ccca488231f12da422be4a80b5c7f165b7593f6388907cac92d3c3f0d4229031`.
 
 `results/p520-serving/releases/<release>/` keeps separate JSON configurations,
 logs, exact create commands, image/config hashes, initial preflight and a
-rollback file. Original D4 files are read and copied; never edited or rerun.
+rollback file. Original release files are read and copied; never edited or rerun.
 The helper's `prepare` and `install --release <path>` commands create a new
 release and **stopped** containers. They refuse an occupied stable name or
 foreign running workloads. `start` is separate.
@@ -105,25 +117,25 @@ and validate compatibility. In an approved maintenance window, stop and rename
 only these owned operating containers to unique archive names, then create the
 replacement pair under `p520-llm-a/b`. Keep their API IDs/ports fixed. Preserve
 the previous image, configs and containers so rollback can restore the previous
-names and start the old pair. The current helper pins `S11X-D2` and deliberately
+names and start the old pair. The current helper pins `S12-C1T` and deliberately
 refuses a different image; update its verified contract with an approved upgrade.
 Do not install a new engine by mutating files inside an existing container.
 
-Stop active `S11X-D2` serving:
+Stop active `S12-C1T` serving:
 
 ```bash
 ssh p520 'docker stop -t 30 p520-llm-a p520-llm-b'
 ```
 
-Full rollback to the preserved `S10-D4` pair (only if needed):
+Full rollback to the preserved `S11X-D2` pair (only if needed):
 
 ```bash
 ssh p520 '
 docker stop -t 30 p520-llm-a p520-llm-b
-docker rename p520-llm-a p520-llm-a-rollback-s11x-d2
-docker rename p520-llm-b p520-llm-b-rollback-s11x-d2
-docker rename p520-llm-a-archive-s10-d4-20261111T012331 p520-llm-a
-docker rename p520-llm-b-archive-s10-d4-20261111T012331 p520-llm-b
+docker rename p520-llm-a p520-llm-a-rollback-s12-c1t
+docker rename p520-llm-b p520-llm-b-rollback-s12-c1t
+docker rename p520-llm-a-archive-s11x-d2-20261119T095616 p520-llm-a
+docker rename p520-llm-b-archive-s11x-d2-20261119T095616 p520-llm-b
 '
 ```
 
