@@ -1,7 +1,7 @@
 {
   "schema": "stage12-candidate-contract-v1",
   "date": "2026-11-25",
-  "status": "GATE_D_IN_PROGRESS",
+  "status": "STAGE_12_COMPLETE",
   "approval": "sequential_gate_a_to_d_user_approved_keep_serving_stopped",
   "model_target": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS",
   "pinned_sources": {
@@ -290,7 +290,13 @@
       "image_id": "sha256:33b61b0432e81c44a6d212ca38be46b4191a989a65c4a0141e2cbc9b116f10ec",
       "engine_sha256": "c01770d00bd49985f008e39d722b996f0ad476545c8bd50bb96ad8a66ed52dda",
       "feature": "Controlled same-route comparison vs S11X-D2 (adds STRATA_ROUTE_TAIL_SKIP=7 to S12-C1; NOT promoted without explicit approval)",
-      "status": "IN_PROGRESS"
+      "status": "PASS",
+      "raw_id": "c1t-20261125T205904",
+      "prefill_tok_s_A_B": [1039.4, 1046.8],
+      "decode_tok_s_A_B": [41.3, 45.2],
+      "ttft_s_A_B": [122.40, 121.54],
+      "quality_suite": "PASS (4/4 A & 4/4 B)",
+      "report": "artifacts/stage12-results-20261125/c1t-20261125T205904/report.md"
     }
   }
 }
