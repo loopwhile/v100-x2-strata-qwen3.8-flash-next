@@ -1,7 +1,7 @@
 {
   "schema": "stage12-candidate-contract-v1",
   "date": "2026-11-25",
-  "status": "GATE_C_IN_PROGRESS",
+  "status": "GATE_D_IN_PROGRESS",
   "approval": "sequential_gate_a_to_d_user_approved_keep_serving_stopped",
   "model_target": "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS",
   "pinned_sources": {
@@ -235,7 +235,22 @@
       "engine_sha256": "b29f813299b91a179716f15e73b71c5b1e4cfd1fa9060014b2aa09596795dba0",
       "feature": "STRATA_HC_V100=1 (sm_70 K-split down + fused HC read T<=6)",
       "build_parity": "22/22 CPU + 15/15 GPU + gr_parity/gr_multi_parity PASS + hc_graph_bench 1.98x-2.13x",
-      "status": "BENCHMARKING"
+      "status": "PASS",
+      "smoke_id": "d3smoke-20261125T194733",
+      "raw_id": "d3-20261125T194836",
+      "prefill_tok_s_A_B": [894.9, 898.9],
+      "decode_tok_s_A_B": [21.8, 21.1],
+      "ttft_s_A_B": [142.19, 141.52],
+      "batch3_warm_prefill_decode_A_B": [994.3, 1001.3, 22.6, 22.6],
+      "report": "artifacts/stage12-results-20261125/d3-20261125T194836/report.md",
+      "note": "Post-docker-build cold cache in b1/b2; b3 reached 22.6/22.6 decode (+0.7/+0.3 over C0); 2x HC read confirmed"
+    },
+    "S12-C1": {
+      "gate": "D",
+      "engine": "0.1.67",
+      "patch": "docker/patches/stage12-d1.patch,docker/patches/stage12-d2.patch,docker/patches/stage12-d3.patch",
+      "feature": "Combined Gate C winners: PathC7 + MmapBounceRing + COLD_OVERLAP=5 + HC_V100=1 + OOMD_ROOM=0 + SELECT_SIMT/ATTN_DAILY/GR_UP75/FUSE_WAIT",
+      "status": "BUILDING"
     }
   }
 }
