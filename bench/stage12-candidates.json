@@ -129,7 +129,31 @@
     "S12-P0": {
       "gate": "B",
       "engine": "0.1.67",
-      "status": "IN_PROGRESS"
+      "status": "PASS",
+      "raw_id": "p0-20261125T170126",
+      "diag_prefill_tok_s_A_B": [877.3, 879.7],
+      "diag_decode_tok_s_A_B": [21.6, 22.2],
+      "diag_ttft_s_A_B": [145.00, 144.62],
+      "report": "artifacts/stage12-results-20261125/p0-20261125T170126/report.md",
+      "bottlenecks": {
+        "prefill_ms_A": {
+          "gpu_total": 143815,
+          "gemm_gate_up": 52385,
+          "dequant": 38538,
+          "qsa_attn": 9517,
+          "qsa_select": 6257,
+          "wait_copy": 4131
+        },
+        "decode_ms_win_A": {
+          "total": 121.25,
+          "tok_win": 2.61,
+          "cpu": 71.63,
+          "waitCPU_gpu": 74.30,
+          "adapt_join": 20.04,
+          "draft": 2.90,
+          "expert_cache_hit_pct": 79.1
+        }
+      }
     }
   }
 }
