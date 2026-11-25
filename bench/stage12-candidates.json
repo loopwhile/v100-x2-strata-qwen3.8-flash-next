@@ -113,16 +113,23 @@
       "image_id": "sha256:83a48e7dc321a72e0a13642668a887d179d630d2ff4dd204fd49cb7f674c3b6e",
       "engine_sha256": "acfe6d530bc970514d0f57c3f5a87fd5b0b77a2666f8bf4095f1ebd33bb0b447",
       "source_sha": "d46f5f268f8ed797e83a5c63a69bffbd7a581cf6",
-      "status": "IN_PROGRESS"
+      "status": "PASS",
+      "smoke_id": "u1smoke-20261125T164236",
+      "raw_id": "u1-20261125T164355",
+      "prefill_tok_s_A_B": [877.1, 880.5],
+      "decode_tok_s_A_B": [21.9, 22.2],
+      "ttft_s_A_B": [145.04, 144.48],
+      "report": "artifacts/stage12-results-20261125/u1-20261125T164355/report.md"
     },
     "S12-R0": {
       "gate": "B",
       "condition": "optional_conditional_on_margin",
-      "status": "DEFERRED"
+      "status": "SKIPPED_OPTION_B_LARGE_GAP"
     },
     "S12-P0": {
       "gate": "B",
-      "status": "PENDING"
+      "engine": "0.1.67",
+      "status": "IN_PROGRESS"
     }
   }
 }
