@@ -1,0 +1,310 @@
+diff --git a/engine/include/strata/core/expert_source.hpp b/engine/include/strata/core/expert_source.hpp
+index 66c13c79..4e104dfe 100644
+--- a/engine/include/strata/core/expert_source.hpp
++++ b/engine/include/strata/core/expert_source.hpp
+@@ -297,6 +297,9 @@ public:
+     /// 149-cold STRATA_COLD_OVERLAP=3: the last prefetch_begin left this expert unstaged because the page cache holds
+     /// all of it (the GGUF read in place): its gate, up and down rows in the mapping.  False: ask `blob`.
+     virtual bool zc_roles(int64_t layer, int64_t expert, const uint8_t** p) { (void) layer; (void) expert; (void) p; return false; }
++    /// S11X-D2 STRATA_COLD_OVERLAP=5: zero-mincore fast path when GGUF role pointers are mapped and tail_off == 0.
++    virtual bool fast_zc_ready(int64_t layer) const { (void) layer; return false; }
++    virtual bool zc_roles_fast(int64_t layer, int64_t expert, const uint8_t** p) { (void) layer; (void) expert; (void) p; return false; }
+     /// CS-T: the experts of `layer` a predictor expects next - a source that reads a file may start reading their
+     /// pages now, in the background.  Only warms: what `blob` returns is unchanged.  Default: nothing.
+     virtual void warm(int64_t layer, const int64_t* experts, int64_t n) { (void) layer; (void) experts; (void) n; }
+@@ -987,6 +990,8 @@ public:
+     int64_t wait_landed(int64_t layer, const int64_t* experts, int64_t n, uint8_t* state) override;
+     void prefetch_end() override;
+     bool zc_roles(int64_t layer, int64_t expert, const uint8_t** p) override;
++    bool fast_zc_ready(int64_t layer) const override;
++    bool zc_roles_fast(int64_t layer, int64_t expert, const uint8_t** p) override;
+     /// 149-cold: the wall time of the last background read batch (prefetch_begin -> its last blob published), us
+     double async_fill_us() const { return async_fill_us_; }
+     /// CS-T: the GGUF in place asks the OS for the predicted experts' pages (PrefetchVirtualMemory on Windows,
+diff --git a/engine/src/core/expert_source.cpp b/engine/src/core/expert_source.cpp
+index 91ee22d1..fc4fbdb2 100644
+--- a/engine/src/core/expert_source.cpp
++++ b/engine/src/core/expert_source.cpp
+@@ -2644,6 +2644,26 @@ bool FileExpertSource::zc_roles(int64_t layer, int64_t expert, const uint8_t** p
+     return true;
+ }
+ 
++bool FileExpertSource::fast_zc_ready(int64_t layer) const {
++    if (layer < 0 || layer >= n_layers_) return false;
++    return !role_ptr_.empty() && !unmapped_ && direct_.empty() && !complement_ready_ && override_.empty() &&
++           strata::kernels::cpu::expert_layout().native &&
++           strata::kernels::cpu::expert_layout().fmt[(size_t) layer].tail_off == 0;
++}
++
++bool FileExpertSource::zc_roles_fast(int64_t layer, int64_t expert, const uint8_t** p) {
++    for (int r = 0; r < 3; ++r) {
++        const size_t i = (size_t) (3 * layer + r);
++        p[r] = role_ptr_[i] + (size_t) ((uint64_t) expert * role_bytes_[i]);
++    }
++    const uint64_t bytes = layer_blob_bytes_[(size_t) layer];
++    file_read_bytes_.fetch_add(bytes, std::memory_order_relaxed);
++    reads_.fetch_add(1, std::memory_order_relaxed);
++    if (io_stats_) io_cached_.fetch_add(bytes, std::memory_order_relaxed);
++    if (gate_on_ && tl_decode) gate_c_.fetch_add(bytes, std::memory_order_relaxed);
++    return true;
++}
++
+ void FileExpertSource::prefetch_end() {
+     if (async_th_.empty()) return;
+     for (std::thread& t : async_th_) t.join();
+@@ -5463,7 +5483,7 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
+     // 0.2.0: unset, 4 for the GGUF read in place on Linux (zero-copy needs the page cache's residency query), else 0
+     static const int cold_env = [] {
+         const char* v = std::getenv("STRATA_COLD_OVERLAP");
+-        return v == nullptr || v[0] == '\0' ? -1 : std::clamp(std::atoi(v), 0, 4);
++        return v == nullptr || v[0] == '\0' ? -1 : std::clamp(std::atoi(v), 0, 5);
+     }();
+     d.cold_mode = cold_env >= 0 ? cold_env : (d.src != nullptr && d.src->linux_file_defaults() ? 4 : 0);
+     pt("begin");
+@@ -5768,7 +5788,8 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
+     miss.clear();
+     int64_t npend = 0;
+     double cold_r_ms = 0;
+-    if (any_cpu) {   // CS-T: the experts the CPU computes, fetched together (the GGUF in place reads them on several threads)
++    const bool fast_zc = d.cold_mode == 5 && native && d.src != nullptr && d.src->fast_zc_ready(d.layers);
++    if (any_cpu && !fast_zc) {   // CS-T: the experts the CPU computes, fetched together (the GGUF in place reads them on several threads)
+         for (int64_t i = 0; i < n_tok * k; ++i)
+             if (kind[i] == -1 && ids[i] >= 0 && ids[i] < d.n_expert &&
+                 std::find(miss.begin(), miss.end(), (int64_t) ids[i]) == miss.end())
+@@ -5839,7 +5860,7 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
+             int16_t& jo = d.job_of[(size_t) e];
+             if (jo < 0) {
+                 const uint8_t* zp[3] = {nullptr, nullptr, nullptr};
+-                const bool zc = d.cold_mode >= 3 && native && d.src->zc_roles(d.layers, e, zp);
++                const bool zc = fast_zc ? d.src->zc_roles_fast(d.layers, e, zp) : (d.cold_mode >= 3 && native && d.src->zc_roles(d.layers, e, zp));
+                 const uint8_t* b = zc ? zp[0] : d.src->blob(d.layers, e);
+                 if (b == nullptr) {
+                     d.failed = true;
+diff --git a/engine/src/program/generate.cpp b/engine/src/program/generate.cpp
+index af2724f6..657559cc 100644
+--- a/engine/src/program/generate.cpp
++++ b/engine/src/program/generate.cpp
+@@ -2506,9 +2506,14 @@ private:
+         // (off by default) puts the thread on the spare CPUs; an explicit STRATA_ADAPT_JOB_CPU is the user's word over it.
+         strata::platform::name_this_thread("strata-adapt-job");
+         const char* c = std::getenv("STRATA_ADAPT_JOB_CPU");
+-        const int cpu = c != nullptr ? std::atoi(c) : smt_spare_cpu();
++        int cpu = c != nullptr ? std::atoi(c) : smt_spare_cpu();
++        bool plan_pinned = false;
++        if (c == nullptr && cpu < 0 && !strata::aux_cpus::enabled()) {
++            const auto plan = strata::aux_cpus::plan();
++            if (!plan.empty()) { cpu = plan[0]; plan_pinned = true; }
++        }
+         if (cpu >= 0) (void) strata::kernels::cpu::pin_current_thread(cpu);
+-        if (c != nullptr) strata::aux_cpus::note_owned_thread();
++        if (c != nullptr || plan_pinned) strata::aux_cpus::note_owned_thread();
+         else if (cpu < 0) strata::aux_cpus::pin_current_thread();
+         for (;;) {
+             std::function<void()> f;
+@@ -11792,17 +11797,25 @@ int main(int argc, char** argv) {
+         aa.adapt_overlap = adapt_overlap();
+         aa.fetch = adapt_fetch();   // #5814
+         o.adapt_async_self = strata::core::adapt_async_self_decides(aa);
++        if (o.serve && o.mmap_experts && !o.resident_cpu_experts && srcp == &src && !multi_gpu &&
++            o.pipeline_windows < 2 && o.batch == 0 && !peer.valid() && !remote_opt &&
++            o.adapt_every > 0 && o.adapt_swaps > 0 && aa.env != 0) {
++            const char* mv = std::getenv("STRATA_MMAP_ADAPT_ASYNC");
++            if (mv != nullptr && std::atoi(mv) != 0) o.adapt_async = 1;
++        }
+     }
+     if (o.adapt_async) {
+         static const bool pl_async = [] {
+             const char* v = std::getenv("STRATA_PIPELINE_ADAPT_ASYNC");
+             return v == nullptr || std::atoi(v) != 0;
+         }();
++        const bool mmap_only = o.mmap_experts && !o.resident_cpu_experts && srcp == &src;
+         const char* why = !o.serve ? "it needs --serve"
+                         : o.adapt_every <= 0 || o.adapt_swaps <= 0 ? "the adaptive tier is off"
+-                        : !o.resident_cpu_experts && srcp != &arena_src ? "it needs the resident RAM mode, --resident-experts, or the expert arena"
+-                        : multi_gpu && srcp == &arena_src ? "not with a layer split in the arena mode"
+-                        : o.pipeline_windows >= 2 && srcp == &arena_src ? "not with --pipeline-windows 2 in the arena mode"
++                        : !o.resident_cpu_experts && srcp != &arena_src && !mmap_only ? "it needs the resident RAM mode, --resident-experts, or the expert arena"
++                        : multi_gpu && (srcp == &arena_src || mmap_only) ? "not with a layer split in the arena/mmap mode"
++                        : o.pipeline_windows >= 2 && (srcp == &arena_src || mmap_only) ? "not with --pipeline-windows 2 in the arena/mmap mode"
++                        : o.batch > 0 && mmap_only ? "not with --batch in the mmap mode"
+                         : o.batch > 0 && o.batch_groups > 1 ? "not with --batch-groups (the pipelined slot groups)"
+                         : peer.valid() ? "not with --peer-device"
+                         : remote_opt ? "not with --remote-expert-opt"
+@@ -12255,7 +12268,7 @@ int main(int argc, char** argv) {
+ #endif
+     }
+     // (the arena mode has no RAM copy to exchange with: its experts are always in RAM, the tier only copies them in)
+-    if (o.adapt_async && !src.complement_ready() && srcp != &arena_src) adapt_async_off("the resident RAM mode is not running");
++    if (o.adapt_async && !src.complement_ready() && srcp != &arena_src && !(o.mmap_experts && srcp == &src)) adapt_async_off("the resident RAM mode is not running");
+     // pp-opt: with the file tier unbuffered, the mapped view of experts.bin is only a fallback from here on - and while
+     // it exists NTFS serves the unbuffered reads one at a time (drop_mapping).  STRATA_KEEP_MAPPING=1 keeps it (A/B).
+     if (srcp == &src && src.unbuffered() && !src.is_unmapped() && std::getenv("STRATA_KEEP_MAPPING") == nullptr) {
+@@ -15579,34 +15592,76 @@ int main(int argc, char** argv) {
+         std::atomic<bool> a_err{false};
+         double a_pick_ms = 0;             // the arena's inline choice, summed (the stats line)
+         strata::program::AdaptiveCopyRange a_rng;   // the batch being copied in (a_copy_in), and where the next one starts
++        struct MmapBounceRing {
++            enum : size_t { kSlots = 2 };
++            uint8_t* buf = nullptr;
++            size_t stride = 0;
++            cudaEvent_t ev[kSlots] = {nullptr, nullptr};
++            bool busy[kSlots] = {false, false};
++            bool init(size_t max_blob_bytes) {
++                stride = (max_blob_bytes + 63u) & ~size_t(63u);
++                if (stride == 0) return false;
++                if (cudaHostAlloc((void**) &buf, stride * kSlots, cudaHostAllocDefault) != cudaSuccess) {
++                    buf = nullptr;
++                    return false;
++                }
++                for (size_t i = 0; i < kSlots; ++i) {
++                    if (cudaEventCreateWithFlags(&ev[i], cudaEventDisableTiming) != cudaSuccess) {
++                        free_all();
++                        return false;
++                    }
++                }
++                return true;
++            }
++            void free_all() {
++                for (size_t i = 0; i < kSlots; ++i) {
++                    if (ev[i] != nullptr) { (void) cudaEventDestroy(ev[i]); ev[i] = nullptr; }
++                    busy[i] = false;
++                }
++                if (buf != nullptr) { (void) cudaFreeHost(buf); buf = nullptr; }
++                stride = 0;
++            }
++            ~MmapBounceRing() { free_all(); }
++        } mmap_bounce;
+         std::vector<AHome> ahomes;   // [0] = CUDA0's cache, [k] = layer split stage k's
+         std::unique_ptr<JobThread> ajob;
+         // the arena mode (srcp == &arena_src): every expert is in the arena already, so a round is a copy in only - no
+         // exchange buffers, no RAM moves (see a_arena below)
+         const bool a_arena = srcp == &arena_src;
++        const bool a_mmap = !a_arena && !src.complement_ready() && o.mmap_experts && srcp == &src;
++        const bool a_no_exchange = a_arena || a_mmap;
+         // as the blocking tier's exchange buffers; the arena has none, so its rounds are as large as the blocking tier's
+         const int64_t a_cap = a_arena ? o.adapt_swaps : std::min<int64_t>(o.adapt_swaps, 192);
+         const auto a_env = [](const char* name, int def) {
+             const char* v = std::getenv(name);
+             return v != nullptr && *v != 0 ? std::atoi(v) : def;
+         };
+-        // arena only (the other modes keep their steps as they were): the choice on this thread (STRATA_ADAPT_PICK_INLINE),
++        // arena / mmap copy-in only: the choice on this thread (STRATA_ADAPT_PICK_INLINE),
+         // the wait for the copies (STRATA_ADAPT_ASYNC_WAIT), the copies in flight per tick (STRATA_ADAPT_ASYNC_BATCH, 0 = all)
+-        const bool a_inline = a_arena && a_env("STRATA_ADAPT_PICK_INLINE", 1) != 0;
+-        const bool a_wait = a_arena && a_env("STRATA_ADAPT_ASYNC_WAIT", 1) != 0;
+-        const size_t a_batch = a_arena ? (size_t) std::max(0, a_env("STRATA_ADAPT_ASYNC_BATCH", 0)) : 0;
++        const bool a_inline = a_no_exchange && a_env("STRATA_ADAPT_PICK_INLINE", 1) != 0;
++        const bool a_wait = a_no_exchange && a_env("STRATA_ADAPT_ASYNC_WAIT", 1) != 0;
++        const size_t a_batch = a_no_exchange ? (size_t) std::max(0, a_env("STRATA_ADAPT_ASYNC_BATCH", 0)) : 0;
+         // o.adapt_async_self (arena, one GPU, nothing explicit): the homes are set up, the job thread is created only when the
+         // session's measurement turns the asynchronous tier on (asw_*, in the decode loop)
+         const bool a_self = o.adapt_async_self && !o.adapt_async && a_arena && !drive.d.usage.empty();
+-        if ((o.adapt_async || a_self) && !drive.d.usage.empty() &&
+-            ((src.complement_ready() && src.exchange_capacity() >= 2 * a_cap) || a_arena)) {
++        bool a_mmap_ok = !a_mmap;
++        if (a_mmap && o.adapt_async && !drive.d.usage.empty()) {
++            size_t max_blob = 0;
++            for (int64_t l = 0; l < g.n_layers; ++l)
++                max_blob = std::max(max_blob, (size_t) strata::kernels::cpu::expert_layout().blob_bytes(l));
++            a_mmap_ok = mmap_bounce.init(max_blob);
++            if (!a_mmap_ok)
++                std::fprintf(stderr, "strata serve: adaptive tier: pinned bounce ring alloc failed, using blocking tier\n");
++        }
++        if ((o.adapt_async || a_self) && !drive.d.usage.empty() && a_mmap_ok &&
++            ((src.complement_ready() && src.exchange_capacity() >= 2 * a_cap) || a_no_exchange)) {
+             ahomes.push_back({&xcache, adapt_stream, adapt_ev, 0, false});
+             for (auto& st : stages) ahomes.push_back({&st->cache, st->adapt_stream, st->adapt_ev, st->dev, false});
+             if (o.adapt_async) {
+                 ajob = std::make_unique<JobThread>();
+                 std::fprintf(stderr, "strata serve: adaptive tier asynchronous (--adapt-async 1): up to %lld swaps per round, "
+                                      "a round every %d windows%s\n", (long long) a_cap, o.adapt_every,
+-                             a_arena ? " (arena: copy-in only)" : "");
++                             a_arena ? " (arena: copy-in only)" : a_mmap ? " (mmap: pinned bounce ring copy-in)" : "");
+             } else {
+                 std::fprintf(stderr, "strata serve: adaptive tier: blocking, and the asynchronous tier is tried once the session "
+                                      "shows the swaps hold the windows up (--adapt-async 0 or STRATA_ADAPT_ASYNC=0: never)\n");
+@@ -15660,7 +15715,7 @@ int main(int argc, char** argv) {
+                 if (slot < 0) continue;
+                 // an exchange (as resident_stage_swaps): `in` from the RAM copy, `out` held by its slot alone takes its
+                 // place there; otherwise `out` is in the copy already (the lend region) or `in` is not (a RAM budget)
+-                const bool x = !a_arena && src.has_resident(c.layer, c.in) && !src.has_resident(c.layer, c.out);
++                const bool x = !a_no_exchange && src.has_resident(c.layer, c.in) && !src.has_resident(c.layer, c.out);
+                 aswaps.push_back({c.layer, c.in, c.out, slot, multi_gpu ? stage_of(c.layer) : 0, (int64_t) aswaps.size(), x,
+                                   nullptr});
+             }
+@@ -15726,6 +15781,39 @@ int main(int argc, char** argv) {
+         };
+         auto a_copy_in = [&]() {   // step 2 on the job thread (the serial loop): each source read, then copied in
+             std::vector<uint8_t> used(ahomes.size(), 0);
++            if (a_mmap) {
++                for (size_t i = a_rng.lo; i < a_rng.hi; ++i) {
++                    const ASwap& w = aswaps[i];
++                    const size_t b_idx = (i - a_rng.lo) % MmapBounceRing::kSlots;
++                    AHome& h = ahomes[(size_t) w.home];
++                    const strata::core::OnDevice on(h.dev);
++                    if (mmap_bounce.busy[b_idx]) {
++                        if (cudaEventSynchronize(mmap_bounce.ev[b_idx]) != cudaSuccess) { a_err = true; break; }
++                        mmap_bounce.busy[b_idx] = false;
++                    }
++                    uint8_t* bb = mmap_bounce.buf + b_idx * mmap_bounce.stride;
++                    if (!src.copy_blob(w.layer, w.in, bb)) {
++                        std::fprintf(stderr, "strata serve: adaptive tier: layer %d expert %d could not be read\n",
++                                     (int) w.layer, (int) w.in);
++                        a_err = true;
++                        break;
++                    }
++                    nib::guard_raw(w.layer, "the async adaptive tier's copy in (a_mmap)");
++                    const size_t bytes = (size_t) strata::kernels::cpu::expert_layout().blob_bytes(w.layer);
++                    if (cudaMemcpyAsync(h.cache->device_slot(w.slot), bb, bytes, cudaMemcpyHostToDevice, h.stream) != cudaSuccess ||
++                        cudaEventRecord(mmap_bounce.ev[b_idx], h.stream) != cudaSuccess) {
++                        std::fprintf(stderr, "strata serve: adaptive tier: copy of layer %d into slot %d (CUDA%d) failed: %s\n",
++                                     (int) w.layer, (int) w.slot, h.dev, cudaGetErrorString(cudaGetLastError()));
++                        a_err = true;
++                        break;
++                    }
++                    mmap_bounce.busy[b_idx] = true;
++                    used[(size_t) w.home] = 1;
++                }
++                for (size_t hi = 0; hi < ahomes.size(); ++hi)
++                    if (used[hi]) a_mark(ahomes[hi]);
++                return;
++            }
+             for (size_t i = a_rng.lo; i < a_rng.hi; ++i) {   // (the batch; all the round's swaps unless the arena caps it)
+                 const ASwap& w = aswaps[i];
+                 if (const uint8_t* b = a_from(w)) {
+@@ -15844,7 +15932,7 @@ int main(int argc, char** argv) {
+                             return false;
+                         }
+                         host_res[out] = strata::core::kNotResident;   // the CPU computes it from the next window on
+-                        srcp->prefetch(w.layer, w.out);
++                        if (!a_mmap) srcp->prefetch(w.layer, w.out);
+                         aswaps[k++] = w;
+                     }
+                     aswaps.resize(k);
+@@ -15877,7 +15965,7 @@ int main(int argc, char** argv) {
+                     for (size_t i = a_rng.landed_begin(pl); i < a_rng.landed_end(pl, aswaps.size()); ++i) {   // (the batch just landed)
+                         const ASwap& w = aswaps[i];
+                         host_res[(size_t) w.layer * g.n_expert + w.in] = w.slot;
+-                        srcp->release(w.layer, w.in);
++                        if (!a_mmap) srcp->release(w.layer, w.in);
+                     }
+                     if (pl) a_res_dirty = true;
+                     else res_upload();
+@@ -15897,7 +15985,7 @@ int main(int argc, char** argv) {
+                     astate = AState::RamFence;
+                     continue;
+                 case AState::RamFence:   // step 3's RAM moves, once no window may still read the places they fill
+-                    if (a_arena) {   // no RAM copy to move
++                    if (a_no_exchange) {   // no RAM copy to move
+                         astate = AState::Commit;
+                         continue;
+                     }
+@@ -15913,7 +16001,7 @@ int main(int argc, char** argv) {
+                 case AState::Commit:   // step 4
+                     if (!a_ready(drain)) return true;
+                     if (a_err.load()) return false;
+-                    if (!a_arena) src.commit_flip();
++                    if (!a_no_exchange) src.commit_flip();
+                     a_ms += std::chrono::duration<double, std::milli>(Clock::now() - a_t0).count();
+                     aswaps.clear();
+                     astate = AState::Idle;

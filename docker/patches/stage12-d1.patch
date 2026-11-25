@@ -1,0 +1,934 @@
+diff --git a/engine/cmake/backends/cpu.cmake b/engine/cmake/backends/cpu.cmake
+index d855d14c..69800ed3 100644
+--- a/engine/cmake/backends/cpu.cmake
++++ b/engine/cmake/backends/cpu.cmake
+@@ -265,7 +265,7 @@ if(MSVC)
+ else()
+   # GCC/Clang spell it differently, and `-mavx512vnni` alone is not enough: VBMI is a separate feature bit.
+   set_source_files_properties(src/kernels/cpu/expert.cpp
+-                              PROPERTIES COMPILE_OPTIONS "-mavx512f;-mavx512bw;-mavx512vl;-mavx512dq;-mavx512vnni;-mavx512vbmi;-mf16c;-mfma")
++                              PROPERTIES COMPILE_OPTIONS "-mavx512f;-mavx512bw;-mavx512vl;-mavx512dq;-mbmi2;-mf16c;-mfma")
+   set_source_files_properties(src/kernels/cpu/q2_avx2.cpp PROPERTIES COMPILE_OPTIONS "-mavx2;-mfma;-mf16c")
+ endif()
+ # AVX-VNNI (Alder Lake, Sapphire Rapids and later): the AVX-2 expert kernels' vpdpwssd / vpdpbusd copies (q2_avx2.cpp,
+@@ -333,7 +333,9 @@ macro(strata_cpu_native_experts)
+     # the older CPUs' i-quant expert rows (iq_avx1.hpp): 128-bit SSSE3/SSE2 integer, SSE2 float, no FMA/F16C
+     set_source_files_properties(src/kernels/cpu/iq_avx1.cpp PROPERTIES COMPILE_OPTIONS "/arch:AVX")
+   else()
+-    set_source_files_properties(src/kernels/cpu/iq_avx512.cpp src/kernels/cpu/nvfp4_avx512.cpp PROPERTIES COMPILE_OPTIONS
++    set_source_files_properties(src/kernels/cpu/iq_avx512.cpp PROPERTIES COMPILE_OPTIONS
++                                "-mavx512f;-mavx512bw;-mavx512vl;-mavx512dq;-mbmi2;-mf16c;-mfma")
++    set_source_files_properties(src/kernels/cpu/nvfp4_avx512.cpp PROPERTIES COMPILE_OPTIONS
+                                 "-mavx512f;-mavx512bw;-mavx512vl;-mavx512dq;-mavx512vnni;-mavx512vbmi;-mavx512vpopcntdq;-mbmi2;-mf16c;-mfma")
+     set_source_files_properties(src/kernels/cpu/iq_avx2.cpp PROPERTIES COMPILE_OPTIONS "-mavx2;-mfma;-mf16c")
+     set_source_files_properties(src/kernels/cpu/kq_avx2.cpp PROPERTIES COMPILE_OPTIONS "-mavx2;-mfma;-mf16c")
+diff --git a/engine/include/strata/kernels/cpu/expert_layout.hpp b/engine/include/strata/kernels/cpu/expert_layout.hpp
+index 714cea14..03ec6090 100644
+--- a/engine/include/strata/kernels/cpu/expert_layout.hpp
++++ b/engine/include/strata/kernels/cpu/expert_layout.hpp
+@@ -93,6 +93,8 @@ bool cpu_avxvnni_ok();
+ inline bool q2_native_kernels(int type) { return type == 42 && (cpu_avx2_ok() || cpu_avx1_ok()); }
+ /// The CPU's brand string (CPUID 0x80000002..4), for messages; "unknown" when it has none.
+ std::string cpu_name();
++/// Human-readable description of active CPU expert kernels and overrides (for startup logs).
++std::string cpu_expert_kernels_desc();
+ /// Q2_0 GGUF rows / activation quantizer on the kernels this CPU has.
+ void q2_rows_any(const uint8_t* w, size_t row_bytes, int nblocks, const ActQ* const* a, int nt, float* const* out,
+                  int r0, int r1);
+diff --git a/engine/src/kernels/cpu/expert.cpp b/engine/src/kernels/cpu/expert.cpp
+index 4bd62890..2f9ebd88 100644
+--- a/engine/src/kernels/cpu/expert.cpp
++++ b/engine/src/kernels/cpu/expert.cpp
+@@ -111,6 +111,22 @@ void quantize_oracle_q8_0(const float* x, int n, ActQ& a) {
+     }
+ }
+ 
++inline __m512i dpbusd512(__m512i u8, __m512i s8) {
++#if defined(__AVX512VNNI__)
++    return _mm512_dpbusd_epi32(_mm512_setzero_si512(), u8, s8);
++#else
++    return _mm512_madd_epi16(_mm512_maddubs_epi16(u8, s8), _mm512_set1_epi16(1));
++#endif
++}
++
++inline __m256i dpbusd256(__m256i u8, __m256i s8) {
++#if defined(__AVX512VNNI__) && defined(__AVX512VL__)
++    return _mm256_dpbusd_epi32(_mm256_setzero_si256(), u8, s8);
++#else
++    return _mm256_madd_epi16(_mm256_maddubs_epi16(u8, s8), _mm256_set1_epi16(1));
++#endif
++}
++
+ /// 2-bit unpack via VPMULTISHIFTQB.
+ ///
+ /// ARGUMENT ORDER IS (control, data) AND WAS DETERMINED EMPIRICALLY (`bench/micro/probe_multishift.cpp`).
+@@ -122,17 +138,27 @@ void quantize_oracle_q8_0(const float* x, int n, ActQ& a) {
+ /// The result is the 32 codes of ONE ACTIVATION CHUNK (4 qword lanes), which is the unit the Q8_1 scale is
+ /// defined on - not the 64-weight block.
+ inline __m256i unpack_q2_0(const uint8_t* codes) {
++#if defined(__AVX512VBMI__) && defined(__AVX512VL__)
+     const __m128i packed = _mm_loadl_epi64((const __m128i*) codes);   // 8 bytes -> 4 u16 in the low half
+     const __m256i lanes = _mm256_cvtepu16_epi64(packed);              // 4 qwords, 8 codes each
+     const __m256i ctrl = _mm256_set1_epi64x((long long) 0x0E0C0A0806040200ULL);
+     return _mm256_and_si256(_mm256_multishift_epi64_epi8(ctrl, lanes), _mm256_set1_epi8(3));
++#else
++    const __m128i b = _mm_loadl_epi64((const __m128i*) codes);
++    const __m128i m3 = _mm_set1_epi8(3);
++    const __m128i c0 = _mm_and_si128(b, m3);
++    const __m128i c1 = _mm_and_si128(_mm_srli_epi16(b, 2), m3);
++    const __m128i c2 = _mm_and_si128(_mm_srli_epi16(b, 4), m3);
++    const __m128i c3 = _mm_and_si128(_mm_srli_epi16(b, 6), m3);
++    const __m128i a0 = _mm_unpacklo_epi8(c0, c1), a1 = _mm_unpacklo_epi8(c2, c3);
++    return _mm256_set_m128i(_mm_unpackhi_epi16(a0, a1), _mm_unpacklo_epi16(a0, a1));
++#endif
+ }
+ 
+ /// 32 codes against 32 int8 activations. Codes 0 contribute nothing to `sum(c*xhat)`, so the zero lanes the
+ /// narrow load leaves behind are harmless.
+ inline __m256i block_dot(const uint8_t* codes, const int8_t* xq) {
+-    return _mm256_dpbusd_epi32(_mm256_setzero_si256(), unpack_q2_0(codes),
+-                               _mm256_load_si256((const __m256i*) xq));
++    return dpbusd256(unpack_q2_0(codes), _mm256_load_si256((const __m256i*) xq));
+ }
+ 
+ inline float hsum_ps(__m256 v) {
+@@ -149,14 +175,23 @@ inline float hsum_ps(__m256 v) {
+ // products built for eight blocks at a time; the weight-independent correction is one FMA per eight blocks.
+ // The sum order differs from the 256-bit kernel (last-bit differences); the verify window and plain decode both
+ // use this kernel, so speculative decode still reproduces plain decode exactly.
+-static const bool kZmm = std::getenv("STRATA_CPU_YMM") == nullptr;
++}  // namespace
++
++extern bool g_q2_zmm;
++extern std::atomic<bool> g_env_inited;
++extern "C" void strata_cpu_ensure_env();
+ 
++namespace {
++#define kZmm (g_q2_zmm)
++
++#if defined(__AVX512VBMI__)
+ inline __m512i unpack64_q2_0_ms(const uint8_t* codes) {
+     const __m128i packed = _mm_loadu_si128((const __m128i*) codes);          // 8 u16 = 64 codes
+     const __m512i lanes = _mm512_cvtepu16_epi64(packed);                    // 8 qwords, 8 codes each
+     const __m512i ctrl = _mm512_set1_epi64((long long) 0x0E0C0A0806040200ULL);
+     return _mm512_and_si512(_mm512_multishift_epi64_epi8(ctrl, lanes), _mm512_set1_epi8(3));
+ }
++#endif
+ 
+ /// 2-bit unpack WITHOUT VPMULTISHIFTQB (the one VBMI op): byte for byte the multishift's result - output byte j
+ /// (code j) is (u16[j/8] >> 2*(j%8)) & 3 - for a CPU with AVX-512 VNNI (dpbusd) but no VBMI (Cascade Lake Xeon;
+@@ -191,8 +226,12 @@ inline __m512i unpack64_q2_0_sw(const uint8_t* codes) {
+ }
+ 
+ inline __m512i unpack64_q2_0(const uint8_t* codes) {
++#if defined(__AVX512VBMI__)
+     static const bool vbmi = cpu_vbmi_ok();          // VPMULTISHIFTQB, or the substitute (bit-shifting) one here
+     return vbmi ? unpack64_q2_0_ms(codes) : unpack64_q2_0_sw(codes);
++#else
++    return unpack64_q2_0_sw(codes);
++#endif
+ }
+ 
+ /// STRATA_CPU_YMM=1 keeps the 256-bit rows (whose unpack keeps the multishift): a machine with VNNI but no VBMI
+@@ -221,8 +260,8 @@ inline float row_dot_z(const uint8_t* codes, const uint8_t* scales, const ActQ&
+         corr = _mm512_fmadd_ps(dd, _mm512_maskz_loadu_ps(m16, a.hx + 2 * b0), corr);
+         for (int i = 0; i < nb; ++i) {
+             const int b = b0 + i;
+-            const __m512i dot = _mm512_dpbusd_epi32(_mm512_setzero_si512(), unpack64_q2_0(codes + b * 16),
+-                                                    _mm512_load_si512((const void*) (a.q + b * QK)));
++            const __m512i dot = dpbusd512(unpack64_q2_0(codes + b * 16),
++                                          _mm512_load_si512((const void*) (a.q + b * QK)));
+             const __m512 sv = _mm512_permutexvar_ps(_mm512_add_epi32(base, _mm512_set1_epi32(2 * i)), p);
+             acc = _mm512_fmadd_ps(sv, _mm512_cvtepi32_ps(dot), acc);
+         }
+@@ -250,8 +289,7 @@ inline void row_dot_multi_z(const uint8_t* codes, const uint8_t* scales, const A
+             const __m512i w = unpack64_q2_0(codes + b * 16);
+             const __m512i idx = _mm512_add_epi32(base, _mm512_set1_epi32(2 * i));
+             for (int t = 0; t < NT; ++t) {
+-                const __m512i dot = _mm512_dpbusd_epi32(_mm512_setzero_si512(), w,
+-                                                        _mm512_load_si512((const void*) (a[t]->q + b * QK)));
++                const __m512i dot = dpbusd512(w, _mm512_load_si512((const void*) (a[t]->q + b * QK)));
+                 acc[t] = _mm512_fmadd_ps(_mm512_permutexvar_ps(idx, p[t]), _mm512_cvtepi32_ps(dot), acc[t]);
+             }
+         }
+@@ -326,10 +364,9 @@ inline void row_dot_multi(const uint8_t* codes, const uint8_t* scales, const Act
+         const __m256i hi = unpack_q2_0(codes + b * 16 + 8);
+         for (int t = 0; t < NT; ++t) {
+             const __m256 slo = _mm256_cvtepi32_ps(
+-                _mm256_dpbusd_epi32(_mm256_setzero_si256(), lo, _mm256_load_si256((const __m256i*) (a[t]->q + b * QK))));
++                dpbusd256(lo, _mm256_load_si256((const __m256i*) (a[t]->q + b * QK))));
+             const __m256 shi = _mm256_cvtepi32_ps(
+-                _mm256_dpbusd_epi32(_mm256_setzero_si256(), hi,
+-                                    _mm256_load_si256((const __m256i*) (a[t]->q + b * QK + QKA))));
++                dpbusd256(hi, _mm256_load_si256((const __m256i*) (a[t]->q + b * QK + QKA))));
+             acc[t] = _mm256_fmadd_ps(_mm256_set1_ps(d * a[t]->scale[2 * b]), slo, acc[t]);
+             acc[t] = _mm256_fmadd_ps(_mm256_set1_ps(d * a[t]->scale[2 * b + 1]), shi, acc[t]);
+             corr[t] += d * (a[t]->hx[2 * b] + a[t]->hx[2 * b + 1]);
+@@ -375,14 +412,12 @@ void expert_oracle_q8_0(const uint8_t* blob, const ActQ& a1, float* out, ExpertS
+                                blob + O_D_SCALES + size_t(r) * SC_D * 2, ws.a2, SC_D);
+ }
+ 
+-bool q2_rows_512_ok() {
+-    return kZmm && cpu_vnni_ok();
+-}
+ }  // namespace
+ 
+ // CpuFeatures::reason, cpu_features, cpu_require_expert_support and the oracle flag live in expert_layout.cpp: this
+ // file is compiled for AVX-512, and the code that finds out whether the CPU has AVX-512 must not be in it (#795).
+ void act_quant_q8_1(const float* x, int n, ActQ& a) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     if (expert_oracle_q8_0_enabled()) {
+         quantize_oracle_q8_0(x, n, a);
+         return;
+@@ -450,11 +485,13 @@ void act_quant_q8_1(const float* x, int n, ActQ& a) {
+ }
+ 
+ void s2_expert_vnni(const uint8_t* blob, const float* x, float* out, ExpertScratch& ws) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     act_quant_q8_1(x, H, ws.a1);
+     s2_expert_vnni_q(blob, ws.a1, out, ws);
+ }
+ 
+ void s2_expert_vnni_q(const uint8_t* blob, const ActQ& a1, float* out, ExpertScratch& ws) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     if (expert_oracle_q8_0_enabled()) {
+         expert_oracle_q8_0(blob, a1, out, ws);
+         return;
+@@ -476,6 +513,7 @@ void s2_expert_vnni_q(const uint8_t* blob, const ActQ& a1, float* out, ExpertScr
+ 
+ 
+ void s2_expert_gu_rows(const uint8_t* blob, const ActQ& a1, float* ff, int r0, int r1) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     for (int r = r0; r < r1; ++r) {
+         const float g = row_dot(blob + O_GU_CODES + (size_t) (2 * r) * ROW_GU,
+                                 blob + O_GU_SCALES + (size_t) (2 * r) * SC_GU * 2, a1, SC_GU);
+@@ -486,6 +524,7 @@ void s2_expert_gu_rows(const uint8_t* blob, const ActQ& a1, float* ff, int r0, i
+ }
+ 
+ void s2_expert_down_rows(const uint8_t* blob, const ActQ& a2, float* out, int r0, int r1) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     for (int r = r0; r < r1; ++r)
+         out[r] = row_dot(blob + O_D_CODES + (size_t) r * ROW_D, blob + O_D_SCALES + (size_t) r * SC_D * 2, a2, SC_D);
+ }
+@@ -515,6 +554,7 @@ void down_rows_multi(const uint8_t* blob, const ActQ* const* a2, float* const* o
+ 
+ void s2_expert_gu_rows_multi(const uint8_t* blob, const ActQ* const* a1, int n_tokens, float* const* ff, int r0,
+                              int r1) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     switch (n_tokens) {
+         case 1: gu_rows_multi<1>(blob, a1, ff, r0, r1); break;
+         case 2: gu_rows_multi<2>(blob, a1, ff, r0, r1); break;
+@@ -529,6 +569,7 @@ void s2_expert_gu_rows_multi(const uint8_t* blob, const ActQ* const* a1, int n_t
+ 
+ void s2_expert_down_rows_multi(const uint8_t* blob, const ActQ* const* a2, int n_tokens, float* const* out, int r0,
+                                int r1) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     switch (n_tokens) {
+         case 1: down_rows_multi<1>(blob, a2, out, r0, r1); break;
+         case 2: down_rows_multi<2>(blob, a2, out, r0, r1); break;
+@@ -570,8 +611,7 @@ inline void q2g_row_multi(const uint8_t* row, const ActQ* const* a, int nblocks,
+             const __m512i w = unpack64_q2_0(row + (size_t) b * 18 + 2);
+             const __m512i idx = _mm512_add_epi32(base, _mm512_set1_epi32(2 * i));
+             for (int t = 0; t < NT; ++t) {
+-                const __m512i dot = _mm512_dpbusd_epi32(_mm512_setzero_si512(), w,
+-                                                        _mm512_load_si512((const void*) (a[t]->q + b * QK)));
++                const __m512i dot = dpbusd512(w, _mm512_load_si512((const void*) (a[t]->q + b * QK)));
+                 acc[t] = _mm512_fmadd_ps(_mm512_permutexvar_ps(idx, p[t]), _mm512_cvtepi32_ps(dot), acc[t]);
+             }
+         }
+@@ -590,6 +630,7 @@ void q2g_rows(const uint8_t* w, size_t row_bytes, int nblocks, const ActQ* const
+ 
+ void q2_0_gguf_rows_multi(const uint8_t* w, size_t row_bytes, int nblocks, const ActQ* const* a, int nt,
+                           float* const* out, int r0, int r1) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     switch (nt) {
+         case 1: q2g_rows<1>(w, row_bytes, nblocks, a, out, r0, r1); break;
+         case 2: q2g_rows<2>(w, row_bytes, nblocks, a, out, r0, r1); break;
+@@ -604,6 +645,7 @@ void q2_0_gguf_rows_multi(const uint8_t* w, size_t row_bytes, int nblocks, const
+ 
+ void s2_expert_vnni_multi(const uint8_t* blob, const ActQ* const* a1, int n_tokens, float* const* out,
+                           ExpertScratchMulti& ws) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     if (expert_oracle_q8_0_enabled() || n_tokens < 1 || n_tokens > MAXT) {
+         for (int t = 0; t < n_tokens; ++t) s2_expert_vnni_q(blob, *a1[t], out[t], ws.single);
+         return;
+@@ -674,8 +716,4 @@ void s2_expert_scalar(const uint8_t* blob, const float* x_in, float* out, bool q
+     }
+ }
+ 
+-bool q2_rows_512_ok() {
+-    return kZmm && cpu_vnni_ok();
+-}
+-
+ }  // namespace strata::kernels::cpu
+diff --git a/engine/src/kernels/cpu/expert_layout.cpp b/engine/src/kernels/cpu/expert_layout.cpp
+index 8a4b95a0..2047d593 100644
+--- a/engine/src/kernels/cpu/expert_layout.cpp
++++ b/engine/src/kernels/cpu/expert_layout.cpp
+@@ -6,6 +6,7 @@
+ #include <cstdio>
+ #include <cstdlib>
+ #include <cstring>
++#include <mutex>
+ #include <string>
+ #if defined(_MSC_VER)
+ #include <intrin.h>
+@@ -113,7 +114,7 @@ bool cpu_avx512_ok() {
+ 
+ bool cpu_avx512bw_ok() {
+     static const bool ok = [] {
+-        if (const char* f = std::getenv("STRATA_FORCE_AVX2"); f != nullptr && f[0] == '1') return false;
++        if (!cpu_isa_free()) return false;
+         unsigned r[4] = {0, 0, 0, 0};
+         auto cpuid = [&](unsigned leaf, unsigned sub) {
+ #if defined(_MSC_VER)
+@@ -307,13 +308,116 @@ void cpuid_regs(unsigned leaf, unsigned sub, unsigned r[4]) {
+ }  // namespace
+ #endif  // x86 cpuid helper
+ 
++bool g_iq512_gather = false;
++int  g_iq512_prefetch = 2048;
++bool g_q2_zmm = false;
++bool g_q2_bitplane = false;
++int  g_iq256_gather_setting = -1;
++int  g_iq_mt_min = -1;
++bool g_iq3s_mt1 = false;
++bool g_avx512bw_iq = false;
++uint32_t g_avx512bw_iq_mask = 0;
++bool g_avx512bw_q2 = false;
++bool g_cpu_iq_all_exact1 = false;
++bool g_no_iq512 = false;
++bool g_no_iq256 = false;
++bool g_no_iq4nl = false;
++bool g_no_q50_512 = false;
++bool g_no_iq512x1 = false;
++bool g_no_iq4xs512 = false;
++std::atomic<bool> g_env_inited{false};
++static std::mutex g_env_mu;
++
++extern "C" void strata_cpu_reload_env() {
++    std::lock_guard<std::mutex> lock(g_env_mu);
++    const char* v_g512 = std::getenv("STRATA_IQ_GATHER");
++    g_iq512_gather = (v_g512 != nullptr && v_g512[0] != '\0') ? (std::atoi(v_g512) != 0) : cpu_gather_fast();
++
++    const char* v_pf = std::getenv("STRATA_IQ_PREFETCH");
++    g_iq512_prefetch = (v_pf != nullptr && v_pf[0] != '\0') ? std::atoi(v_pf) : 2048;
++
++    const char* v_bp = std::getenv("STRATA_Q2_BITPLANE");
++    g_q2_bitplane = (v_bp != nullptr && v_bp[0] == '1');
++
++    const char* v_g256 = std::getenv("STRATA_IQ256_GATHER");
++    g_iq256_gather_setting = (v_g256 == nullptr || v_g256[0] == '\0') ? -1 : (std::atoi(v_g256) != 0 ? 1 : 0);
++
++    const char* v_mt = std::getenv("STRATA_IQ_MT_MIN");
++    g_iq_mt_min = (v_mt != nullptr && v_mt[0] != '\0') ? std::atoi(v_mt) : -1;
++
++    g_iq3s_mt1 = (std::getenv("STRATA_IQ3S_MT1") != nullptr);
++
++    const char* v_bwiq = std::getenv("STRATA_AVX512BW_IQ");
++    g_avx512bw_iq_mask = 0;
++    if (v_bwiq != nullptr && v_bwiq[0] != '\0' && cpu_avx512bw_ok()) {
++        if (std::strcmp(v_bwiq, "1") == 0) {
++            g_avx512bw_iq_mask = (1u << 16) | (1u << 17) | (1u << 18) | (1u << 21) | (1u << 22);
++        } else if (std::strcmp(v_bwiq, "0") != 0) {
++            const char* p = v_bwiq;
++            while (*p != '\0') {
++                const int t = std::atoi(p);
++                if (t > 0 && t < 32) g_avx512bw_iq_mask |= (1u << t);
++                const char* c = std::strchr(p, ',');
++                if (c == nullptr) break;
++                p = c + 1;
++            }
++        }
++    }
++    g_avx512bw_iq = (g_avx512bw_iq_mask != 0);
++
++    const char* v_bwq2 = std::getenv("STRATA_AVX512BW_Q2");
++    g_avx512bw_q2 = (v_bwq2 != nullptr && v_bwq2[0] == '1' && cpu_avx512bw_ok());
++
++    const bool ymm = (std::getenv("STRATA_CPU_YMM") != nullptr);
++    g_q2_zmm = !ymm && (cpu_vnni_ok() || g_avx512bw_q2);
++
++    const char* v_ex1 = std::getenv("STRATA_CPU_IQ_ALL_EXACT1");
++    g_cpu_iq_all_exact1 = (v_ex1 != nullptr && v_ex1[0] == '1' && v_ex1[1] == '\0');
++
++    g_no_iq512 = (std::getenv("STRATA_NO_IQ512") != nullptr);
++    g_no_iq256 = (std::getenv("STRATA_NO_IQ256") != nullptr);
++    g_no_iq4nl = (std::getenv("STRATA_NO_IQ4NL") != nullptr);
++    g_no_q50_512 = (std::getenv("STRATA_NO_Q50_512") != nullptr);
++    g_no_iq512x1 = (std::getenv("STRATA_NO_IQ512X1") != nullptr);
++    g_no_iq4xs512 = (std::getenv("STRATA_NO_IQ4XS512") != nullptr);
++    g_env_inited.store(true, std::memory_order_release);
++}
++
++extern "C" void strata_cpu_ensure_env() {
++    if (!g_env_inited.load(std::memory_order_acquire)) strata_cpu_reload_env();
++}
++
++inline void ensure_env_inited() {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
++}
++
++std::string cpu_expert_kernels_desc() {
++    ensure_env_inited();
++    if (!g_avx512bw_iq && !g_q2_bitplane && !g_avx512bw_q2 && g_iq_mt_min < 0 && g_iq256_gather_setting < 0) {
++        return "AVX-2";
++    }
++    std::ostringstream os;
++    os << ((g_avx512bw_iq || g_avx512bw_q2) ? "AVX-2 + AVX-512BW" : "AVX-2");
++    os << " (";
++    bool first = true;
++    auto sep = [&]() { if (!first) os << ", "; first = false; };
++    if (g_avx512bw_iq) {
++        sep();
++        const char* v = std::getenv("STRATA_AVX512BW_IQ");
++        os << "STRATA_AVX512BW_IQ=" << (v ? v : "1");
++    }
++    if (g_q2_bitplane) { sep(); os << "STRATA_Q2_BITPLANE=1"; }
++    if (g_avx512bw_q2) { sep(); os << "STRATA_AVX512BW_Q2=1"; }
++    if (g_iq_mt_min >= 0) { sep(); os << "STRATA_IQ_MT_MIN=" << g_iq_mt_min; }
++    if (g_iq256_gather_setting >= 0) { sep(); os << "STRATA_IQ256_GATHER=" << g_iq256_gather_setting; }
++    sep(); os << "STRATA_IQ_GATHER=" << (g_iq512_gather ? 1 : 0);
++    os << ")";
++    return os.str();
++}
++
+ int iq256_gather_setting() {
+-    static const int s = [] {
+-        const char* v = std::getenv("STRATA_IQ256_GATHER");
+-        if (v == nullptr || v[0] == '\0') return -1;
+-        return std::atoi(v) != 0 ? 1 : 0;
+-    }();
+-    return s;
++    ensure_env_inited();
++    return g_iq256_gather_setting;
+ }
+ 
+ #if defined(__x86_64__) || defined(__i386__) || defined(_M_X64) || defined(_M_IX86)
+@@ -462,11 +566,17 @@ void cpu_require_expert_support() {
+     std::exit(1);
+ }
+ 
++bool q2_rows_512_ok() {
++    ensure_env_inited();
++    return g_q2_zmm;
++}
++
+ void q2_rows_any(const uint8_t* w, size_t row_bytes, int nblocks, const ActQ* const* a, int nt, float* const* out,
+                  int r0, int r1) {
+     // VNNI-512 without VBMI: expert.cpp's zmm row dot has a substitute for the VBMI-only 2-bit unpack there
+     // (q2_rows_512_ok also leaves the STRATA_CPU_YMM=1 choice to the AVX-2 kernel, on this CPU on the rung below).
+-    if (q2_rows_512_ok()) q2_0_gguf_rows_multi(w, row_bytes, nblocks, a, nt, out, r0, r1);
++    ensure_env_inited();
++    if (g_q2_zmm) q2_0_gguf_rows_multi(w, row_bytes, nblocks, a, nt, out, r0, r1);
+     else if (cpu_avx2_ok()) q2_0_gguf_rows_multi_avx2(w, row_bytes, nblocks, a, nt, out, r0, r1);
+     else q2_0_gguf_rows_multi_avx1(w, row_bytes, nblocks, a, nt, out, r0, r1);   // issue #1699: the third rung
+ }
+@@ -480,7 +590,8 @@ void q2_rows_any_legacy(const uint8_t* w, size_t row_bytes, int nblocks, const A
+ 
+ void act_quant_any(const float* x, int n, ActQ& a) {
+     // the q8 quantizer is VBMI-free: a VNNI-but-no-VBMI CPU (Cascade Lake Xeon) keeps its 512-bit form
+-    if (cpu_vnni_ok()) act_quant_q8_1(x, n, a);
++    ensure_env_inited();
++    if (cpu_vnni_ok() || g_avx512bw_q2) act_quant_q8_1(x, n, a);
+     else if (cpu_avx2_ok()) act_quant_q8_1_avx2(x, n, a);
+     else act_quant_q8_1_avx1(x, n, a);   // issue #1699
+ }
+diff --git a/engine/src/kernels/cpu/iq_avx512.cpp b/engine/src/kernels/cpu/iq_avx512.cpp
+index eb3abc0c..68e4fe4b 100644
+--- a/engine/src/kernels/cpu/iq_avx512.cpp
++++ b/engine/src/kernels/cpu/iq_avx512.cpp
+@@ -22,6 +22,7 @@
+ #include <cpuid.h>
+ #endif
+ 
++#include <atomic>
+ #include <cmath>
+ #include <cstdlib>
+ #include <cstring>
+@@ -35,22 +36,44 @@ inline uint32_t u32(const uint8_t* p) { uint32_t v; std::memcpy(&v, p, 4); retur
+ inline uint16_t u16(const uint8_t* p) { uint16_t v; std::memcpy(&v, p, 2); return v; }
+ inline uint64_t u64(const uint8_t* p) { uint64_t v; std::memcpy(&v, p, 8); return v; }
+ 
+-// E-2: the IQ3 grids by one AVX-512 gather (the same words, the same results) - measured 3-5% SLOWER than the scalar
+-// lookups on a Ryzen 5 7600 (Zen 4 gathers are microcoded), so opt-in: STRATA_IQ_GATHER=1
+-// 0.2.5: DEFAULT on where gathers are fast (Intel server and HEDT cores with AVX-512: cpu_gather_fast), off on Zen 4 (microcoded);
+-// STRATA_IQ_GATHER=1 / 0 force it either way.  The same words are loaded, so the results are bit for bit the scalar decode's.
+-const bool gather = [] {
+-    const char* v = std::getenv("STRATA_IQ_GATHER");
+-    return v != nullptr && v[0] != '\0' ? std::atoi(v) != 0 : cpu_gather_fast();
+-}();
++inline __m512i dpwssd512(__m512i acc, __m512i p16, __m512i sc) {
++#if defined(__AVX512VNNI__)
++    return _mm512_dpwssd_epi32(acc, p16, sc);
++#else
++    return _mm512_add_epi32(acc, _mm512_madd_epi16(p16, sc));
++#endif
++}
++
++inline __m512i dpbusd512(__m512i u8, __m512i s8) {
++#if defined(__AVX512VNNI__)
++    return _mm512_dpbusd_epi32(_mm512_setzero_si512(), u8, s8);
++#else
++    return _mm512_madd_epi16(_mm512_maddubs_epi16(u8, s8), _mm512_set1_epi16(1));
++#endif
++}
++
++inline __m256i dpbusd256(__m256i u8, __m256i s8) {
++#if defined(__AVX512VNNI__) && defined(__AVX512VL__)
++    return _mm256_dpbusd_epi32(_mm256_setzero_si256(), u8, s8);
++#else
++    return _mm256_madd_epi16(_mm256_maddubs_epi16(u8, s8), _mm256_set1_epi16(1));
++#endif
++}
++
++}  // namespace
++
++extern bool g_iq512_gather;
++extern int  g_iq512_prefetch;
++extern std::atomic<bool> g_env_inited;
++extern "C" void strata_cpu_ensure_env();
++
++namespace {
++#define gather (g_iq512_gather)
+ // the grid lookups by one 64-bit gather of eight entries (IQ2_XXS / IQ2_XS / IQ2_S): `idx` = eight 32-bit indices
+ inline __m512i gather64(__m256i idx, const void* grid) { return _mm512_i32gather_epi64(idx, grid, 8); }
+ // E-2: software prefetch distance in bytes (STRATA_IQ_PREFETCH; 0 = off): -2-3% gate/up time on IQ3_S decode
+ // (the rows are read at ~30 GB/s by 6 cores, near what DDR5 with 4 KB pages gives: the pool is memory-bound)
+-const int prefetch_ahead = [] {
+-    const char* v = std::getenv("STRATA_IQ_PREFETCH");
+-    return v ? std::atoi(v) : 2048;
+-}();
++#define prefetch_ahead (g_iq512_prefetch)
+ 
+ // lanes 0-7 -> s0, 8-15 -> s1, 16-23 -> s2, 24-31 -> s3 (int16 lanes of a maddubs result: two values each)
+ inline __m512i scales4(int s0, int s1, int s2, int s3) {
+@@ -231,7 +254,7 @@ inline void row_dot(const uint8_t* row, int nblocks, const block_q8_K* const* y,
+             for (int t = 0; t < NT; ++t) {
+                 const __m512i yv = _mm512_loadu_si512((const void*) (y[t][i].qs + 64 * j));
+                 const __m512i ys = _mm512_mask_sub_epi8(yv, m, zero, yv);
+-                acci[t] = _mm512_dpwssd_epi32(acci[t], _mm512_maddubs_epi16(g, ys), sc);
++                acci[t] = dpwssd512(acci[t], _mm512_maddubs_epi16(g, ys), sc);
+             }
+         }
+         if constexpr (Singleton) {
+@@ -322,6 +345,7 @@ void dot_rows_nt(int nt, const uint8_t* w, size_t row_bytes, int n, const void*
+ // i | parity(i) << 7).  The table needs a load and a few shifts and ors a group of eight values; popcount does it for all eight groups
+ // of 64 values in one vector: measured on Zen 5, one-token IQ2_XXS rows 33 -> 45-50 GB/s (16 threads, DRAM-sized), cache-resident 16.8 -> 13.4 ns a block.
+ // (AVX512_VPOPCNTDQ + VL: Zen 4, Zen 5, Ice Lake and later; iq512x_supported() asks for it.)
++#if defined(__AVX512VPOPCNTDQ__)
+ inline __mmask64 sign_mask_from_idx(__m256i si) {
+     const __m256i par = _mm256_slli_epi32(_mm256_and_si256(_mm256_popcnt_epi32(si), _mm256_set1_epi32(1)), 7);
+     return _cvtu64_mask64((uint64_t) _mm_cvtsi128_si64(_mm256_cvtepi32_epi8(_mm256_or_si256(si, par))));
+@@ -375,6 +399,9 @@ template <> struct FmtX<18> : Fmt<18> {
+         sc = scales4(sa, sa, sb, sb);
+     }
+ };
++#else
++template <int TY> struct FmtX : Fmt<TY> {};
++#endif
+ 
+ // ---- the DeepSeek CPU lane's exact rows (iq512x_rows): the same 64-value decode, but summed as ggml's AVX2 dots sum, so a
+ // token's row is ggml-cpu's vec_dot bit for bit at any number of tokens: the integer sums of a block fold to ggml's eight lanes
+@@ -410,7 +437,7 @@ inline void row_dot_x(const uint8_t* row, int nblocks, const block_q8_K* const*
+             for (int t = 0; t < NT; ++t) {
+                 const __m512i yv = _mm512_loadu_si512((const void*) (y[t][i].qs + 64 * j));
+                 const __m512i ys = _mm512_mask_sub_epi8(yv, m, zero, yv);
+-                acci[t] = _mm512_dpwssd_epi32(acci[t], _mm512_maddubs_epi16(g, ys), sc);
++                acci[t] = dpwssd512(acci[t], _mm512_maddubs_epi16(g, ys), sc);
+             }
+         }
+         const float dx = h2f(u16(blk));
+@@ -472,7 +499,7 @@ void dot_rows_wide(const uint8_t* w, size_t row_bytes, int n, const void* const*
+                         FmtX<TY>::decode(blk, j, g, m, s);
+                         w8[j] = _mm512_mask_sub_epi8(g, m, zero, g);
+                         sc[j] = s;
+-                        corr = _mm512_dpwssd_epi32(corr, _mm512_maddubs_epi16(one8, w8[j]), s);
++                        corr = dpwssd512(corr, _mm512_maddubs_epi16(one8, w8[j]), s);
+                     }
+                     const __m256i corr128 = _mm256_slli_epi32(fold256(corr), 7);
+                     const float dx = h2f(u16(blk));
+@@ -481,7 +508,7 @@ void dot_rows_wide(const uint8_t* w, size_t row_bytes, int n, const void* const*
+                         const uint8_t* u = ubuf.data() + (size_t) t * n + (size_t) i * 256;
+                         __m512i a = zero;
+                         for (int j = 0; j < 4; ++j)
+-                            a = _mm512_dpwssd_epi32(a, _mm512_maddubs_epi16(_mm512_loadu_si512((const void*) (u + 64 * j)), w8[j]), sc[j]);
++                            a = dpwssd512(a, _mm512_maddubs_epi16(_mm512_loadu_si512((const void*) (u + 64 * j)), w8[j]), sc[j]);
+                         const __m256i s = _mm256_sub_epi32(fold256(a), corr128);
+                         float* ap = accq + (size_t) t * 8;
+                         _mm256_storeu_ps(ap, _mm256_fmadd_ps(_mm256_set1_ps(dx * y[t][i].d), _mm256_cvtepi32_ps(s), _mm256_loadu_ps(ap)));
+@@ -572,8 +599,8 @@ void rows_m(const uint8_t* w, size_t rb, int n, const block_q8_K* const* y, cons
+                     const __m512i q8 = _mm512_loadu_si512((const void*) (y[t][i].qs + 64 * it));
+                     const __m512i pp = _mm512_loadu_si512((const void*) (P[t] + ((size_t) i * 8 + 2 * it) * 16));
+                     const __m512i ys = _mm512_mask_sub_epi8(q8, gneg, zero, q8);
+-                    s1[t] = _mm512_dpwssd_epi32(s1[t], _mm512_maddubs_epi16(ag, ys), sc);
+-                    s2[t] = _mm512_dpwssd_epi32(s2[t], pp, ssc);
++                    s1[t] = dpwssd512(s1[t], _mm512_maddubs_epi16(ag, ys), sc);
++                    s2[t] = dpwssd512(s2[t], pp, ssc);
+                 }
+             }
+             const float dx = h2f(d16);
+@@ -617,6 +644,7 @@ void rows_m_nt(int nt, const uint8_t* w, size_t rb, int n, const void* const* ac
+ 
+ void iq512_gu_rows(int type, const uint8_t* blob, size_t gu_row, size_t up_off, int n, const void* const* act, int nt,
+                    float* const* ff, int r0, int r1) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     switch (type) {
+         case 16: gu_rows_nt<16>(nt, blob, gu_row, up_off, n, act, ff, r0, r1); break;
+         case 17: gu_rows_nt<17>(nt, blob, gu_row, up_off, n, act, ff, r0, r1); break;
+@@ -630,6 +658,7 @@ void iq512_gu_rows(int type, const uint8_t* blob, size_t gu_row, size_t up_off,
+ // The linked ggml AVX2 singleton order, for the formats validated against its production dot.
+ void iq512_reference_gu_rows(int type, const uint8_t* blob, size_t gu_row, size_t up_off, int n,
+                              const void* const* act, int nt, float* const* ff, int r0, int r1) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     switch (type) {
+         case 18: gu_rows_nt<18, true>(nt, blob, gu_row, up_off, n, act, ff, r0, r1); break;
+         case 21: gu_rows_nt<21, true>(nt, blob, gu_row, up_off, n, act, ff, r0, r1); break;
+@@ -640,6 +669,7 @@ void iq512_reference_gu_rows(int type, const uint8_t* blob, size_t gu_row, size_
+ 
+ void iq512_rows(int type, const uint8_t* w, size_t row_bytes, int n, const void* const* act, int nt, float* const* out,
+                 int r0, int r1) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     switch (type) {
+         case 16: dot_rows_nt<16>(nt, w, row_bytes, n, act, out, r0, r1); break;
+         case 17: dot_rows_nt<17>(nt, w, row_bytes, n, act, out, r0, r1); break;
+@@ -650,6 +680,7 @@ void iq512_rows(int type, const uint8_t* w, size_t row_bytes, int n, const void*
+     }
+ }
+ 
++#if defined(__AVX512VPOPCNTDQ__)
+ static bool has_vpopcnt() {
+     static const bool ok = [] {
+ #if defined(_MSC_VER)
+@@ -664,15 +695,25 @@ static bool has_vpopcnt() {
+     }();
+     return ok;
+ }
++#endif
+ 
+-bool iq512_gather_on() noexcept { return gather; }
++#undef gather
++bool iq512_gather_on() noexcept {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
++    return g_iq512_gather;
++}
+ 
+ bool iq512x_supported(int type) noexcept {
++#if defined(__AVX512VPOPCNTDQ__)
+     return has_vpopcnt() && (type == 16 || type == 17 || type == 18 || type == 21 || type == 22 || type == 29);
++#else
++    return cpu_avx512bw_ok() && (type == 16 || type == 17 || type == 18 || type == 21 || type == 22 || type == 29);
++#endif
+ }
+ 
+ void iq512x_rows(int type, const uint8_t* w, size_t row_bytes, int n, const void* const* act, int nt, float* const* out,
+                  int r0, int r1) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     switch (type) {
+         case 16: dot_rows_x_nt<16>(nt, w, row_bytes, n, act, out, r0, r1); break;
+         case 17: dot_rows_x_nt<17>(nt, w, row_bytes, n, act, out, r0, r1); break;
+@@ -721,8 +762,8 @@ void gu_fused(const uint8_t* blob, size_t gu_row, size_t up_off, int n, const vo
+                 FmtX<TY>::decode(ub, j, ug, um, us);
+                 for (int t = 0; t < NT; ++t) {
+                     const __m512i yv = _mm512_loadu_si512((const void*) (y[t][i].qs + 64 * j));
+-                    ig[t] = _mm512_dpwssd_epi32(ig[t], _mm512_maddubs_epi16(gg, _mm512_mask_sub_epi8(yv, gm, zero, yv)), gs);
+-                    iu[t] = _mm512_dpwssd_epi32(iu[t], _mm512_maddubs_epi16(ug, _mm512_mask_sub_epi8(yv, um, zero, yv)), us);
++                    ig[t] = dpwssd512(ig[t], _mm512_maddubs_epi16(gg, _mm512_mask_sub_epi8(yv, gm, zero, yv)), gs);
++                    iu[t] = dpwssd512(iu[t], _mm512_maddubs_epi16(ug, _mm512_mask_sub_epi8(yv, um, zero, yv)), us);
+                 }
+             }
+             const float dg = h2f(u16(gb)), du = h2f(u16(ub));
+@@ -756,10 +797,17 @@ void gu_fused_nt(int nt, const uint8_t* blob, size_t gu_row, size_t up_off, int
+ 
+ }  // namespace
+ 
+-bool iq512f_supported(int type) noexcept { return has_vpopcnt() && (type == 16 || type == 17 || type == 18 || type == 21 || type == 22); }
++bool iq512f_supported(int type) noexcept {
++#if defined(__AVX512VPOPCNTDQ__)
++    return has_vpopcnt() && (type == 16 || type == 17 || type == 18 || type == 21 || type == 22);
++#else
++    return cpu_avx512bw_ok() && (type == 16 || type == 17 || type == 18 || type == 21 || type == 22);
++#endif
++}
+ 
+ void iq512_fused_gu_rows(int type, const uint8_t* blob, size_t gu_row, size_t up_off, int n, const void* const* act, int nt,
+                          float* const* ff, int r0, int r1) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     switch (type) {
+         case 16: gu_fused_nt<16>(nt, blob, gu_row, up_off, n, act, ff, r0, r1); break;
+         case 17: gu_fused_nt<17>(nt, blob, gu_row, up_off, n, act, ff, r0, r1); break;
+@@ -812,7 +860,7 @@ void qd_rows(const uint8_t* w, size_t row_bytes, int n, const block_q8_0* const*
+             const __mmask64 neg = _mm512_movepi8_mask(wq);
+             for (int t = 0; t < NT; ++t) {
+                 const __m512i yv = pair_q8_0(&y[t][ib], &y[t][ib + 1]);
+-                const __m512i p = _mm512_dpbusd_epi32(_mm512_setzero_si512(), aw, _mm512_mask_sub_epi8(yv, neg, _mm512_setzero_si512(), yv));
++                const __m512i p = dpbusd512(aw, _mm512_mask_sub_epi8(yv, neg, _mm512_setzero_si512(), yv));
+                 const __m256 lo = _mm256_cvtepi32_ps(_mm512_castsi512_si256(p));
+                 const __m256 hi = _mm256_cvtepi32_ps(_mm512_extracti64x4_epi64(p, 1));
+                 acc[t] = _mm256_fmadd_ps(_mm256_set1_ps(d0 * h2f(y[t][ib].d)), lo, acc[t]);
+@@ -825,7 +873,7 @@ void qd_rows(const uint8_t* w, size_t row_bytes, int n, const block_q8_0* const*
+             const float d0 = h2f(((const block_q5_0*) b0)->d);
+             for (int t = 0; t < NT; ++t) {
+                 const __m256i yv = _mm256_loadu_si256((const __m256i*) y[t][ib].qs);
+-                const __m256i p = _mm256_dpbusd_epi32(_mm256_setzero_si256(), _mm256_abs_epi8(wq), _mm256_sign_epi8(yv, wq));
++                const __m256i p = dpbusd256(_mm256_abs_epi8(wq), _mm256_sign_epi8(yv, wq));
+                 acc[t] = _mm256_fmadd_ps(_mm256_set1_ps(d0 * h2f(y[t][ib].d)), _mm256_cvtepi32_ps(p), acc[t]);
+             }
+         }
+@@ -852,6 +900,7 @@ void qd_rows_nt(int nt, const uint8_t* w, size_t row_bytes, int n, const void* c
+ }  // namespace
+ 
+ void q50_512_down_rows(const uint8_t* w, size_t row_bytes, int n, const void* const* hq, int nt, float* const* out, int r0, int r1) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     qd_rows_nt(nt, w, row_bytes, n, hq, out, r0, r1);
+ }
+ 
+diff --git a/engine/src/kernels/cpu/native_expert.cpp b/engine/src/kernels/cpu/native_expert.cpp
+index 2e2d154d..f971722e 100644
+--- a/engine/src/kernels/cpu/native_expert.cpp
++++ b/engine/src/kernels/cpu/native_expert.cpp
+@@ -21,6 +21,7 @@
+ #include "strata/kernels/cpu/pool_quant.hpp"
+ 
+ #include <algorithm>
++#include <atomic>
+ #include <cmath>
+ #include <cstdio>
+ #include <cstdlib>
+@@ -205,7 +206,7 @@ bool q50_512_ok() {
+     static const bool ok = [] {
+         const Tr tr = traits(kTQ5_0);
+         const Tr t8 = traits(kTQ8_0);
+-        if (!cpu_vnni_ok() || !tr.has_dot() || !t8.has_from_float()) return false;
++        if ((!cpu_vnni_ok() && !cpu_avx512bw_ok()) || !tr.has_dot() || !t8.has_from_float()) return false;
+         uint32_t seed = 31337u;
+         auto rnd = [&seed] { seed = seed * 1664525u + 1013904223u; return seed >> 8; };
+         for (const int n : {96, 640}) {
+@@ -239,9 +240,12 @@ bool q50_512_ok() {
+     return ok;
+ }
+ 
++extern "C" void strata_cpu_reload_env();
++extern "C" void strata_cpu_ensure_env();
++
+ void init_once() {
+     static std::once_flag once;
+-    std::call_once(once, [] { layer_init(); });
++    std::call_once(once, [] { layer_init(); strata_cpu_reload_env(); });
+ }
+ 
+ // BW-G: how many bytes ahead of the row being computed the row loops request the weights (row_prefetch.hpp).
+@@ -262,6 +266,20 @@ int row_pf_prologue() {
+ 
+ }  // namespace
+ 
++extern bool g_iq512_gather;
++extern int  g_iq_mt_min;
++extern bool g_iq3s_mt1;
++extern bool g_avx512bw_iq;
++extern uint32_t g_avx512bw_iq_mask;
++extern bool g_cpu_iq_all_exact1;
++extern bool g_no_iq512;
++extern bool g_no_iq256;
++extern bool g_no_iq4nl;
++extern bool g_no_q50_512;
++extern bool g_no_iq512x1;
++extern bool g_no_iq4xs512;
++extern std::atomic<bool> g_env_inited;
++
+ int row_pf_bytes() noexcept { return row_pf_setting(); }
+ int row_pf_hint() noexcept {
+     static const int v = [] {
+@@ -538,59 +556,22 @@ void native_quant_h(const NativeFmt& f, const float* h, void* dst) {
+ }
+ 
+ int native_gu_mt_min(int gu_type) {
+-    // #152: from how many tokens the multi-token kernels run (ggml's vec_dot below that).  The default 2 is the
+-    // measured-fastest rule, but a token's expert rows then round differently alone than in a group, so greedy output
+-    // can depend on how many drafts a verify window held.  STRATA_IQ_MT_MIN=1 (opt-in, 0.1.30) uses the multi-token
+-    // kernels for every group: output independent of the drafting, at a measured -1..-3% decode on IQ3_S (AVX-512).
+-    static const char* env = std::getenv("STRATA_IQ_MT_MIN");
+-    static const int mt_min = env ? std::atoi(env) : 2;
+-    // IQ3_S where the AVX-2 kernel gathers its grid (cpu_gather_fast, unless STRATA_IQ256_GATHER=0) on a CPU without
+-    // AVX-512: there that kernel beats ggml's dot for ONE token too (14900KF P-core, an expert's gate/up rows: 0.34 ->
+-    // 0.19 ms; its E-cores, which keep the scalar decode: 0.71 -> 0.68), and in decode most CPU experts serve one token
+-    // of the window.  So IQ3_S takes it for every group, and those rows no longer depend on the drafting.  A machine-
+-    // wide rule, not a per-core one: every core rounds an expert the same.  Every probe here is in expert_layout.cpp
+-    // and cpu_avx2_ok() comes first, so no AVX2 code runs before the check.  STRATA_IQ_MT_MIN set keeps its rule.
+-    // Opt-in (STRATA_IQ3S_MT1=1): it changes a lone token's IQ3_S rounding on those CPUs, so the default stays 0.1.39's.
+-    static const bool iq3s_one = env == nullptr && std::getenv("STRATA_IQ3S_MT1") != nullptr && cpu_avx2_ok() && std::getenv("STRATA_NO_IQ256") == nullptr &&
+-                                 !cpu_avx512_ok() && iq256_gather_setting() != 0 && cpu_gather_fast();
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
++    const int mt_min = g_iq_mt_min >= 0 ? g_iq_mt_min : 2;
++    const bool iq3s_one = g_iq_mt_min < 0 && g_iq3s_mt1 && cpu_avx2_ok() && !g_no_iq256 &&
++                          !cpu_avx512_ok() && iq256_gather_setting() != 0 && cpu_gather_fast();
+     return iq3s_one && gu_type == 21 ? 1 : mt_min;
+ }
+ 
+ template <NativeArithmetic Arithmetic>
+ void native_gu_rows_impl(const NativeFmt& f, const uint8_t* blob, const void* const* act, int nt, float* const* ff,
+                     int r0, int r1) {
+-    // the multi-token kernels decode the weights once for all tokens: 2.0-2.4x ggml-cpu at three tokens, no faster
+-    // at one (all are bound by the codebook lookups, ~5 GB/s per core), measured by native_expert_parity.  AVX-512
+-    // first, then the AVX-2 one (Zen 2/3, Intel 12th-14th gen).  STRATA_NO_IQ512 drops an AVX-512 CPU to the
+-    // AVX-2 kernel, STRATA_NO_IQ256 drops the AVX-2 kernel; ggml-cpu's single-token vec_dot is reached only with
+-    // both set (and on a CPU without AVX-512, STRATA_NO_IQ512 changes nothing).
+-    // 0.2.12 (PR 5120): AVX-512 F/DQ/BW/VL + VNNI is what iq_avx512.cpp runs on (its object holds no VBMI instruction); VBMI is not required.
+-    static const bool avx512 = cpu_vnni_ok() && std::getenv("STRATA_NO_IQ512") == nullptr;
+-    // STRATA_NO_IQ256 drops the AVX-2 kernel.  cpu_avx2_ok() is ALSO required: iq_avx2.cpp and kq_avx2.cpp
+-    // are compiled /arch:AVX2 and use AVX2 and FMA3, so calling them on a CPU without either is an
+-    // illegal instruction, not a slow path.  The gate sat next to `avx512` above, which does test
+-    // cpu_avx512_ok(), and that asymmetry is what let a pre-Haswell CPU reach iq256_gu_rows.
+-    // Without it this falls through to ggml-cpu's vec_dot below, which is compiled for whatever
+-    // baseline the build selected (AVX1 here) and covers the same types - IQ2_XXS and IQ2_S among
+-    // them.  That path loops over tokens itself, so it is correct for any `nt`, not just one.
+-    static const bool avx2 = cpu_avx2_ok() && std::getenv("STRATA_NO_IQ256") == nullptr;
+-    // The older-CPU tier (STRATA_ISA_FLOOR=avx builds): without it every expert on such a CPU runs on ggml-cpu's
+-    // scalar _generic dots.  Only where AVX2 is absent, so a modern CPU's rounding never moves (and
+-    // STRATA_NO_IQ256=1 there still means ggml, as before).  iq_avx1.cpp is compiled for AVX and gated on
+-    // cpu_avx1_ok().  Measured on an E5-2470 v2 (iq_avx1_parity --bench): 1.2-3.1x ggml's dot from two tokens on,
+-    // at one token ggml's auto-vectorized generic loop matches the 128-bit kernel - so the same #152 mt_min rule
+-    // as the AVX-2 kernels, and STRATA_IQ_MT_MIN=1 takes the kernel for one token too (its rows are then
+-    // independent of the drafting: iq_avx1_parity checks every width bit for bit).
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
++    const bool bw_iq = (f.gu_type > 0 && f.gu_type < 32) && ((g_avx512bw_iq_mask & (1u << f.gu_type)) != 0);
++    const bool avx512 = (cpu_vnni_ok() || bw_iq) && !g_no_iq512;
++    const bool avx2 = cpu_avx2_ok() && !g_no_iq256;
+     static const bool avx1 = !cpu_avx2_ok() && cpu_avx1_ok() && std::getenv("STRATA_NO_IQ128") == nullptr;
+-    // The exact rows are ggml-cpu's AVX2 single-token dot bit for bit, so they need ggml-cpu itself built for AVX2 and
+-    // not AVX-512 (ggml_cpu_has_*): a STRATA_ISA_FLOOR build runs ggml's AVX1/SSE dots, a native build on an AVX-512 CPU
+-    // run with STRATA_FORCE_AVX2=1 runs its AVX-512 one, and both round differently (#2215's guard).
+-    static const bool exact_one = [] {
+-        const char* v = std::getenv("STRATA_CPU_IQ_ALL_EXACT1");
+-        return v && v[0] == '1' && v[1] == 0 && flavour_avx2() && !flavour_avx512();
+-    }();
+-    // only where ggml's dot runs today (below the #152 multi-token rule): with STRATA_IQ_MT_MIN=1 a lone token keeps the
+-    // multi-token kernel, so a token's rows still do not depend on how many tokens share its expert
++    const bool exact_one = g_cpu_iq_all_exact1 && flavour_avx2() && (!flavour_avx512() || !cpu_vnni_ok());
+     if (exact_one && nt == 1 && nt < native_gu_mt_min(f.gu_type) && avx2 && !cpu_avx512_ok() &&
+         (f.gu_type == 16 || f.gu_type == 17 || f.gu_type == 18 || f.gu_type == 21 || f.gu_type == 22)) {
+         static std::once_flag announced;
+@@ -598,11 +579,7 @@ void native_gu_rows_impl(const NativeFmt& f, const uint8_t* blob, const void* co
+         iq256_gu_rows_exact_one(f.gu_type, blob, f.gu_row, f.up_off, (int) f.n_embd, act[0], ff[0], r0, r1);
+         return;
+     }
+-    // 0.2.5 (AVX-512 CPUs where a gather is cheap: Intel Sapphire Rapids and later): ONE token of an IQ3_XXS / IQ3_S expert on the
+-    // 512-bit exact rows, ggml-cpu's single-token AVX2 dot bit for bit with the grid words gathered: 1.3x ggml's dot on a Xeon 8468
+-    // (x512_bench), the same output.  Where the multi-token rule (#152) already sends one token to the multi-token kernel
+-    // (STRATA_IQ_MT_MIN=1) that stays; STRATA_NO_IQ512X1=1 turns this off; the first use checks the bits against this ggml.
+-    static const bool x512_one = avx512 && iq512_gather_on() && std::getenv("STRATA_NO_IQ512X1") == nullptr;
++    const bool x512_one = avx512 && g_iq512_gather && !g_no_iq512x1;
+     if (x512_one && nt == 1 && nt < native_gu_mt_min(f.gu_type) && f.tail_off == 0 && (f.gu_type == 18 || f.gu_type == 21) &&
+         x512_one_ok(f.gu_type)) {
+         const int n1 = (int) f.n_embd;
+@@ -617,10 +594,7 @@ void native_gu_rows_impl(const NativeFmt& f, const uint8_t* blob, const void* co
+         }
+         return;
+     }
+-    // 0.2.12: IQ4_XS on an AVX-512 CPU used to run on ggml-cpu's dot for every token (the 256-bit kernel below is AVX2-only).  The 512-bit rows sum
+-    // as that dot sums (the integer lanes, the f16 scale times y.d, eight float lanes, its hsum), so each token's row is ggml's bit for bit
+-    // at any number of tokens, checked once against this ggml.  STRATA_NO_IQ4XS512=1 keeps ggml's dot; STRATA_IQ4XS512_MIN=N: from N tokens on.
+-    static const bool iq4xs512 = avx512 && std::getenv("STRATA_NO_IQ4XS512") == nullptr;
++    const bool iq4xs512 = avx512 && !g_no_iq4xs512;
+     static const int iq4xs512_min = [] { const char* e = std::getenv("STRATA_IQ4XS512_MIN"); return e ? std::atoi(e) : 1; }();
+     if (iq4xs512 && f.gu_type == 23 && nt >= iq4xs512_min && f.tail_off == 0 && iq512_reference_ok(23)) {
+         iq512_reference_gu_rows(23, blob, f.gu_row, f.up_off, (int) f.n_embd, act, nt, ff, r0, r1);
+@@ -681,7 +655,7 @@ void native_gu_rows_impl(const NativeFmt& f, const uint8_t* blob, const void* co
+     // A format with only an AVX-2 kernel (IQ4_XS, #415) takes it on AVX-2 CPUs only: an AVX-512 CPU keeps ggml-cpu for
+     // it, as before (its rows would round differently).  Each kernel only for the formats it implements: falling
+     // through an empty switch would leave ff unwritten instead of falling back to ggml-cpu.
+-    static const bool cpu512 = cpu_vnni_ok();
++    const bool cpu512 = cpu_vnni_ok() || bw_iq;
+     if (nt >= mt_min && (iq512_supported(f.gu_type) || (!cpu512 && iq256_supported(f.gu_type)))) {
+         if (singleton_iq) {
+ #if defined(__x86_64__) || defined(_M_X64)
+@@ -794,8 +768,9 @@ void native_down_rows_impl(const NativeFmt& f, const uint8_t* blob, const void*
+                       int r0, int r1) {
+     // IQ4_NL down rows: the AVX-2 multi-token kernel decodes the nibbles and absolutises the weights once per
+     // block instead of once per token; ggml-cpu's dot is single-token.  STRATA_NO_IQ4NL falls back to it.
+-    static const bool iq4nl_mt = std::getenv("STRATA_NO_IQ4NL") == nullptr;
+-    static const int mt_min = [] { const char* e = std::getenv("STRATA_IQ_MT_MIN"); return e ? std::atoi(e) : 2; }();
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
++    const bool iq4nl_mt = !g_no_iq4nl;
++    const int mt_min = g_iq_mt_min >= 0 ? g_iq_mt_min : 2;
+     static const bool kq = [] { const char* v = std::getenv("STRATA_KQ256"); return v != nullptr && std::atoi(v) != 0; }();
+     // Both multi-token kernels below are /arch:AVX2 translation units (kq_avx2.cpp and iq_avx2.cpp),
+     // so a CPU without AVX2 has to reach ggml-cpu's vec_dot instead - same reasoning as the gate/up
+@@ -819,7 +794,7 @@ void native_down_rows_impl(const NativeFmt& f, const uint8_t* blob, const void*
+     }
+     // 0.2.12: Q5_0 down rows (ggml-cpu's dot, once a token) in 512-bit lanes, the same bits (q50_512_ok checks that on first use): the weights
+     // of a block pair are decoded once for all the tokens.  STRATA_NO_Q50_512=1 keeps ggml's dot; STRATA_Q50_512_MIN=N: from N tokens on (default 2).
+-    static const bool q50_512 = cpu_vnni_ok() && std::getenv("STRATA_NO_Q50_512") == nullptr;
++    const bool q50_512 = (cpu_vnni_ok() || g_avx512bw_iq) && !g_no_q50_512;
+     static const int q50_min = [] { const char* e = std::getenv("STRATA_Q50_512_MIN"); return e ? std::atoi(e) : 2; }();
+     if (q50_512 && f.d_type == 6 && nt >= q50_min && f.tail_off == 0 && q50_512_ok()) {
+         q50_512_down_rows(blob + f.down_off, f.d_row, (int) f.n_ff, hq, nt, out, r0, r1);
+diff --git a/engine/src/kernels/cpu/q2_avx2.cpp b/engine/src/kernels/cpu/q2_avx2.cpp
+index c406d427..b4aa2a3f 100644
+--- a/engine/src/kernels/cpu/q2_avx2.cpp
++++ b/engine/src/kernels/cpu/q2_avx2.cpp
+@@ -11,6 +11,7 @@
+ 
+ #include <immintrin.h>
+ 
++#include <atomic>
+ #include <cmath>
+ #include <cstdlib>
+ #include <cstring>
+@@ -143,14 +144,21 @@ void rows_bp(const uint8_t* w, size_t row_bytes, int npairs, const ActQ* const*
+     }
+ }
+ 
+-const bool kBitplane = [] {
+-    const char* e = std::getenv("STRATA_Q2_BITPLANE");
+-    return e != nullptr && e[0] == '1';
+-}();
++}  // namespace
++
++extern bool g_q2_bitplane;
++extern std::atomic<bool> g_env_inited;
++extern "C" void strata_cpu_ensure_env();
++
++namespace {
++#define kBitplane (g_q2_bitplane)
+ 
+ }  // namespace
+ 
+-bool q2_bitplane_enabled() { return kBitplane; }
++bool q2_bitplane_enabled() {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
++    return kBitplane;
++}
+ 
+ void q2_0_gguf_rows_multi_avx2_v(bool vnni_rows, const uint8_t* w, size_t row_bytes, int nblocks, const ActQ* const* a,
+                                  int nt, float* const* out, int r0, int r1) {
+@@ -171,6 +179,7 @@ void q2_0_gguf_rows_multi_avx2_legacy(const uint8_t* w, size_t row_bytes, int nb
+ 
+ void q2_0_gguf_rows_multi_avx2(const uint8_t* w, size_t row_bytes, int nblocks, const ActQ* const* a, int nt,
+                                float* const* out, int r0, int r1) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     bool bp = kBitplane && nblocks % 2 == 0;
+     for (int t = 0; t < nt && bp; ++t) bp = a[t]->bp_pairs == nblocks / 2;
+     if (!bp) {
+@@ -227,6 +236,7 @@ void bitplane_image(ActQ& a) {
+ }  // namespace
+ 
+ void act_quant_q8_1_avx2(const float* x, int n, ActQ& a) {
++    if (__builtin_expect(!g_env_inited.load(std::memory_order_acquire), 0)) strata_cpu_ensure_env();
+     a.nchunks = n / QKA;
+     const __m256 absmask = _mm256_castsi256_ps(_mm256_set1_epi32(0x7fffffff));
+     const __m256 half = _mm256_set1_ps(0.5f), mhalf = _mm256_set1_ps(-0.5f), zero = _mm256_setzero_ps();
+diff --git a/engine/src/program/generate.cpp b/engine/src/program/generate.cpp
+index af2724f6..8fa2ac88 100644
+--- a/engine/src/program/generate.cpp
++++ b/engine/src/program/generate.cpp
+@@ -5631,7 +5631,8 @@ int main(int argc, char** argv) {
+                          ? (strata::kernels::cpu::cpu_avx1_ok() && std::getenv("STRATA_NO_IQ128") == nullptr
+                             ? "AVX1 (older-CPU build)"
+                             : "ggml-cpu (older-CPU build)")
+-                     : std::getenv("STRATA_NO_IQ256") == nullptr ? "AVX-2" : "ggml-cpu (STRATA_NO_IQ256 set)");
++                     : std::getenv("STRATA_NO_IQ256") == nullptr ? strata::kernels::cpu::cpu_expert_kernels_desc().c_str()
++                                                                   : "ggml-cpu (STRATA_NO_IQ256 set)");
+ #endif
+     // the compiled shape; a native model's file replaces it below with its own metadata (read_geometry), which a
+     // pruned variant (GSQ-RCO Coder, fewer than 512 experts) differs from

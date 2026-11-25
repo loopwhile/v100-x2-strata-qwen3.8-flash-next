@@ -159,13 +159,27 @@
       "gate": "C",
       "engine": "0.1.67",
       "env": {"STRATA_OOMD_ROOM": "0"},
-      "status": "IN_PROGRESS"
+      "status": "PASS",
+      "raw_id": "c0-20261125T170951",
+      "prefill_tok_s_A_B": [1034.2, 1040.5],
+      "decode_tok_s_A_B": [21.9, 22.3],
+      "ttft_s_A_B": [123.04, 122.30],
+      "os_read_mb_A_B": [1031.0, 443.5],
+      "report": "artifacts/stage12-results-20261125/c0-20261125T170951/report.md"
     },
     "S12-D1": {
       "gate": "C",
       "engine": "0.1.67",
+      "patch": "docker/patches/stage12-d1.patch",
       "feature": "PathC7 non-VNNI AVX512BW CPU expert port",
-      "status": "PATCH_PREP"
+      "status": "BUILDING"
+    },
+    "S12-D2": {
+      "gate": "C",
+      "engine": "0.1.67",
+      "patch": "docker/patches/stage12-d2.patch",
+      "feature": "MmapBounceRing + JobThread + zero-mincore + COLD_OVERLAP=5",
+      "status": "PATCH_READY"
     }
   }
 }
